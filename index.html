@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!-- MalleTrack v4.1 -->
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -609,19 +609,19 @@ async function init() {
 // SUPABASE REALTIME
 // ============================================================
 function subscribeRealtime() {
-  sb.channel('loc').on('postgres_changes',{event:'*',schema:'public',table:'locations',filter:`room_id=eq.${ROOM_ID}`},
+  sb.channel('loc').on('postgres_changes',{event:'*',schema:'public',table:'locations',filter:'room_id=eq.'+ROOM_ID},
     (p) => { if(p.new?.user_id!==state.currentUser?.id){state.crewLocations[p.new.user_id]=p.new;updateMarker(p.new);renderCrew();} }).subscribe();
 
-  sb.channel('snp').on('postgres_changes',{event:'INSERT',schema:'public',table:'snaps',filter:`room_id=eq.${ROOM_ID}`},
+  sb.channel('snp').on('postgres_changes',{event:'INSERT',schema:'public',table:'snaps',filter:'room_id=eq.'+ROOM_ID},
     async(p) => { await loadSnaps(); if(state.activeTab!=='tab-snaps') showTabNotif('tab-snaps'); showToast('📸 Neuer Snap von '+p.new.author_name+'!'); }).subscribe();
 
-  sb.channel('sta').on('postgres_changes',{event:'*',schema:'public',table:'statuses',filter:`room_id=eq.${ROOM_ID}`},
+  sb.channel('sta').on('postgres_changes',{event:'*',schema:'public',table:'statuses',filter:'room_id=eq.'+ROOM_ID},
     (p) => { if(p.new){state.crewStatuses[p.new.user_id]=p.new;renderCrew();} }).subscribe();
 
-  sb.channel('pin').on('postgres_changes',{event:'INSERT',schema:'public',table:'pins',filter:`room_id=eq.${ROOM_ID}`},
+  sb.channel('pin').on('postgres_changes',{event:'INSERT',schema:'public',table:'pins',filter:'room_id=eq.'+ROOM_ID},
     (p) => { placePinOnMap(p.new); showToast(`📍 Neuer Treffpunkt: ${p.new.name}`); }).subscribe();
 
-  sb.channel('cht').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:`room_id=eq.${ROOM_ID}`},
+  sb.channel('cht').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_id=eq.'+ROOM_ID},
     async(p) => {
       await loadChatMessages();
       if(state.activeTab!=='tab-chat'){state.unreadChat++;updateChatBadge();}
