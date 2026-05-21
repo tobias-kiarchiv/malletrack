@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>MalleTrack 🌴</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-deep:    #07070f;
+  --bg-card:    #0f0f1e;
+  --bg-glass:   rgba(15,15,30,0.85);
+  --neon-pink:  #ff2d78;
+  --neon-cyan:  #00e5ff;
+  --neon-gold:  #ffd600;
+  --neon-green: #39ff14;
+  --text-pri:   #f0f0ff;
+  --text-sec:   #8888aa;
+  --border:     rgba(255,255,255,0.07);
+  --tab-h:      68px;
+  --safe-bot:   env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; width: 100%; overflow: hidden; background: var(--bg-deep); color: var(--text-pri); font-family: 'Space Grotesk', sans-serif; -webkit-font-smoothing: antialiased; }
+body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 60% 40% at 20% 10%, rgba(255,45,120,0.12) 0%, transparent 70%), radial-gradient(ellipse 50% 35% at 80% 80%, rgba(0,229,255,0.10) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+#app { position: fixed; inset: 0; display: flex; flex-direction: column; z-index: 1; }
+#header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px 10px; background: var(--bg-glass); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 50; }
+.logo { font-family: 'Bebas Neue', cursive; font-size: 26px; letter-spacing: 2px; background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.live-badge { display: flex; align-items: center; gap: 5px; background: rgba(57,255,20,0.15); border: 1px solid rgba(57,255,20,0.35); border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: var(--neon-green); }
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-green); animation: blink 1.2s ease-in-out infinite; }
+.user-chip { display: flex; align-items: center; gap: 7px; background: rgba(255,45,120,0.15); border: 1px solid rgba(255,45,120,0.35); border-radius: 20px; padding: 5px 12px 5px 6px; cursor: pointer; font-size: 13px; font-weight: 500; }
+.user-chip .emoji { font-size: 18px; }
+#content { flex: 1; overflow: hidden; position: relative; }
+.tab-panel { position: absolute; inset: 0; overflow-y: auto; display: none; -webkit-overflow-scrolling: touch; }
+.tab-panel.active { display: block; }
+#tabbar { display: flex; background: var(--bg-glass); backdrop-filter: blur(24px); border-top: 1px solid var(--border); height: calc(var(--tab-h) + var(--safe-bot)); padding-bottom: var(--safe-bot); flex-shrink: 0; z-index: 50; }
+.tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: var(--text-sec); cursor: pointer; transition: all 0.2s; position: relative; padding-bottom: 2px; }
+.tab-btn.active { color: var(--neon-pink); }
+.tab-btn .tab-icon { font-size: 22px; }
+.tab-btn .tab-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
+.tab-btn.active::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 40px; height: 2px; border-radius: 0 0 4px 4px; background: linear-gradient(90deg, var(--neon-pink), var(--neon-cyan)); }
+#tab-karte { display: none; position: absolute; inset: 0; }
+#tab-karte.active { display: block; }
+#map { width: 100%; height: 100%; }
+.map-overlay { position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 400; display: flex; flex-direction: column; align-items: center; gap: 10px; width: calc(100% - 32px); max-width: 360px; }
+.btn-primary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 14px 20px; border-radius: 16px; border: none; background: linear-gradient(135deg, var(--neon-pink), #cc0055); color: white; font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.3px; cursor: pointer; box-shadow: 0 0 24px rgba(255,45,120,0.4), 0 4px 16px rgba(0,0,0,0.4); transition: all 0.2s; }
+.btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+.btn-primary.sharing { background: linear-gradient(135deg, var(--neon-green), #00bb00); box-shadow: 0 0 24px rgba(57,255,20,0.4); }
+.map-hint { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 12px; color: var(--text-sec); text-align: center; width: 100%; }
+.map-hint span { color: var(--neon-cyan); font-weight: 600; }
+.leaflet-tile { filter: brightness(0.75) saturate(0.8) hue-rotate(180deg); }
+.leaflet-container { background: #111; }
+.emoji-marker { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+.emoji-bubble { background: var(--bg-card); border: 2px solid var(--neon-pink); border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 0 14px rgba(255,45,120,0.5); }
+.emoji-name { background: rgba(10,10,18,0.9); border: 1px solid var(--border); border-radius: 8px; padding: 2px 8px; font-size: 10px; font-weight: 700; color: white; margin-top: 2px; white-space: nowrap; }
+.pin-bubble { background: var(--bg-card); border: 2px solid var(--neon-gold); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 14px rgba(255,214,0,0.5); }
+#tab-snaps { padding: 16px; padding-bottom: 80px; }
+.snap-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-family: 'Bebas Neue', cursive; font-size: 28px; letter-spacing: 1px; background: linear-gradient(90deg, white, var(--text-sec)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.snap-count { background: rgba(255,45,120,0.2); border: 1px solid rgba(255,45,120,0.4); border-radius: 20px; padding: 3px 12px; font-size: 13px; font-weight: 600; color: var(--neon-pink); }
+.camera-btn { width: 100%; height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, rgba(255,45,120,0.15), rgba(0,229,255,0.10)); border: 2px dashed rgba(255,45,120,0.45); border-radius: 20px; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; }
+.camera-btn:active { transform: scale(0.98); }
+.camera-icon { font-size: 32px; }
+.camera-label { font-size: 14px; font-weight: 700; color: var(--neon-pink); letter-spacing: 0.5px; }
+#file-input { display: none; }
+.snap-feed { display: flex; flex-direction: column; gap: 16px; }
+.snap-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; animation: slideIn 0.3s ease-out; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.snap-meta { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+.snap-author { display: flex; align-items: center; gap: 8px; }
+.snap-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; background: rgba(255,45,120,0.2); border: 2px solid rgba(255,45,120,0.4); }
+.snap-name { font-weight: 700; font-size: 14px; }
+.snap-time { font-size: 11px; color: var(--text-sec); margin-top: 1px; }
+.snap-countdown { display: flex; flex-direction: column; align-items: flex-end; }
+.countdown-label { font-size: 9px; color: var(--text-sec); text-transform: uppercase; letter-spacing: 0.5px; }
+.countdown-value { font-size: 13px; font-weight: 700; color: var(--neon-pink); font-variant-numeric: tabular-nums; }
+.snap-image { width: 100%; max-height: 400px; object-fit: cover; display: block; }
+.snap-footer { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+.snap-location { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-sec); }
+.snap-reactions { display: flex; gap: 6px; }
+.reaction-btn { background: rgba(255,255,255,0.07); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+.reaction-btn:active { transform: scale(0.95); background: rgba(255,45,120,0.2); }
+.empty-feed { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 12px; opacity: 0.6; }
+.empty-icon { font-size: 56px; }
+.empty-text { font-size: 16px; font-weight: 600; color: var(--text-sec); text-align: center; }
+#tab-gruppe { padding: 16px; padding-bottom: 80px; }
+.group-header { margin-bottom: 20px; }
+.group-subtitle { font-size: 13px; color: var(--text-sec); margin-top: 4px; }
+.event-card { background: linear-gradient(135deg, rgba(255,45,120,0.15), rgba(0,229,255,0.1)); border: 1px solid rgba(255,45,120,0.3); border-radius: 20px; padding: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; }
+.event-emoji { font-size: 40px; }
+.event-info h3 { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.event-info p { font-size: 12px; color: var(--text-sec); line-height: 1.5; }
+.members-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-sec); margin-bottom: 12px; }
+.member-list { display: flex; flex-direction: column; gap: 10px; }
+.member-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; }
+.member-card.me { border-color: rgba(255,45,120,0.4); background: linear-gradient(135deg, rgba(255,45,120,0.08), var(--bg-card)); }
+.member-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; }
+.member-card.sharing-active::before { background: var(--neon-cyan); }
+.member-avatar { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(255,255,255,0.07); border: 2px solid var(--border); flex-shrink: 0; position: relative; }
+.online-dot { position: absolute; bottom: 1px; right: 1px; width: 11px; height: 11px; border-radius: 50%; background: var(--neon-green); border: 2px solid var(--bg-card); }
+.member-info { flex: 1; min-width: 0; }
+.member-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 6px; }
+.me-badge { background: rgba(255,45,120,0.25); border: 1px solid rgba(255,45,120,0.4); border-radius: 6px; padding: 1px 6px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px; color: var(--neon-pink); text-transform: uppercase; }
+.member-status { font-size: 12px; color: var(--text-sec); margin-top: 3px; }
+.status-select { background: rgba(255,255,255,0.07); border: 1px solid var(--border); border-radius: 8px; color: var(--text-pri); font-family: 'Space Grotesk', sans-serif; font-size: 12px; padding: 3px 8px; cursor: pointer; margin-top: 4px; width: 100%; max-width: 200px; -webkit-appearance: none; }
+.member-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.sharing-badge { display: flex; align-items: center; gap: 4px; background: rgba(0,229,255,0.15); border: 1px solid rgba(0,229,255,0.35); border-radius: 20px; padding: 3px 10px; font-size: 10px; font-weight: 700; color: var(--neon-cyan); }
+.sharing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-cyan); animation: blink 1.2s ease-in-out infinite; }
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+.room-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-top: 20px; text-align: center; }
+.room-label { font-size: 11px; color: var(--text-sec); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.room-id { font-family: 'Bebas Neue', cursive; font-size: 32px; letter-spacing: 4px; background: linear-gradient(135deg, var(--neon-gold), #ff6b00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+.room-copy-btn { background: rgba(255,214,0,0.1); border: 1px solid rgba(255,214,0,0.3); border-radius: 10px; padding: 8px 18px; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: var(--neon-gold); cursor: pointer; }
+.modal-backdrop { position: fixed; inset: 0; background: rgba(7,7,15,0.85); backdrop-filter: blur(8px); z-index: 200; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal-sheet { width: 100%; max-width: 480px; background: var(--bg-card); border-top: 1px solid var(--border); border-radius: 24px 24px 0 0; padding: 20px 20px calc(20px + var(--safe-bot)); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); max-height: 90vh; overflow-y: auto; }
+.modal-backdrop.open .modal-sheet { transform: translateY(0); }
+.modal-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.modal-title { font-family: 'Bebas Neue', cursive; font-size: 26px; letter-spacing: 1px; margin-bottom: 20px; text-align: center; }
+.emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 16px; }
+.emoji-option { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 24px; border-radius: 12px; background: rgba(255,255,255,0.05); border: 2px solid transparent; cursor: pointer; transition: all 0.15s; }
+.emoji-option.selected { border-color: var(--neon-pink); background: rgba(255,45,120,0.2); }
+.name-input { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; color: var(--text-pri); font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 500; outline: none; margin-bottom: 12px; transition: border-color 0.2s; }
+.name-input:focus { border-color: var(--neon-pink); }
+.name-input::placeholder { color: var(--text-sec); }
+.pin-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+.pin-option { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 14px 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; transition: all 0.15s; text-align: center; }
+.pin-option.selected { border-color: var(--neon-gold); background: rgba(255,214,0,0.1); }
+.pin-option .pin-icon { font-size: 26px; }
+.pin-option .pin-name { font-size: 11px; font-weight: 600; color: var(--text-sec); }
+.toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%) translateY(-20px); background: rgba(15,15,30,0.95); border: 1px solid var(--border); border-radius: 14px; padding: 12px 20px; font-size: 14px; font-weight: 600; z-index: 1000; opacity: 0; transition: all 0.3s; pointer-events: none; white-space: nowrap; max-width: calc(100vw - 32px); text-align: center; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="logo">🌴 MalleTrack</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      <div class="user-chip" onclick="openProfileModal()">
+        <span class="emoji" id="header-emoji">🦁</span>
+        <span id="header-name">Profil</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="content">
+    <div id="tab-karte" class="tab-panel active">
+      <div id="map"></div>
+      <div class="map-overlay">
+        <button class="btn-primary" id="share-loc-btn" onclick="toggleLocationSharing()">
+          <span>📍</span><span id="share-loc-text">Meinen Standort teilen</span>
+        </button>
+        <div class="map-hint">Klicke auf die Karte für einen <span>Treffpunkt-Pin</span></div>
+      </div>
+    </div>
+
+    <div id="tab-snaps" class="tab-panel">
+      <div style="padding:16px;padding-bottom:80px">
+        <div class="snap-header">
+          <div class="section-title">SNAPS</div>
+          <div class="snap-count" id="snap-count">0 Fotos</div>
+        </div>
+        <div class="camera-btn" onclick="triggerCamera()">
+          <div class="camera-icon">📸</div>
+          <div class="camera-label">SNAP AUFNEHMEN</div>
+        </div>
+        <input type="file" id="file-input" accept="image/*" capture="environment" onchange="handlePhotoUpload(event)">
+        <div class="snap-feed" id="snap-feed">
+          <div class="empty-feed" id="empty-feed">
+            <div class="empty-icon">🌅</div>
+            <div class="empty-text">Noch keine Snaps.<br>Sei der Erste!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-gruppe" class="tab-panel">
+      <div style="padding:16px;padding-bottom:80px">
+        <div class="group-header">
+          <div class="section-title">CREW</div>
+          <div class="group-subtitle">7 Amigos auf Malle 🌴🍺</div>
+        </div>
+        <div class="event-card">
+          <div class="event-emoji">🏝️</div>
+          <div class="event-info">
+            <h3>Mallorca Summer 2026</h3>
+            <p>Palma de Mallorca · Echtzeit-Sync aktiv<br>Privatgruppe · Kein Tracking · Kein Konto</p>
+          </div>
+        </div>
+        <div class="members-title">Live-Status der Crew</div>
+        <div class="member-list" id="member-list"></div>
+        <div class="room-card">
+          <div class="room-label">🔑 Raum-ID zum Teilen</div>
+          <div class="room-id">MALLE26</div>
+          <button class="room-copy-btn" onclick="copyRoomLink()">🔗 Link kopieren</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabbar">
+    <button class="tab-btn active" onclick="switchTab('tab-karte',this)"><span class="tab-icon">🗺️</span><span class="tab-label">Radar</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-snaps',this)"><span class="tab-icon">📸</span><span class="tab-label">Snaps</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-gruppe',this)"><span class="tab-icon">👥</span><span class="tab-label">Crew</span></button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- PROFIL MODAL -->
+<div class="modal-backdrop" id="profile-modal" onclick="closeOnBackdrop(event,'profile-modal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🎭 Dein Profil</div>
+    <div class="emoji-grid" id="emoji-grid"></div>
+    <input type="text" class="name-input" id="profile-name-input" placeholder="Dein Name (z.B. 'Juanita')" maxlength="20">
+    <button class="btn-primary" onclick="saveProfile()">✅ Speichern & Loslegen</button>
+  </div>
+</div>
+
+<!-- PIN MODAL -->
+<div class="modal-backdrop" id="pin-modal" onclick="closeOnBackdrop(event,'pin-modal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📍 Treffpunkt setzen</div>
+    <div class="pin-options" id="pin-options"></div>
+    <button class="btn-primary" onclick="confirmPin()">📌 Für alle setzen</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SUPABASE KONFIGURATION
+// ============================================================
+const SUPABASE_URL = 'https://umoinjlvdzcgiacmrkpl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtb2luamx2ZHpjZ2lhY21ya3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzODcyOTYsImV4cCI6MjA5NDk2MzI5Nn0.InNrzf9FQIxhz1Ns03MRYI711VFWbgctJ9tKpj_7afo';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const ROOM_ID = 'MALLE26';
+const SNAP_EXPIRY_HOURS = 24;
+
+const PROFILE_EMOJIS = ['🦁','🌺','🐬','🦋','🦅','🌙','🐉','🦊','🐼','🦄','🔥','⚡','🌴','🍹','😎','🏄','🎸','💎','🌈','🦈'];
+const STATUS_OPTIONS = ['Am Strand','Im Pool','Im Club','Im Bierkönig','Am Hotel','Auf dem Weg','Beim Essen','Akku leer 🪫','Schlafe noch 😴','Am Hafen','Beim Shoppen'];
+const PIN_OPTIONS = [
+  {emoji:'🍺',name:'Bierkönig'},{emoji:'🏨',name:'Hotel'},{emoji:'🏖️',name:'Strand'},
+  {emoji:'🍕',name:'Restaurant'},{emoji:'🚌',name:'Bushaltestelle'},{emoji:'🎉',name:'Party!'}
+];
+
+let state = {
+  currentUser: null, locationSharing: false, watchId: null,
+  currentLat: null, currentLng: null, pendingPin: null,
+  selectedPinOption: null, selectedEmoji: PROFILE_EMOJIS[0],
+  mapInstance: null, markers: {}, pinMarker: null, snaps: [],
+  crewStatuses: {}, crewLocations: {}
+};
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+  const saved = localStorage.getItem('malletrack_profile');
+  if (saved) {
+    state.currentUser = JSON.parse(saved);
+    updateHeaderChip();
+  } else {
+    setTimeout(() => openProfileModal(), 600);
+  }
+
+  // Emoji-Grid
+  const grid = document.getElementById('emoji-grid');
+  PROFILE_EMOJIS.forEach(em => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-option' + (em === state.selectedEmoji ? ' selected' : '');
+    btn.textContent = em;
+    btn.onclick = () => selectEmoji(em);
+    grid.appendChild(btn);
+  });
+
+  // Pin-Optionen
+  const pinOpts = document.getElementById('pin-options');
+  PIN_OPTIONS.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'pin-option';
+    btn.innerHTML = `<div class="pin-icon">${opt.emoji}</div><div class="pin-name">${opt.name}</div>`;
+    btn.onclick = () => selectPinOption(i);
+    pinOpts.appendChild(btn);
+  });
+
+  initMap();
+  await loadSnaps();
+  await loadStatuses();
+  await loadLocations();
+  await loadPin();
+  renderCrew();
+  subscribeRealtime();
+  setInterval(updateCountdowns, 1000);
+}
+
+// ============================================================
+// SUPABASE REALTIME SUBSCRIPTIONS
+// ============================================================
+function subscribeRealtime() {
+  // Standorte live empfangen
+  sb.channel('locations_channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'locations', filter: `room_id=eq.${ROOM_ID}` },
+      (payload) => {
+        const loc = payload.new;
+        if (loc && loc.user_id !== (state.currentUser?.id || '')) {
+          state.crewLocations[loc.user_id] = loc;
+          updateMarker(loc);
+          renderCrew();
+        }
+      })
+    .subscribe();
+
+  // Snaps live empfangen
+  sb.channel('snaps_channel')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'snaps', filter: `room_id=eq.${ROOM_ID}` },
+      async (payload) => {
+        await loadSnaps();
+        showToast('📸 Neuer Snap von ' + payload.new.author_name + '!');
+      })
+    .subscribe();
+
+  // Status live empfangen
+  sb.channel('statuses_channel')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'statuses', filter: `room_id=eq.${ROOM_ID}` },
+      (payload) => {
+        const s = payload.new;
+        if (s) { state.crewStatuses[s.user_id] = s; renderCrew(); }
+      })
+    .subscribe();
+
+  // Pins live empfangen
+  sb.channel('pins_channel')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pins', filter: `room_id=eq.${ROOM_ID}` },
+      (payload) => {
+        const pin = payload.new;
+        placePinOnMap(pin.lat, pin.lng, pin.emoji, pin.name);
+        showToast(`📍 Neuer Treffpunkt: ${pin.name}`);
+      })
+    .subscribe();
+}
+
+// ============================================================
+// KARTE
+// ============================================================
+function initMap() {
+  const map = L.map('map', { center: [39.5696, 2.6502], zoom: 14, zoomControl: false, attributionControl: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+  map.on('click', (e) => { state.pendingPin = { lat: e.latlng.lat, lng: e.latlng.lng }; openPinModal(); });
+  state.mapInstance = map;
+}
+
+function createEmojiIcon(emoji, name, isMe = false) {
+  return L.divIcon({
+    className: '',
+    html: `<div class="emoji-marker"><div class="emoji-bubble" style="${isMe?'border-color:var(--neon-cyan);box-shadow:0 0 14px rgba(0,229,255,0.5)':''}">${emoji}</div><div class="emoji-name">${name}</div></div>`,
+    iconSize: [60, 65], iconAnchor: [30, 62]
+  });
+}
+
+function updateMarker(loc) {
+  const isMe = loc.user_id === state.currentUser?.id;
+  const icon = createEmojiIcon(loc.user_emoji, loc.user_name + (isMe?' (Du)':''), isMe);
+  if (state.markers[loc.user_id]) {
+    state.markers[loc.user_id].setLatLng([loc.lat, loc.lng]);
+    state.markers[loc.user_id].setIcon(icon);
+  } else {
+    const m = L.marker([loc.lat, loc.lng], { icon }).addTo(state.mapInstance);
+    m.bindPopup(`<b>${loc.user_emoji} ${loc.user_name}</b>`);
+    state.markers[loc.user_id] = m;
+  }
+}
+
+async function loadLocations() {
+  const { data } = await sb.from('locations').select('*').eq('room_id', ROOM_ID);
+  if (data) data.forEach(loc => { state.crewLocations[loc.user_id] = loc; updateMarker(loc); });
+}
+
+async function loadPin() {
+  const { data } = await sb.from('pins').select('*').eq('room_id', ROOM_ID).order('created_at', { ascending: false }).limit(1);
+  if (data && data.length > 0) placePinOnMap(data[0].lat, data[0].lng, data[0].emoji, data[0].name);
+}
+
+function placePinOnMap(lat, lng, emoji, name) {
+  if (state.pinMarker) state.mapInstance.removeLayer(state.pinMarker);
+  const icon = L.divIcon({
+    className: '',
+    html: `<div class="emoji-marker"><div class="pin-bubble">${emoji}</div><div class="emoji-name" style="color:var(--neon-gold)">${name}</div></div>`,
+    iconSize: [55, 62], iconAnchor: [27, 58]
+  });
+  state.pinMarker = L.marker([lat, lng], { icon }).addTo(state.mapInstance);
+}
+
+// ============================================================
+// STANDORT SHARING
+// ============================================================
+function toggleLocationSharing() {
+  if (!state.currentUser) { showToast('⚠️ Bitte erst Profil auswählen!'); openProfileModal(); return; }
+  state.locationSharing ? stopLocationSharing() : startLocationSharing();
+}
+
+function startLocationSharing() {
+  if (!navigator.geolocation) { showToast('❌ Geolocation nicht verfügbar'); return; }
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    state.currentLat = pos.coords.latitude;
+    state.currentLng = pos.coords.longitude;
+    state.locationSharing = true;
+    updateSharingButton(true);
+    await sendLocation(state.currentLat, state.currentLng);
+    state.mapInstance.setView([state.currentLat, state.currentLng], 15);
+    showToast('📍 Standort wird live geteilt!');
+    state.watchId = navigator.geolocation.watchPosition(async (p) => {
+      state.currentLat = p.coords.latitude; state.currentLng = p.coords.longitude;
+      await sendLocation(p.coords.latitude, p.coords.longitude);
+    }, null, { enableHighAccuracy: true, maximumAge: 5000 });
+  }, () => {
+    // Demo-Modus wenn GPS blockiert
+    state.currentLat = 39.5696 + (Math.random()-0.5)*0.01;
+    state.currentLng = 2.6502 + (Math.random()-0.5)*0.01;
+    state.locationSharing = true;
+    updateSharingButton(true);
+    sendLocation(state.currentLat, state.currentLng);
+    showToast('📍 Demo: Simulierter Standort');
+  });
+}
+
+async function sendLocation(lat, lng) {
+  if (!state.currentUser) return;
+  await sb.from('locations').upsert({
+    room_id: ROOM_ID, user_id: state.currentUser.id,
+    user_name: state.currentUser.name, user_emoji: state.currentUser.emoji,
+    lat, lng, updated_at: new Date().toISOString()
+  }, { onConflict: 'room_id,user_id' });
+  updateMarker({ user_id: state.currentUser.id, user_name: state.currentUser.name, user_emoji: state.currentUser.emoji, lat, lng });
+}
+
+function stopLocationSharing() {
+  if (state.watchId) { navigator.geolocation.clearWatch(state.watchId); state.watchId = null; }
+  state.locationSharing = false;
+  updateSharingButton(false);
+  if (state.markers[state.currentUser?.id]) {
+    state.mapInstance.removeLayer(state.markers[state.currentUser.id]);
+    delete state.markers[state.currentUser.id];
+  }
+  showToast('📴 Standort-Sharing gestoppt');
+}
+
+function updateSharingButton(active) {
+  const btn = document.getElementById('share-loc-btn');
+  const txt = document.getElementById('share-loc-text');
+  btn.classList.toggle('sharing', active);
+  txt.textContent = active ? 'Standort wird geteilt ✓' : 'Meinen Standort teilen';
+}
+
+// ============================================================
+// TREFFPUNKT PIN
+// ============================================================
+function openPinModal() {
+  document.querySelectorAll('.pin-option').forEach(el => el.classList.remove('selected'));
+  state.selectedPinOption = null;
+  document.getElementById('pin-modal').classList.add('open');
+}
+function selectPinOption(i) {
+  state.selectedPinOption = i;
+  document.querySelectorAll('.pin-option').forEach((el, j) => el.classList.toggle('selected', i===j));
+}
+async function confirmPin() {
+  if (state.selectedPinOption === null) { showToast('⚠️ Bitte Treffpunkt auswählen'); return; }
+  const opt = PIN_OPTIONS[state.selectedPinOption];
+  const { lat, lng } = state.pendingPin;
+  await sb.from('pins').insert({ room_id: ROOM_ID, lat, lng, name: opt.name, emoji: opt.emoji });
+  placePinOnMap(lat, lng, opt.emoji, opt.name);
+  document.getElementById('pin-modal').classList.remove('open');
+  showToast(`📍 Treffpunkt "${opt.name}" für alle gesetzt!`);
+}
+
+// ============================================================
+// SNAPS
+// ============================================================
+function triggerCamera() { document.getElementById('file-input').click(); }
+
+async function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!state.currentUser) { showToast('⚠️ Bitte erst Profil auswählen!'); openProfileModal(); return; }
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const expiresAt = new Date(Date.now() + SNAP_EXPIRY_HOURS * 3600000).toISOString();
+    await sb.from('snaps').insert({
+      room_id: ROOM_ID, author_name: state.currentUser.name,
+      author_emoji: state.currentUser.emoji, image_data: e.target.result,
+      location: state.currentLat ? 'Palma de Mallorca' : 'Mallorca',
+      expires_at: expiresAt, reactions: {'🔥':0,'😂':0,'❤️':0}
+    });
+    await loadSnaps();
+    showToast('📸 Snap geteilt!');
+    const snapTab = document.querySelectorAll('.tab-btn')[1];
+    switchTab('tab-snaps', snapTab);
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+async function loadSnaps() {
+  const { data } = await sb.from('snaps').select('*')
+    .eq('room_id', ROOM_ID)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false });
+  state.snaps = data || [];
+  renderSnaps();
+}
+
+function renderSnaps() {
+  const feed = document.getElementById('snap-feed');
+  const emptyEl = document.getElementById('empty-feed');
+  document.getElementById('snap-count').textContent = `${state.snaps.length} Foto${state.snaps.length!==1?'s':''}`;
+  feed.querySelectorAll('.snap-card').forEach(el => el.remove());
+  emptyEl.style.display = state.snaps.length === 0 ? 'flex' : 'none';
+  state.snaps.forEach(snap => feed.appendChild(createSnapCard(snap)));
+}
+
+function createSnapCard(snap) {
+  const card = document.createElement('div');
+  card.className = 'snap-card';
+  card.dataset.snapId = snap.id;
+  const expiresAt = new Date(snap.expires_at).getTime();
+  const remaining = expiresAt - Date.now();
+  const hrs = Math.floor(remaining / 3600000);
+  const mins = Math.floor((remaining % 3600000) / 60000);
+  const r = snap.reactions || {'🔥':0,'😂':0,'❤️':0};
+  card.innerHTML = `
+    <div class="snap-meta">
+      <div class="snap-author">
+        <div class="snap-avatar">${snap.author_emoji}</div>
+        <div><div class="snap-name">${snap.author_name}</div><div class="snap-time">${formatTime(snap.created_at)}</div></div>
+      </div>
+      <div class="snap-countdown">
+        <span class="countdown-label">💣 Löscht in</span>
+        <span class="countdown-value" data-expires="${expiresAt}">${hrs}h ${mins}m</span>
+      </div>
+    </div>
+    <img class="snap-image" src="${snap.image_data}" alt="Snap">
+    <div class="snap-footer">
+      <div class="snap-location">📍 ${snap.location || 'Mallorca'}</div>
+      <div class="snap-reactions">
+        <button class="reaction-btn" onclick="addReaction('${snap.id}','🔥')">🔥 ${r['🔥']}</button>
+        <button class="reaction-btn" onclick="addReaction('${snap.id}','😂')">😂 ${r['😂']}</button>
+        <button class="reaction-btn" onclick="addReaction('${snap.id}','❤️')">❤️ ${r['❤️']}</button>
+      </div>
+    </div>`;
+  return card;
+}
+
+async function addReaction(snapId, emoji) {
+  const snap = state.snaps.find(s => s.id === snapId);
+  if (!snap) return;
+  const newReactions = { ...snap.reactions, [emoji]: (snap.reactions[emoji] || 0) + 1 };
+  await sb.from('snaps').update({ reactions: newReactions }).eq('id', snapId);
+  await loadSnaps();
+  showToast(emoji + ' Reaktion!');
+}
+
+// ============================================================
+// CREW / STATUS
+// ============================================================
+async function loadStatuses() {
+  const { data } = await sb.from('statuses').select('*').eq('room_id', ROOM_ID);
+  if (data) data.forEach(s => state.crewStatuses[s.user_id] = s);
+}
+
+function renderCrew() {
+  const list = document.getElementById('member-list');
+  list.innerHTML = '';
+
+  // Aktive Nutzer aus DB + aktuellen User
+  const allUsers = new Map();
+
+  // Bekannte User aus Locations
+  Object.values(state.crewLocations).forEach(loc => {
+    allUsers.set(loc.user_id, { id: loc.user_id, name: loc.user_name, emoji: loc.user_emoji, sharing: true });
+  });
+
+  // Bekannte User aus Statuses
+  Object.values(state.crewStatuses).forEach(s => {
+    if (!allUsers.has(s.user_id)) allUsers.set(s.user_id, { id: s.user_id, name: s.user_name, emoji: s.user_emoji, sharing: false });
+  });
+
+  // Eigenes Profil hinzufügen falls nicht dabei
+  if (state.currentUser && !allUsers.has(state.currentUser.id)) {
+    allUsers.set(state.currentUser.id, { ...state.currentUser, sharing: state.locationSharing });
+  }
+
+  if (allUsers.size === 0) {
+    list.innerHTML = '<div class="empty-feed" style="opacity:0.5"><div class="empty-icon">👀</div><div class="empty-text">Noch niemand aktiv.<br>Teile den Link!</div></div>';
+    return;
+  }
+
+  allUsers.forEach(member => {
+    const isMe = state.currentUser && member.id === state.currentUser.id;
+    const statusData = state.crewStatuses[member.id];
+    const status = statusData?.status || 'Gerade angekommen';
+    const sharing = state.crewLocations[member.id] || (isMe && state.locationSharing);
+
+    const card = document.createElement('div');
+    card.className = 'member-card' + (isMe ? ' me' : '') + (sharing ? ' sharing-active' : '');
+    card.innerHTML = `
+      <div class="member-avatar">
+        ${member.emoji}
+        ${sharing ? '<div class="online-dot"></div>' : ''}
+      </div>
+      <div class="member-info">
+        <div class="member-name">${member.name}${isMe ? '<span class="me-badge">DU</span>' : ''}</div>
+        ${isMe
+          ? `<select class="status-select" onchange="updateStatus(this.value)">${STATUS_OPTIONS.map(s=>`<option ${s===status?'selected':''}>${s}</option>`).join('')}</select>`
+          : `<div class="member-status">💬 ${status}</div>`
+        }
+      </div>
+      <div class="member-right">
+        ${sharing ? '<div class="sharing-badge"><div class="sharing-dot"></div>LIVE</div>' : '<div style="font-size:11px;color:var(--text-sec)">Offline</div>'}
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+async function updateStatus(newStatus) {
+  if (!state.currentUser) return;
+  await sb.from('statuses').upsert({
+    room_id: ROOM_ID, user_id: state.currentUser.id,
+    user_name: state.currentUser.name, user_emoji: state.currentUser.emoji,
+    status: newStatus, updated_at: new Date().toISOString()
+  }, { onConflict: 'room_id,user_id' });
+  showToast(`✅ Status: "${newStatus}"`);
+}
+
+// ============================================================
+// PROFIL
+// ============================================================
+function openProfileModal() {
+  if (state.currentUser) {
+    document.getElementById('profile-name-input').value = state.currentUser.name;
+    selectEmoji(state.currentUser.emoji);
+  }
+  document.getElementById('profile-modal').classList.add('open');
+}
+function selectEmoji(em) {
+  state.selectedEmoji = em;
+  document.querySelectorAll('.emoji-option').forEach(el => el.classList.toggle('selected', el.textContent === em));
+}
+async function saveProfile() {
+  const name = document.getElementById('profile-name-input').value.trim();
+  if (!name) { showToast('⚠️ Bitte Namen eingeben!'); return; }
+  state.currentUser = { id: 'u_' + name.toLowerCase().replace(/\s/g,'_'), name, emoji: state.selectedEmoji };
+  localStorage.setItem('malletrack_profile', JSON.stringify(state.currentUser));
+  updateHeaderChip();
+  document.getElementById('profile-modal').classList.remove('open');
+  showToast(`👋 Willkommen, ${state.selectedEmoji} ${name}!`);
+  await updateStatus('Gerade angekommen');
+  renderCrew();
+}
+function updateHeaderChip() {
+  if (!state.currentUser) return;
+  document.getElementById('header-emoji').textContent = state.currentUser.emoji;
+  document.getElementById('header-name').textContent = state.currentUser.name;
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+  const t = document.getElementById(tabId);
+  if (t) { t.classList.add('active'); t.style.display = 'block'; }
+  document.getElementById('tab-karte').style.display = tabId === 'tab-karte' ? 'block' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (tabId === 'tab-karte' && state.mapInstance) setTimeout(() => state.mapInstance.invalidateSize(), 100);
+}
+function closeOnBackdrop(event, id) { if (event.target.id === id) document.getElementById(id).classList.remove('open'); }
+function copyRoomLink() {
+  const url = window.location.origin + window.location.pathname + '?room=MALLE26';
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => showToast('🔗 Link kopiert!'));
+  else showToast('URL: ' + url);
+}
+function updateCountdowns() {
+  document.querySelectorAll('.countdown-value[data-expires]').forEach(el => {
+    const rem = parseInt(el.dataset.expires) - Date.now();
+    if (rem <= 0) { loadSnaps(); return; }
+    const h = Math.floor(rem/3600000), m = Math.floor((rem%3600000)/60000), s = Math.floor((rem%60000)/1000);
+    el.textContent = h > 0 ? `${h}h ${m}m` : `${m}m ${s}s`;
+    if (rem < 3600000) el.style.color = 'var(--neon-gold)';
+    if (rem < 300000) el.style.color = 'var(--neon-pink)';
+  });
+}
+function formatTime(ts) {
+  const diff = Date.now() - new Date(ts).getTime();
+  if (diff < 60000) return 'Gerade eben';
+  if (diff < 3600000) return `vor ${Math.floor(diff/60000)} Min`;
+  return `vor ${Math.floor(diff/3600000)} Std`;
+}
+let toastTimeout;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  document.getElementById('tab-karte').style.display = 'block';
+  document.getElementById('tab-snaps').style.display = 'none';
+  document.getElementById('tab-gruppe').style.display = 'none';
+});
+</script>
+</body>
+</html>
