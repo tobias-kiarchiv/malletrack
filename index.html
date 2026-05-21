@@ -206,6 +206,76 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 ::-webkit-scrollbar{display:none}
 *{scrollbar-width:none}
+
+/* ============================================================
+   COUNTDOWN BANNER
+   ============================================================ */
+.countdown-banner{background:linear-gradient(135deg,rgba(255,214,0,0.15),rgba(255,45,120,0.10));border:1px solid rgba(255,214,0,0.3);border-radius:16px;padding:14px 18px;margin:14px 14px 0;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.countdown-banner .cb-label{font-size:11px;font-weight:700;color:var(--neon-gold);text-transform:uppercase;letter-spacing:0.5px}
+.countdown-banner .cb-time{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:2px;background:linear-gradient(135deg,var(--neon-gold),var(--neon-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.countdown-banner .cb-sub{font-size:10px;color:var(--text-sec);margin-top:1px}
+.cb-palm{font-size:32px}
+
+/* ============================================================
+   ROULETTE
+   ============================================================ */
+#tab-fun-inner{padding:14px;padding-bottom:80px}
+.roulette-card{background:linear-gradient(135deg,rgba(255,45,120,0.12),rgba(255,214,0,0.08));border:1px solid rgba(255,45,120,0.3);border-radius:20px;padding:20px;margin-bottom:14px;text-align:center}
+.wheel-container{position:relative;width:220px;height:220px;margin:0 auto 16px;cursor:pointer}
+.wheel{width:100%;height:100%;border-radius:50%;position:relative;transition:transform 3s cubic-bezier(0.17,0.67,0.12,0.99);border:3px solid var(--neon-pink);box-shadow:0 0 24px rgba(255,45,120,0.4)}
+.wheel-pointer{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:28px;z-index:10;filter:drop-shadow(0 0 6px rgba(255,45,120,0.8))}
+.wheel-result{font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:1px;color:var(--neon-gold);min-height:32px;margin-bottom:10px}
+.btn-roulette{background:linear-gradient(135deg,var(--neon-pink),#cc0055);border:none;border-radius:14px;padding:13px 28px;color:white;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 0 20px rgba(255,45,120,0.4)}
+.btn-roulette:active{transform:scale(0.97)}
+.roulette-categories{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.roulette-cat-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center}
+.roulette-cat-btn.active{border-color:var(--neon-pink);background:rgba(255,45,120,0.15);color:var(--neon-pink)}
+
+/* ============================================================
+   LEADERBOARD
+   ============================================================ */
+.leaderboard-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:14px}
+.lb-header{background:linear-gradient(135deg,rgba(255,214,0,0.15),rgba(255,45,120,0.10));padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.lb-title{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:1px;color:var(--neon-gold)}
+.lb-list{padding:0}
+.lb-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid var(--border);transition:background 0.2s}
+.lb-rank{font-family:'Bebas Neue',cursive;font-size:22px;width:28px;text-align:center;flex-shrink:0}
+.lb-rank.gold{color:var(--neon-gold)}
+.lb-rank.silver{color:#aaa}
+.lb-rank.bronze{color:#cd7f32}
+.lb-avatar{font-size:24px;flex-shrink:0}
+.lb-info{flex:1}
+.lb-name{font-weight:700;font-size:14px}
+.lb-detail{font-size:11px;color:var(--text-sec);margin-top:2px}
+.lb-score{font-family:'Bebas Neue',cursive;font-size:24px;color:var(--neon-pink)}
+
+/* ============================================================
+   AUFGABEN
+   ============================================================ */
+.task-card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:all 0.2s;cursor:pointer}
+.task-card.done{opacity:0.5;border-color:rgba(57,255,20,0.3);background:rgba(57,255,20,0.04)}
+.task-card:active{transform:scale(0.98)}
+.task-check{width:28px;height:28px;border-radius:50%;border:2px solid var(--neon-pink);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all 0.2s}
+.task-card.done .task-check{background:var(--neon-green);border-color:var(--neon-green)}
+.task-info{flex:1}
+.task-title{font-weight:700;font-size:14px}
+.task-card.done .task-title{text-decoration:line-through;color:var(--text-sec)}
+.task-pts{font-size:11px;color:var(--neon-gold);margin-top:2px;font-weight:600}
+.task-difficulty{font-size:18px;flex-shrink:0}
+.new-task-row{display:flex;gap:8px;margin-top:12px}
+.new-task-input{flex:1;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:12px;padding:11px 14px;color:var(--text-pri);font-family:'Space Grotesk',sans-serif;font-size:14px;outline:none}
+.new-task-input:focus{border-color:var(--neon-pink)}
+.btn-add-task{background:var(--neon-pink);border:none;border-radius:12px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;flex-shrink:0}
+
+/* ============================================================
+   HEATMAP
+   ============================================================ */
+.heatmap-info{background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:12px;color:var(--text-sec);line-height:1.6}
+.heatmap-info span{color:var(--neon-cyan);font-weight:600}
+.heatmap-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.heatmap-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.heatmap-stat .hs-val{font-family:'Bebas Neue',cursive;font-size:24px;color:var(--neon-cyan)}
+.heatmap-stat .hs-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px}
 </style>
 </head>
 <body>
@@ -230,6 +300,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <span>📍</span><span id="share-loc-text">Meinen Standort teilen</span>
         </button>
         <div class="map-hint">Karte antippen für <span>Treffpunkt</span> · Personen antippen für Aktionen</div>
+        <button class="btn-primary" style="background:linear-gradient(135deg,var(--neon-gold),#ff6b00);box-shadow:0 0 16px rgba(255,214,0,0.4)" onclick="flyToHomeBase()">
+          🏠 Zum Hotel navigieren
+        </button>
       </div>
     </div>
 
@@ -298,6 +371,62 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
+
+    <!-- SPASS TAB (Roulette + Leaderboard + Aufgaben + Heatmap) -->
+    <div id="tab-fun" class="tab-panel">
+      <div id="tab-fun-inner">
+
+        <!-- COUNTDOWN -->
+        <div class="section-title" style="margin-bottom:14px">MALLE 2026 🌴</div>
+        <div style="background:linear-gradient(135deg,rgba(255,214,0,0.12),rgba(255,45,120,0.08));border:1px solid rgba(255,214,0,0.25);border-radius:18px;padding:20px;margin-bottom:16px;text-align:center">
+          <div style="font-size:11px;font-weight:700;color:var(--neon-gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⏳ Countdown bis Mallorca</div>
+          <div class="cb-time" id="cd-time-2" style="font-family:'Bebas Neue',cursive;font-size:42px;letter-spacing:3px;background:linear-gradient(135deg,var(--neon-gold),var(--neon-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">--d --h --m</div>
+          <div style="font-size:12px;color:var(--text-sec);margin-top:6px">02. Juli → 05. Juli 2026 · 23:00 Uhr</div>
+          <div id="malle-active-msg" style="display:none;margin-top:10px;font-size:18px;font-weight:700;color:var(--neon-green)">🎉 WIR SIND AUF MALLE! 🎉</div>
+        </div>
+
+        <!-- ROULETTE -->
+        <div class="section-title" style="margin-bottom:12px">🎰 MALLE-ROULETTE</div>
+        <div class="roulette-card">
+          <div class="roulette-categories" id="roulette-cats" style="margin-bottom:16px"></div>
+          <div class="wheel-container" onclick="spinWheel()">
+            <div class="wheel-pointer">▼</div>
+            <canvas id="wheel-canvas" width="220" height="220"></canvas>
+          </div>
+          <div class="wheel-result" id="wheel-result">Kategorie wählen & drehen!</div>
+          <button class="btn-roulette" onclick="spinWheel()">🎰 DREHEN!</button>
+        </div>
+
+        <!-- LEADERBOARD -->
+        <div class="section-title" style="margin-bottom:12px">🏆 CREW LEADERBOARD</div>
+        <div class="leaderboard-card">
+          <div class="lb-header">
+            <div class="lb-title">Punkte-Stand</div>
+            <div style="font-size:11px;color:var(--text-sec)">Snaps · Reaktionen · Aufgaben</div>
+          </div>
+          <div class="lb-list" id="leaderboard-list"></div>
+        </div>
+
+        <!-- AUFGABEN -->
+        <div class="section-title" style="margin-bottom:12px">📋 AUFGABEN-KARTEN</div>
+        <div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">Erledige Aufgaben für Punkte im Leaderboard!</div>
+        <div id="tasks-list"></div>
+        <div class="new-task-row">
+          <input class="new-task-input" id="new-task-input" placeholder="Eigene Aufgabe hinzufügen..." maxlength="60" onkeydown="if(event.key==='Enter')addCustomTask()">
+          <button class="btn-add-task" onclick="addCustomTask()">+</button>
+        </div>
+
+        <!-- HEATMAP -->
+        <div class="section-title" style="margin-top:20px;margin-bottom:12px">🌡️ CREW-HEATMAP</div>
+        <div class="heatmap-info">
+          Die Heatmap zeigt wo die Crew während des gesamten Urlaubs unterwegs war. Wird <span>automatisch live</span> aktualisiert solange jemand den Standort teilt.
+        </div>
+        <div class="heatmap-stats" id="heatmap-stats"></div>
+        <div id="heatmap-map" style="height:300px;border-radius:16px;overflow:hidden;border:1px solid var(--border)"></div>
+
+      </div>
+    </div>
+
     <!-- SPOTIFY -->
     <div id="tab-spotify" class="tab-panel">
       <div id="tab-spotify-inner">
@@ -326,6 +455,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="tab-btn" onclick="switchTab('tab-snaps',this)"><span class="tab-icon">📸</span><span class="tab-label">Snaps</span></button>
     <button class="tab-btn" onclick="switchTab('tab-gruppe',this)"><span class="tab-icon">👥</span><span class="tab-label">Crew</span></button>
     <button class="tab-btn" id="chat-tab-btn" onclick="switchTab('tab-chat',this)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-fun',this)"><span class="tab-icon">🎰</span><span class="tab-label">Fun</span></button>
     <button class="tab-btn" onclick="switchTab('tab-spotify',this)"><span class="tab-icon">🎵</span><span class="tab-label">Musik</span></button>
   </div>
 </div>
@@ -381,20 +511,44 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const ROOM_ID = 'MALLE26';
 const SNAP_EXPIRY_HOURS = 24;
 
-const PROFILE_EMOJIS = ['🦁','🌺','🐬','🦋','🦅','🌙','🐉','🦊','🐼','🦄','🔥','⚡','🌴','🍹','😎','🏄','🎸','💎','🌈','🦈','🦜','🐯','🦩','🧸','🏝️','🍦','🎭','🤿','🏖️','🎪','🦒','🐙','🦓','🌵','🎯'];
+// Fußball-Vereinswappen als SVG-basierte Emoji-Strings (Unicode-Flags + Symbole)
+// Zeile 1: Bundesliga & International
+const PROFILE_EMOJIS = [
+  // ⚽ Fußball-Symbole & Vereinsfarben
+  '⚽','🔴⚫','⚪🔴','🔴⚪','🟡⚫','🔵⚪','🟢⚪','🔴🟡',
+  // Tiere mit Vereinsbezug
+  '🦅','🦁','🐯','🐻','🦊','🐴','🦌','🐂','🦈','🦅',
+  // Fußball-Emojis
+  '🏆','🥅','👟','🧤','🪖','🎽','🏟️','🎯',
+  // Party & Malle
+  '🌴','🍹','😎','🏄','🔥','⚡','💎','🌈',
+  // Weitere Tiere
+  '🦜','🐼','🦄','🐬','🦋','🌺','🦩','🧸',
+  // Mehr Fußball & Sport
+  '🏅','🥇','💪','🤜','👊','🙌','🎪','🤿'
+];
 const STATUS_OPTIONS = ['Am Strand','Im Pool','Im Club','Im Bierkönig','Am Hotel','Auf dem Weg','Beim Essen','Akku leer 🪫','Schlafe noch 😴','Am Hafen','Beim Shoppen','Im Taxi','Am Flughafen'];
 const QUICK_EMOJIS = ['🔥','❤️','😂','🥂','🌴','👀','💃','🕺','🍺','🤙','😍','💀','🎉','🏄','😎','🙌','💪','🤣','😱','❓'];
 const PIN_OPTIONS = [
-  {emoji:'🍺',name:'Bierkönig'},{emoji:'🏨',name:'Hotel'},{emoji:'🏖️',name:'Strand'},
-  {emoji:'🍕',name:'Restaurant'},{emoji:'🚌',name:'Bushaltestelle'},{emoji:'🎉',name:'Party!'},
-  {emoji:'🏊',name:'Pool'},{emoji:'🛥️',name:'Hafen'},{emoji:'🛒',name:'Supermarkt'}
+  // Mallorca-Clubs & Bars
+  {emoji:'🍺',name:'Bierkönig'},{emoji:'🎪',name:'Megapark'},{emoji:'🎭',name:'BCM Club'},
+  {emoji:'🥂',name:'Mamma Mia'},{emoji:'🌴',name:'Ballermann 6'},{emoji:'🎵',name:'Bierpalast'},
+  {emoji:'🍹',name:'Schinkenstraße'},{emoji:'🎉',name:'Riu Palace'},
+  // Orte
+  {emoji:'🏨',name:'Hotel'},  {emoji:'🏖️',name:'Strand'},{emoji:'🏊',name:'Pool'},
+  {emoji:'🛥️',name:'Hafen'},{emoji:'🗺️',name:'Altstadt'},
+  // Essen & Einkaufen
+  {emoji:'🍕',name:'Restaurant'},{emoji:'☕',name:'Café'},{emoji:'🛒',name:'Supermarkt'},
+  {emoji:'💊',name:'Apotheke'},{emoji:'💰',name:'ATM / Geldautomat'},
+  // Transport
+  {emoji:'🚌',name:'Bushaltestelle'},{emoji:'🚕',name:'Taxi'},{emoji:'✈️',name:'Flughafen'},
 ];
 
 let state = {
   currentUser: null, locationSharing: false, watchId: null,
   currentLat: null, currentLng: null, pendingPin: null,
   selectedPinOption: null, selectedEmoji: PROFILE_EMOJIS[0],
-  mapInstance: null, markers: {}, pinMarkers: [], snaps: [],
+  mapInstance: null, markers: {}, pinMarkers: {}, snaps: [],
   crewStatuses: {}, crewLocations: {},
   chatMessages: [], unreadChat: 0, activeTab: 'tab-karte',
   spotifyPlaylists: [], openComments: new Set(),
@@ -471,20 +625,137 @@ function subscribeRealtime() {
 }
 
 // ============================================================
-// KARTE – OpenStreetMap mit POI-Tiles (Carto Voyager)
+// KARTE – Carto Voyager + Hotel Eden Home Base + Overpass POIs
 // ============================================================
-function initMap() {
-  const map = L.map('map',{center:[39.5696,2.6502],zoom:15,zoomControl:false,attributionControl:false});
+// Hotel Eden Palma Playa – feste Home Base
+const HOME_BASE = { lat: 39.5323, lng: 2.7285, name: 'Hotel Eden', emoji: '🏠' };
 
-  // Carto Voyager: helle, klare Karte mit POIs und Beschriftungen
+function initMap() {
+  const map = L.map('map',{center:[HOME_BASE.lat, HOME_BASE.lng],zoom:15,zoomControl:false,attributionControl:false});
+
+  // Carto Voyager: klare Karte mit Straßennamen + POI-Beschriftungen
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
     attribution:'© OpenStreetMap © CARTO', subdomains:'abcd', maxZoom:19
   }).addTo(map);
 
   L.control.attribution({position:'bottomleft',prefix:'© OSM · CARTO'}).addTo(map);
 
+  // HOME BASE: Hotel Eden als fixer permanenter Marker
+  const homeIcon = L.divIcon({
+    className:'',
+    html:`<div class="emoji-marker">
+      <div class="emoji-bubble" style="border-color:var(--neon-gold);box-shadow:0 0 16px rgba(255,214,0,0.6);background:#1a1a2e">🏠</div>
+      <div class="emoji-name" style="color:var(--neon-gold);border-color:rgba(255,214,0,0.4)">Hotel Eden ⭐</div>
+    </div>`,
+    iconSize:[70,70], iconAnchor:[35,66]
+  });
+  const homeMarker = L.marker([HOME_BASE.lat, HOME_BASE.lng], {icon: homeIcon}).addTo(map);
+  homeMarker.bindPopup('<b>🏠 Hotel Eden Palma Playa</b><br><small>Unsere Home Base!</small>');
+  homeMarker.on('click', () => openHomeBaseModal());
+
+  // POIs per Overpass API laden (Bars, Restaurants, Hotels, ATMs, Clubs)
+  loadOverpassPOIs(map);
+
   map.on('click',(e)=>{state.pendingPin={lat:e.latlng.lat,lng:e.latlng.lng};openPinModal();});
   state.mapInstance=map;
+}
+
+// Overpass API – lädt echte POIs aus OpenStreetMap
+async function loadOverpassPOIs(map) {
+  // Bereich: ~2km rund um Playa de Palma / Ballermann
+  const bbox = '39.510,2.680,39.560,2.760';
+  const query = \`[out:json][timeout:15];
+(
+  node["amenity"="bar"](${bbox});
+  node["amenity"="pub"](${bbox});
+  node["amenity"="nightclub"](${bbox});
+  node["amenity"="restaurant"](${bbox});
+  node["amenity"="fast_food"](${bbox});
+  node["amenity"="cafe"](${bbox});
+  node["amenity"="atm"](${bbox});
+  node["tourism"="hotel"](${bbox});
+  node["amenity"="pharmacy"](${bbox});
+  node["shop"="supermarket"](${bbox});
+);
+out body;\`;
+
+  try {
+    const resp = await fetch('https://overpass-api.de/api/interpreter', {
+      method:'POST', body:'data='+encodeURIComponent(query)
+    });
+    const data = await resp.json();
+    const poiIcons = {
+      bar:'🍺', pub:'🍺', nightclub:'🎉', restaurant:'🍕', fast_food:'🌭',
+      cafe:'☕', atm:'💰', hotel:'🏨', pharmacy:'💊', supermarket:'🛒'
+    };
+    const poiColors = {
+      bar:'#ff6b35', pub:'#ff6b35', nightclub:'#ff2d78', restaurant:'#ffd600',
+      fast_food:'#ffd600', cafe:'#a0522d', atm:'#39ff14', hotel:'#00e5ff',
+      pharmacy:'#39ff14', supermarket:'#00e5ff'
+    };
+
+    (data.elements || []).forEach(el => {
+      if (!el.lat || !el.lon) return;
+      const type = el.tags.amenity || el.tags.tourism || el.tags.shop;
+      const icon = poiIcons[type] || '📍';
+      const color = poiColors[type] || '#888';
+      const name = el.tags.name || type;
+      if (!name || name.length < 2) return;
+
+      const poiIcon = L.divIcon({
+        className:'',
+        html:\`<div style="display:flex;flex-direction:column;align-items:center">
+          <div style="background:#0f0f1e;border:1.5px solid ${color};border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 6px ${color}40">${icon}</div>
+          <div style="background:rgba(10,10,18,0.85);border-radius:5px;padding:1px 5px;font-size:8px;font-weight:700;color:${color};white-space:nowrap;margin-top:1px;max-width:70px;overflow:hidden;text-overflow:ellipsis">${name.substring(0,12)}</div>
+        </div>\`,
+        iconSize:[30,42], iconAnchor:[15,40]
+      });
+
+      const m = L.marker([el.lat, el.lon], {icon: poiIcon, zIndexOffset:-100}).addTo(map);
+      m.bindPopup(\`<b>${icon} ${name}</b><br><small>${type}</small>\`);
+      m.on('click', () => {
+        const actions = document.getElementById('marker-actions');
+        document.getElementById('marker-modal-title').textContent = \`${icon} ${name}\`;
+        actions.innerHTML = '';
+        addAction(actions,'🗺️','In Google Maps öffnen',()=>{
+          window.open(\`https://www.google.com/maps/search/${encodeURIComponent(name)}/@${el.lat},${el.lon},17z\`,'_blank');
+          closeModal('marker-modal');
+        });
+        addAction(actions,'🧭','Navigation starten',()=>{
+          window.open(\`https://www.google.com/maps/dir/?api=1&destination=${el.lat},${el.lon}\`,'_blank');
+          closeModal('marker-modal');
+        });
+        addAction(actions,'💬','Im Chat teilen',()=>{
+          sendSpecialMessage(\`📍 Tipp: ${icon} ${name} → https://maps.google.com?q=${el.lat},${el.lon}\`);
+          closeModal('marker-modal');
+          switchTab('tab-chat',document.getElementById('chat-tab-btn'));
+        });
+        document.getElementById('marker-modal').classList.add('open');
+      });
+    });
+  } catch(e) {
+    console.warn('Overpass API nicht erreichbar:', e);
+  }
+}
+
+function openHomeBaseModal() {
+  document.getElementById('marker-modal-title').textContent = '🏠 Hotel Eden Palma Playa';
+  const actions = document.getElementById('marker-actions');
+  actions.innerHTML = '';
+  addAction(actions,'🧭','Navigation starten',()=>{
+    window.open(\`https://www.google.com/maps/dir/?api=1&destination=${HOME_BASE.lat},${HOME_BASE.lng}\`,'_blank');
+    closeModal('marker-modal');
+  });
+  addAction(actions,'🗺️','In Google Maps öffnen',()=>{
+    window.open(\`https://www.google.com/maps/search/Hotel+Eden+Palma+Playa/@${HOME_BASE.lat},${HOME_BASE.lng},17z\`,'_blank');
+    closeModal('marker-modal');
+  });
+  addAction(actions,'💬','Adresse im Chat teilen',()=>{
+    sendSpecialMessage('🏠 Home Base: Hotel Eden Palma Playa → https://maps.google.com?q='+HOME_BASE.lat+','+HOME_BASE.lng);
+    closeModal('marker-modal');
+    switchTab('tab-chat',document.getElementById('chat-tab-btn'));
+  });
+  document.getElementById('marker-modal').classList.add('open');
 }
 
 function createEmojiIcon(emoji,name,isMe=false,isSharing=false) {
@@ -517,19 +788,38 @@ async function loadLocations() {
 }
 
 async function loadPins() {
-  const {data}=await sb.from('pins').select('*').eq('room_id',ROOM_ID).order('created_at',{ascending:false}).limit(5);
-  if(data) data.forEach(pin=>placePinOnMap(pin));
+  // Nur den neuesten Pin pro Name (Typ) laden
+  const {data}=await sb.from('pins').select('*').eq('room_id',ROOM_ID).order('created_at',{ascending:false});
+  if(!data) return;
+  const seen=new Set();
+  data.forEach(pin=>{ if(!seen.has(pin.name)){ seen.add(pin.name); placePinOnMap(pin); } });
 }
 
+// pinMarkers ist jetzt ein Map: name → {marker, pinData}
 function placePinOnMap(pin) {
-  const icon=L.divIcon({
+  // Alten Marker desselben Typs entfernen
+  if(state.pinMarkers[pin.name]) {
+    state.mapInstance.removeLayer(state.pinMarkers[pin.name].marker);
+  }
+  const icon=makePinIcon(pin);
+  const m=L.marker([pin.lat,pin.lng],{icon, draggable:true}).addTo(state.mapInstance);
+  m.on('click',()=>openPinMarkerModal(pin));
+  // Drag-End: neue Position in DB speichern
+  m.on('dragend', async(e)=>{
+    const {lat,lng}=e.target.getLatLng();
+    pin.lat=lat; pin.lng=lng;
+    await sb.from('pins').update({lat,lng}).eq('id',pin.id);
+    showToast(`📍 ${pin.name} verschoben!`);
+  });
+  state.pinMarkers[pin.name]={marker:m, pinData:pin};
+}
+
+function makePinIcon(pin) {
+  return L.divIcon({
     className:'',
     html:`<div class="emoji-marker"><div class="pin-bubble">${pin.emoji}</div><div class="emoji-name" style="color:var(--neon-gold)">${pin.name}</div></div>`,
     iconSize:[55,60],iconAnchor:[27,56]
   });
-  const m=L.marker([pin.lat,pin.lng],{icon}).addTo(state.mapInstance);
-  m.on('click',()=>openPinMarkerModal(pin));
-  state.pinMarkers.push(m);
 }
 
 // ============================================================
@@ -596,15 +886,22 @@ function openMemberModal(member) {
 
   const loc=state.crewLocations[member.id];
   if(loc) {
-    addAction(actions,'🗺️','Standort auf Karte zeigen',()=>{
+    addAction(actions,'📍','Standort auf Karte zeigen',()=>{
       closeModal('member-modal');
       switchTab('tab-karte',document.querySelectorAll('.tab-btn')[0]);
-      setTimeout(()=>{ state.mapInstance.setView([loc.lat,loc.lng],17); },300);
+      setTimeout(()=>state.mapInstance.setView([loc.lat,loc.lng],17),300);
     });
-    addAction(actions,'📱','In Google Maps öffnen',()=>{
-      window.open(`https://www.google.com/maps?q=${loc.lat},${loc.lng}`,'_blank');
+    addAction(actions,'🧭','Zu Person navigieren (Google Maps)',()=>{
+      window.open('https://www.google.com/maps/dir/?api=1&destination='+loc.lat+','+loc.lng,'_blank');
       closeModal('member-modal');
     });
+    addAction(actions,'📌','Standort im Chat teilen',()=>{
+      sendSpecialMessage('📍 Standort von '+member.emoji+' '+member.name+': https://maps.google.com?q='+loc.lat+','+loc.lng);
+      closeModal('member-modal');
+      switchTab('tab-chat',document.getElementById('chat-tab-btn'));
+    });
+  } else {
+    addAction(actions,'❓','Kein Standort verfügbar',()=>{ showToast('Person teilt gerade keinen Standort'); closeModal('member-modal'); });
   }
   document.getElementById('member-modal').classList.add('open');
 }
@@ -669,13 +966,14 @@ function updateSharingButton(active) {
 function openPinModal(){document.querySelectorAll('.pin-option').forEach(el=>el.classList.remove('selected'));state.selectedPinOption=null;document.getElementById('pin-modal').classList.add('open');}
 function selectPinOption(i){state.selectedPinOption=i;document.querySelectorAll('.pin-option').forEach((el,j)=>el.classList.toggle('selected',i===j));}
 async function confirmPin(){
-  if(state.selectedPinOption===null){showToast('⚠️ Bitte Treffpunkt auswählen');return;}
+  if(state.selectedPinOption===null){showToast("⚠️ Bitte Treffpunkt auswählen");return;}
   const opt=PIN_OPTIONS[state.selectedPinOption];
   const {lat,lng}=state.pendingPin;
-  const {data}=await sb.from('pins').insert({room_id:ROOM_ID,lat,lng,name:opt.name,emoji:opt.emoji}).select().single();
+  await sb.from("pins").delete().eq("room_id",ROOM_ID).eq("name",opt.name);
+  const {data}=await sb.from("pins").insert({room_id:ROOM_ID,lat,lng,name:opt.name,emoji:opt.emoji}).select().single();
   if(data)placePinOnMap(data);
-  closeModal('pin-modal');
-  showToast(`📍 Treffpunkt "${opt.name}" für alle gesetzt!`);
+  closeModal("pin-modal");
+  showToast(`📍 "${opt.name}" gesetzt – verschiebbar per Drag!`);
 }
 
 // ============================================================
@@ -991,6 +1289,7 @@ function switchTab(tabId,btn) {
   if(btn)btn.classList.add('active');
   if(tabId==='tab-karte'&&state.mapInstance)setTimeout(()=>state.mapInstance.invalidateSize(),100);
   if(tabId==='tab-chat'){state.unreadChat=0;updateChatBadge();setTimeout(()=>{const c=document.getElementById('chat-messages');c.scrollTop=c.scrollHeight;},100);}
+  if(tabId==='tab-fun'){loadLeaderboard();loadTasks();initRoulette();setTimeout(()=>initHeatmap(),200);}
 }
 function showTabNotif(tabId){/* optional badge logic */}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -1011,11 +1310,354 @@ function escHtml(t){const d=document.createElement('div');d.appendChild(document
 let toastT;
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2800);}
 
-// MESSAGES TABELLE ERSTELLEN FALLS NÖTIG (SQL muss vorher angelegt sein)
+
+// ============================================================
+// COUNTDOWN  02.07.2026 00:00 → 05.07.2026 23:00
+// ============================================================
+const MALLE_START = new Date('2026-07-02T00:00:00').getTime();
+const MALLE_END   = new Date('2026-07-05T23:00:00').getTime();
+
+function updateMainCountdown() {
+  const now = Date.now();
+  const bannerEl = document.getElementById('main-countdown');
+  const el1 = document.getElementById('cd-time');
+  const el2 = document.getElementById('cd-time-2');
+  const subEl = document.getElementById('cd-sub');
+  const activeMsg = document.getElementById('malle-active-msg');
+
+  if (now >= MALLE_START && now <= MALLE_END) {
+    // WIR SIND AUF MALLE!
+    if (el1) el1.textContent = '🌴 LIVE 🌴';
+    if (el2) el2.textContent = '🌴 LIVE';
+    if (activeMsg) activeMsg.style.display = 'block';
+    if (bannerEl) bannerEl.style.borderColor = 'rgba(57,255,20,0.4)';
+    return;
+  }
+  if (now > MALLE_END) {
+    if (el1) el1.textContent = 'Vorbei 😢';
+    if (el2) el2.textContent = 'Vorbei 😢';
+    return;
+  }
+  const diff = MALLE_START - now;
+  const days  = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins  = Math.floor((diff % 3600000) / 60000);
+  const secs  = Math.floor((diff % 60000) / 1000);
+  if (el1) el1.textContent = `${days}T ${hours}h ${mins}m`;
+  if (el2) el2.textContent = `${days}d ${hours}h ${mins}m ${secs}s`;
+  if (subEl) subEl.textContent = `${days} Tage, ${hours} Stunden bis Abflug!`;
+}
+setInterval(updateMainCountdown, 1000);
+
+// ============================================================
+// ROULETTE
+// ============================================================
+const ROULETTE_CATEGORIES = {
+  'Trinken 🍺': [
+    'Wer trinkt den nächsten Shot?','Alle trinken!','Zwei Finger trinken','Gib deinen Drink weiter','Du zahlst die nächste Runde','Waterfall – alle trinken bis du aufhörst','Niemals habe ich... – wer lügt trinkt','Mixe einen Drink für jemanden'
+  ],
+  'Challenges 🎯': [
+    'Mache 10 Liegestütze','Tanze 30 Sek solo auf der Tanzfläche','Singe laut ein Lied','Ruf jemanden zuhause an','Foto mit einem Fremden','Rede 2 Min kein Deutsch','Imitiere eine Person in der Gruppe','Tausche für 5 Min das Handy mit jemandem'
+  ],
+  'Wer von uns...? 👀': [
+    'Wer ist zuerst eingeschlafen?','Wer hat am meisten Geld ausgegeben?','Wer hat am lautesten geschnarcht?','Wer würde am längsten durchhalten?','Wer ist am besten angezogen?','Wer wäre der schlechteste Pilot?','Wer ist das Gruppengewissen?','Wer würde als Erstes aufgeben?'
+  ],
+  'Malle-Spezial 🌴': [
+    'Macht ein Gruppen-Selfie!','Wählt den nächsten Club per Abstimmung','10€ in den Gruppenpool','Bestellt eine Überraschung für alle','Plant spontan eine Bootstour','Kauft alle dieselbe Sonnenbrille','Macht einen 24h-Handyentzug','Spontaner Karaoke-Abend!'
+  ]
+};
+let rouletteCategory = 'Trinken 🍺';
+let wheelSpinning = false;
+let wheelAngle = 0;
+
+function initRoulette() {
+  const cats = document.getElementById('roulette-cats');
+  if (!cats) return;
+  cats.innerHTML = '';
+  Object.keys(ROULETTE_CATEGORIES).forEach(cat => {
+    const btn = document.createElement('div');
+    btn.className = 'roulette-cat-btn' + (cat === rouletteCategory ? ' active' : '');
+    btn.textContent = cat;
+    btn.onclick = () => {
+      rouletteCategory = cat;
+      document.querySelectorAll('.roulette-cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      drawWheel();
+    };
+    cats.appendChild(btn);
+  });
+  drawWheel();
+}
+
+function drawWheel() {
+  const canvas = document.getElementById('wheel-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const items = ROULETTE_CATEGORIES[rouletteCategory];
+  const n = items.length;
+  const arc = (2 * Math.PI) / n;
+  const colors = ['#ff2d78','#ff6b35','#ffd600','#39ff14','#00e5ff','#7b2fff','#ff2d78','#ff6b35'];
+  ctx.clearRect(0, 0, 220, 220);
+  ctx.save();
+  ctx.translate(110, 110);
+  ctx.rotate(wheelAngle * Math.PI / 180);
+  items.forEach((item, i) => {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, 106, i * arc - Math.PI/2, (i+1) * arc - Math.PI/2);
+    ctx.fillStyle = colors[i % colors.length];
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.save();
+    ctx.rotate(i * arc + arc/2 - Math.PI/2);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 9px Space Grotesk, sans-serif';
+    ctx.shadowColor = 'rgba(0,0,0,0.7)';
+    ctx.shadowBlur = 3;
+    const short = item.length > 14 ? item.substring(0,13)+'…' : item;
+    ctx.fillText(short, 98, 3);
+    ctx.restore();
+  });
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(0, 0, 14, 0, 2*Math.PI);
+  ctx.fillStyle = '#07070f';
+  ctx.fill();
+  ctx.strokeStyle = 'var(--neon-pink)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function spinWheel() {
+  if (wheelSpinning) return;
+  wheelSpinning = true;
+  document.getElementById('wheel-result').textContent = '🎰 Drehe...';
+  const items = ROULETTE_CATEGORIES[rouletteCategory];
+  const extra = 1440 + Math.random() * 720;
+  const targetAngle = wheelAngle + extra;
+  const startAngle = wheelAngle;
+  const duration = 3000;
+  const start = performance.now();
+  function animate(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    wheelAngle = startAngle + (targetAngle - startAngle) * ease;
+    drawWheel();
+    if (progress < 1) { requestAnimationFrame(animate); return; }
+    wheelSpinning = false;
+    wheelAngle = targetAngle % 360;
+    // Determine winner
+    const arc = 360 / items.length;
+    const normalizedAngle = ((360 - (wheelAngle % 360)) + 90) % 360;
+    const winnerIdx = Math.floor(normalizedAngle / arc) % items.length;
+    const result = items[winnerIdx];
+    document.getElementById('wheel-result').textContent = '👉 ' + result;
+    showToast('🎰 ' + result);
+    // Save to chat
+    if (state.currentUser) sendSpecialMessage('🎰 Roulette-Ergebnis: ' + result);
+  }
+  requestAnimationFrame(animate);
+}
+
+// ============================================================
+// LEADERBOARD
+// ============================================================
+async function loadLeaderboard() {
+  const lbEl = document.getElementById('leaderboard-list');
+  if (!lbEl) return;
+
+  // Punkte: Snaps (10 Pkt), Reaktionen erhalten (2 Pkt), Aufgaben (varies)
+  const { data: snaps } = await sb.from('snaps').select('author_name,author_emoji,reactions').eq('room_id', ROOM_ID);
+  const tasks = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+
+  const scores = {};
+  (snaps || []).forEach(snap => {
+    const key = snap.author_name;
+    if (!scores[key]) scores[key] = { name: snap.author_name, emoji: snap.author_emoji || '🦁', pts: 0, snaps: 0, reactions: 0 };
+    scores[key].pts += 10;
+    scores[key].snaps += 1;
+    const r = snap.reactions || {};
+    const total = Object.values(r).reduce((a,b) => a + (parseInt(b)||0), 0);
+    scores[key].pts += total * 2;
+    scores[key].reactions += total;
+  });
+
+  // Aufgaben-Punkte
+  Object.entries(tasks).forEach(([taskKey, done]) => {
+    if (done && done.user && done.pts) {
+      if (!scores[done.user]) scores[done.user] = { name: done.user, emoji: done.emoji || '🦁', pts: 0, snaps: 0, reactions: 0 };
+      scores[done.user].pts += done.pts;
+    }
+  });
+
+  const sorted = Object.values(scores).sort((a, b) => b.pts - a.pts);
+  const medals = ['🥇','🥈','🥉'];
+  const rankClass = ['gold','silver','bronze'];
+  lbEl.innerHTML = '';
+
+  if (sorted.length === 0) {
+    lbEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-sec);font-size:13px">Noch keine Punkte! Macht Snaps & erledigt Aufgaben 🚀</div>';
+    return;
+  }
+
+  sorted.forEach((entry, i) => {
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    const rankLabel = i < 3 ? medals[i] : (i+1)+'';
+    const rc = i < 3 ? rankClass[i] : '';
+    row.innerHTML = `
+      <div class="lb-rank ${rc}">${rankLabel}</div>
+      <div class="lb-avatar">${entry.emoji}</div>
+      <div class="lb-info">
+        <div class="lb-name">${escHtml(entry.name)}</div>
+        <div class="lb-detail">📸 ${entry.snaps} Snaps · ❤️ ${entry.reactions} Reaktionen</div>
+      </div>
+      <div class="lb-score">${entry.pts}</div>`;
+    lbEl.appendChild(row);
+  });
+}
+
+// ============================================================
+// AUFGABEN
+// ============================================================
+const DEFAULT_TASKS = [
+  { id:'t1', title:'Gruppen-Selfie am Pool', emoji:'🤳', pts:15, diff:'⭐' },
+  { id:'t2', title:'Sonnenaufgang fotografieren', emoji:'🌅', pts:25, diff:'⭐⭐' },
+  { id:'t3', title:'Lokales Essen probieren', emoji:'🥘', pts:10, diff:'⭐' },
+  { id:'t4', title:'Auf der Tanzfläche abreißen', emoji:'💃', pts:20, diff:'⭐⭐' },
+  { id:'t5', title:'Ein Gespräch auf Spanisch führen', emoji:'🗣️', pts:30, diff:'⭐⭐⭐' },
+  { id:'t6', title:'Bootstour machen', emoji:'🛥️', pts:35, diff:'⭐⭐⭐' },
+  { id:'t7', title:'Alle Crew-Mitglieder auf der Karte gesehen', emoji:'🗺️', pts:20, diff:'⭐⭐' },
+  { id:'t8', title:'Erstes Bier unter 10€', emoji:'🍺', pts:10, diff:'⭐' },
+  { id:'t9', title:'Im Meer schwimmen', emoji:'🌊', pts:15, diff:'⭐' },
+  { id:'t10', title:'Snap mit 5+ Reaktionen bekommen', emoji:'📸', pts:25, diff:'⭐⭐' },
+  { id:'t11', title:'Bis Sonnenaufgang durchfeiern', emoji:'🌙', pts:40, diff:'⭐⭐⭐' },
+  { id:'t12', title:'Sandburg bauen', emoji:'🏖️', pts:10, diff:'⭐' },
+];
+
+function loadTasks() {
+  const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+  const custom = JSON.parse(localStorage.getItem('malletrack_tasks_custom') || '[]');
+  const allTasks = [...DEFAULT_TASKS, ...custom];
+  const el = document.getElementById('tasks-list');
+  if (!el) return;
+  el.innerHTML = '';
+  allTasks.forEach(task => {
+    const isDone = !!done[task.id];
+    const card = document.createElement('div');
+    card.className = 'task-card' + (isDone ? ' done' : '');
+    card.onclick = () => toggleTask(task);
+    card.innerHTML = `
+      <div class="task-check">${isDone ? '✓' : ''}</div>
+      <div class="task-info">
+        <div class="task-title">${task.emoji} ${escHtml(task.title)}</div>
+        <div class="task-pts">+${task.pts} Punkte</div>
+      </div>
+      <div class="task-difficulty">${task.diff}</div>`;
+    el.appendChild(card);
+  });
+}
+
+function toggleTask(task) {
+  if (!state.currentUser) { showToast('⚠️ Profil auswählen!'); return; }
+  const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+  if (done[task.id]) {
+    delete done[task.id];
+    showToast('↩️ Aufgabe zurückgesetzt');
+  } else {
+    done[task.id] = { user: state.currentUser.name, emoji: state.currentUser.emoji, pts: task.pts };
+    showToast(`✅ +${task.pts} Punkte für "${task.title}"!`);
+    if (state.currentUser) sendSpecialMessage(`✅ ${state.currentUser.emoji} ${state.currentUser.name} hat Aufgabe erledigt: ${task.emoji} ${task.title} (+${task.pts} Punkte)`);
+  }
+  localStorage.setItem('malletrack_tasks_done', JSON.stringify(done));
+  loadTasks();
+  loadLeaderboard();
+}
+
+function addCustomTask() {
+  const input = document.getElementById('new-task-input');
+  const title = input.value.trim(); if (!title) return;
+  const custom = JSON.parse(localStorage.getItem('malletrack_tasks_custom') || '[]');
+  custom.push({ id: 'c_' + Date.now(), title, emoji:'⚡', pts: 20, diff:'⭐⭐' });
+  localStorage.setItem('malletrack_tasks_custom', JSON.stringify(custom));
+  input.value = '';
+  loadTasks();
+  showToast('✅ Aufgabe hinzugefügt!');
+}
+
+// ============================================================
+// HEATMAP
+// ============================================================
+let heatmapInstance = null;
+
+async function initHeatmap() {
+  const mapEl = document.getElementById('heatmap-map');
+  if (!mapEl || heatmapInstance) return;
+
+  heatmapInstance = L.map('heatmap-map', {
+    center: [39.5696, 2.6502], zoom: 13,
+    zoomControl: false, attributionControl: false
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    { subdomains:'abcd', maxZoom:19 }).addTo(heatmapInstance);
+
+  await updateHeatmap();
+}
+
+async function updateHeatmap() {
+  if (!heatmapInstance) return;
+
+  // Alle gespeicherten Standorte laden
+  const { data } = await sb.from('locations').select('lat,lng,user_name,user_emoji').eq('room_id', ROOM_ID);
+  if (!data || data.length === 0) return;
+
+  // Statistiken
+  const statsEl = document.getElementById('heatmap-stats');
+  if (statsEl) {
+    const uniqueUsers = new Set(data.map(d => d.user_name)).size;
+    statsEl.innerHTML = `
+      <div class="heatmap-stat"><div class="hs-val">${uniqueUsers}</div><div class="hs-label">Aktive</div></div>
+      <div class="heatmap-stat"><div class="hs-val">${data.length}</div><div class="hs-label">Punkte</div></div>
+      <div class="heatmap-stat"><div class="hs-val">📡</div><div class="hs-label">Live</div></div>`;
+  }
+
+  // Alle Marker auf Heatmap zeigen
+  data.forEach(loc => {
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="background:rgba(255,45,120,0.6);width:16px;height:16px;border-radius:50%;border:2px solid var(--neon-pink);box-shadow:0 0 8px rgba(255,45,120,0.5)"></div>`,
+      iconSize:[16,16], iconAnchor:[8,8]
+    });
+    L.marker([loc.lat, loc.lng], { icon }).addTo(heatmapInstance)
+      .bindPopup(`${loc.user_emoji} ${loc.user_name}`);
+  });
+
+  // Fit bounds
+  const bounds = L.latLngBounds(data.map(d => [d.lat, d.lng]));
+  if (bounds.isValid()) heatmapInstance.fitBounds(bounds, { padding: [20, 20] });
+}
+
+// Heatmap alle 30s updaten
+setInterval(() => { if (state.activeTab === 'tab-fun') updateHeatmap(); }, 30000);
+
+
+// Zum Hotel fliegen
+function flyToHomeBase() {
+  if (!state.mapInstance) return;
+  state.mapInstance.flyTo([HOME_BASE.lat, HOME_BASE.lng], 17, { duration: 1.5 });
+  showToast('🏠 Hotel Eden Palma Playa');
+}
+
+// INIT
 document.addEventListener('DOMContentLoaded',()=>{
   init();
   document.getElementById('tab-karte').style.display='block';
-  ['tab-snaps','tab-gruppe','tab-chat','tab-spotify'].forEach(id=>document.getElementById(id).style.display='none');
+  ['tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-spotify'].forEach(id=>document.getElementById(id).style.display='none');
 });
 </script>
 </body>
