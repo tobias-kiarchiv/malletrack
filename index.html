@@ -647,10 +647,10 @@ function initMap() {
   // HOME BASE: Hotel Eden als fixer permanenter Marker
   const homeIcon = L.divIcon({
     className:'',
-    html:`<div class="emoji-marker">
-      <div class="emoji-bubble" style="border-color:var(--neon-gold);box-shadow:0 0 16px rgba(255,214,0,0.6);background:#1a1a2e">🏠</div>
-      <div class="emoji-name" style="color:var(--neon-gold);border-color:rgba(255,214,0,0.4)">Hotel Eden ⭐</div>
-    </div>`,
+    html:'<div class="emoji-marker">'
+       + '<div class="emoji-bubble" style="border-color:var(--neon-gold);box-shadow:0 0 16px rgba(255,214,0,0.6);background:#1a1a2e">🏠</div>'
+       + '<div class="emoji-name" style="color:var(--neon-gold);border-color:rgba(255,214,0,0.4)">Hotel Eden ⭐</div>'
+       + '</div>',
     iconSize:[70,70], iconAnchor:[35,66]
   });
   const homeMarker = L.marker([HOME_BASE.lat, HOME_BASE.lng], {icon: homeIcon}).addTo(map);
@@ -739,15 +739,15 @@ function openHomeBaseModal() {
   const actions = document.getElementById('marker-actions');
   actions.innerHTML = '';
   addAction(actions,'🧭','Navigation starten',()=>{
-    window.open(\`https://www.google.com/maps/dir/?api=1&destination=${HOME_BASE.lat},${HOME_BASE.lng}\`,'_blank');
+    window.open('https://www.google.com/maps/dir/?api=1&destination=' + HOME_BASE.lat + ',' + HOME_BASE.lng,'_blank');
     closeModal('marker-modal');
   });
   addAction(actions,'🗺️','In Google Maps öffnen',()=>{
-    window.open(\`https://www.google.com/maps/search/Hotel+Eden+Palma+Playa/@${HOME_BASE.lat},${HOME_BASE.lng},17z\`,'_blank');
+    window.open('https://www.google.com/maps/search/Hotel+Eden+Palma+Playa/@' + HOME_BASE.lat + ',' + HOME_BASE.lng + ',17z','_blank');
     closeModal('marker-modal');
   });
   addAction(actions,'💬','Adresse im Chat teilen',()=>{
-    sendSpecialMessage('🏠 Home Base: Hotel Eden Palma Playa → https://maps.google.com?q='+HOME_BASE.lat+','+HOME_BASE.lng);
+    sendSpecialMessage('🏠 Home Base: Hotel Eden Palma Playa → https://maps.google.com?q=' + HOME_BASE.lat + ',' + HOME_BASE.lng);
     closeModal('marker-modal');
     switchTab('tab-chat',document.getElementById('chat-tab-btn'));
   });
