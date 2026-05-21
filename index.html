@@ -666,79 +666,71 @@ function initMap() {
 
 // Overpass API – lädt echte POIs aus OpenStreetMap
 async function loadOverpassPOIs(map) {
-  // Bereich: ~2km rund um Playa de Palma / Ballermann
   const bbox = '39.510,2.680,39.560,2.760';
-  const query = \`[out:json][timeout:15];
-(
-  node["amenity"="bar"](${bbox});
-  node["amenity"="pub"](${bbox});
-  node["amenity"="nightclub"](${bbox});
-  node["amenity"="restaurant"](${bbox});
-  node["amenity"="fast_food"](${bbox});
-  node["amenity"="cafe"](${bbox});
-  node["amenity"="atm"](${bbox});
-  node["tourism"="hotel"](${bbox});
-  node["amenity"="pharmacy"](${bbox});
-  node["shop"="supermarket"](${bbox});
-);
-out body;\`;
+  const query = '[out:json][timeout:15];('
+    + 'node["amenity"="bar"](' + bbox + ');'
+    + 'node["amenity"="pub"](' + bbox + ');'
+    + 'node["amenity"="nightclub"](' + bbox + ');'
+    + 'node["amenity"="restaurant"](' + bbox + ');'
+    + 'node["amenity"="fast_food"](' + bbox + ');'
+    + 'node["amenity"="cafe"](' + bbox + ');'
+    + 'node["amenity"="atm"](' + bbox + ');'
+    + 'node["tourism"="hotel"](' + bbox + ');'
+    + 'node["amenity"="pharmacy"](' + bbox + ');'
+    + 'node["shop"="supermarket"](' + bbox + ');'
+    + ');out body;';
 
   try {
     const resp = await fetch('https://overpass-api.de/api/interpreter', {
-      method:'POST', body:'data='+encodeURIComponent(query)
+      method: 'POST', body: 'data=' + encodeURIComponent(query)
     });
+    if (!resp.ok) return;
     const data = await resp.json();
-    const poiIcons = {
-      bar:'🍺', pub:'🍺', nightclub:'🎉', restaurant:'🍕', fast_food:'🌭',
-      cafe:'☕', atm:'💰', hotel:'🏨', pharmacy:'💊', supermarket:'🛒'
-    };
-    const poiColors = {
-      bar:'#ff6b35', pub:'#ff6b35', nightclub:'#ff2d78', restaurant:'#ffd600',
-      fast_food:'#ffd600', cafe:'#a0522d', atm:'#39ff14', hotel:'#00e5ff',
-      pharmacy:'#39ff14', supermarket:'#00e5ff'
-    };
+    const poiIcons   = { bar:'🍺', pub:'🍺', nightclub:'🎉', restaurant:'🍕', fast_food:'🌭', cafe:'☕', atm:'💰', hotel:'🏨', pharmacy:'💊', supermarket:'🛒' };
+    const poiColors  = { bar:'#ff6b35', pub:'#ff6b35', nightclub:'#ff2d78', restaurant:'#ffd600', fast_food:'#ffd600', cafe:'#a0522d', atm:'#39ff14', hotel:'#00e5ff', pharmacy:'#39ff14', supermarket:'#00e5ff' };
 
-    (data.elements || []).forEach(el => {
+    (data.elements || []).slice(0, 120).forEach(el => {
       if (!el.lat || !el.lon) return;
-      const type = el.tags.amenity || el.tags.tourism || el.tags.shop;
-      const icon = poiIcons[type] || '📍';
+      const type  = el.tags.amenity || el.tags.tourism || el.tags.shop || '';
+      const icon  = poiIcons[type]  || '📍';
       const color = poiColors[type] || '#888';
-      const name = el.tags.name || type;
+      const name  = el.tags.name   || type;
       if (!name || name.length < 2) return;
 
+      const shortName = name.length > 12 ? name.substring(0,11)+'…' : name;
       const poiIcon = L.divIcon({
-        className:'',
-        html:\`<div style="display:flex;flex-direction:column;align-items:center">
-          <div style="background:#0f0f1e;border:1.5px solid ${color};border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 6px ${color}40">${icon}</div>
-          <div style="background:rgba(10,10,18,0.85);border-radius:5px;padding:1px 5px;font-size:8px;font-weight:700;color:${color};white-space:nowrap;margin-top:1px;max-width:70px;overflow:hidden;text-overflow:ellipsis">${name.substring(0,12)}</div>
-        </div>\`,
-        iconSize:[30,42], iconAnchor:[15,40]
+        className: '',
+        html: '<div style="display:flex;flex-direction:column;align-items:center">'
+            + '<div style="background:#0f0f1e;border:1.5px solid ' + color + ';border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 0 5px ' + color + '40">' + icon + '</div>'
+            + '<div style="background:rgba(10,10,18,0.85);border-radius:4px;padding:1px 4px;font-size:7px;font-weight:700;color:' + color + ';white-space:nowrap;margin-top:1px">' + shortName + '</div>'
+            + '</div>',
+        iconSize:[28,40], iconAnchor:[14,38]
       });
 
-      const m = L.marker([el.lat, el.lon], {icon: poiIcon, zIndexOffset:-100}).addTo(map);
-      m.bindPopup(\`<b>${icon} ${name}</b><br><small>${type}</small>\`);
+      const m = L.marker([el.lat, el.lon], { icon: poiIcon, zIndexOffset: -100 }).addTo(map);
+      const elLat = el.lat, elLon = el.lon, elName = name, elIcon = icon, elType = type;
       m.on('click', () => {
+        document.getElementById('marker-modal-title').textContent = elIcon + ' ' + elName;
         const actions = document.getElementById('marker-actions');
-        document.getElementById('marker-modal-title').textContent = \`${icon} ${name}\`;
         actions.innerHTML = '';
-        addAction(actions,'🗺️','In Google Maps öffnen',()=>{
-          window.open(\`https://www.google.com/maps/search/${encodeURIComponent(name)}/@${el.lat},${el.lon},17z\`,'_blank');
+        addAction(actions, '🗺️', 'In Google Maps öffnen', () => {
+          window.open('https://www.google.com/maps/search/' + encodeURIComponent(elName) + '/@' + elLat + ',' + elLon + ',17z', '_blank');
           closeModal('marker-modal');
         });
-        addAction(actions,'🧭','Navigation starten',()=>{
-          window.open(\`https://www.google.com/maps/dir/?api=1&destination=${el.lat},${el.lon}\`,'_blank');
+        addAction(actions, '🧭', 'Navigation starten', () => {
+          window.open('https://www.google.com/maps/dir/?api=1&destination=' + elLat + ',' + elLon, '_blank');
           closeModal('marker-modal');
         });
-        addAction(actions,'💬','Im Chat teilen',()=>{
-          sendSpecialMessage(\`📍 Tipp: ${icon} ${name} → https://maps.google.com?q=${el.lat},${el.lon}\`);
+        addAction(actions, '💬', 'Im Chat teilen', () => {
+          sendSpecialMessage('📍 Tipp: ' + elIcon + ' ' + elName + ' → https://maps.google.com?q=' + elLat + ',' + elLon);
           closeModal('marker-modal');
-          switchTab('tab-chat',document.getElementById('chat-tab-btn'));
+          switchTab('tab-chat', document.getElementById('chat-tab-btn'));
         });
         document.getElementById('marker-modal').classList.add('open');
       });
     });
   } catch(e) {
-    console.warn('Overpass API nicht erreichbar:', e);
+    console.warn('Overpass API Fehler (kein Problem, App läuft weiter):', e);
   }
 }
 
@@ -1283,23 +1275,37 @@ function updateHeaderChip(){if(!state.currentUser)return;document.getElementById
 // ============================================================
 // UTILS
 // ============================================================
-function switchTab(tabId,btn) {
-  state.activeTab=tabId;
-  document.querySelectorAll('.tab-panel').forEach(p=>{p.classList.remove('active');p.style.display='none';});
-  const t=document.getElementById(tabId);
-  if(t){t.classList.add('active');t.style.display='block';}
-  document.getElementById('tab-karte').style.display=tabId==='tab-karte'?'block':'none';
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  if(tabId==='tab-karte'){
-    if(state.mapInstance){
-      setTimeout(()=>{state.mapInstance.invalidateSize();},200);
-    } else {
-      setTimeout(()=>initMap(),200);
+function switchTab(tabId, btn) {
+  try {
+    state.activeTab = tabId;
+    // Alle Panels verstecken
+    const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-spotify'];
+    ALL_TABS.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.display = 'none'; el.classList.remove('active'); }
+    });
+    // Gewähltes Panel zeigen
+    const target = document.getElementById(tabId);
+    if (target) { target.style.display = 'block'; target.classList.add('active'); }
+    // Tab-Buttons
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    // Tab-spezifische Aktionen
+    if (tabId === 'tab-karte') {
+      setTimeout(() => {
+        if (state.mapInstance) state.mapInstance.invalidateSize();
+        else initMap();
+      }, 150);
     }
-  }
-  if(tabId==='tab-chat'){state.unreadChat=0;updateChatBadge();setTimeout(()=>{const c=document.getElementById('chat-messages');c.scrollTop=c.scrollHeight;},100);}
-  if(tabId==='tab-fun'){loadLeaderboard();loadTasks();initRoulette();setTimeout(()=>initHeatmap(),200);}
+    if (tabId === 'tab-chat') {
+      state.unreadChat = 0; updateChatBadge();
+      setTimeout(() => { const c = document.getElementById('chat-messages'); if(c) c.scrollTop = c.scrollHeight; }, 100);
+    }
+    if (tabId === 'tab-fun') {
+      try { loadLeaderboard(); loadTasks(); initRoulette(); } catch(e){}
+      setTimeout(() => { try { initHeatmap(); } catch(e){} }, 300);
+    }
+  } catch(e) { console.error('switchTab error:', e); }
 }
 function showTabNotif(tabId){/* optional badge logic */}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
@@ -1664,12 +1670,20 @@ function flyToHomeBase() {
 }
 
 // INIT
-document.addEventListener('DOMContentLoaded',()=>{
-  // Karte muss beim Init sichtbar sein damit Leaflet die Größe korrekt berechnet
-  document.getElementById('tab-karte').style.display='block';
-  ['tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-spotify'].forEach(id=>document.getElementById(id).style.display='none');
-  init();
+document.addEventListener('DOMContentLoaded', () => {
+  // Alle Tabs initial verstecken außer Karte
+  const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-spotify'];
+  ALL_TABS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === 'tab-karte' ? 'block' : 'none';
+  });
+
+  // Countdown sofort starten
   updateMainCountdown();
+  setInterval(updateMainCountdown, 1000);
+
+  // App initialisieren
+  init().catch(e => console.error('Init error:', e));
 });
 </script>
 </body>
