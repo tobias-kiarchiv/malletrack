@@ -43,7 +43,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* KARTE */
 #tab-karte{display:none;position:absolute;inset:0}
 #tab-karte.active{display:block}
-#map{width:100%;height:100%}
+#map{width:100%;height:100%;min-height:300px;background:#111}
 .map-overlay{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;align-items:center;gap:8px;width:calc(100% - 32px);max-width:360px}
 .btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 20px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--neon-pink),#cc0055);color:white;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 0 20px rgba(255,45,120,0.4),0 4px 16px rgba(0,0,0,0.4);transition:all 0.2s}
 .btn-primary:active{transform:scale(0.97);opacity:0.9}
@@ -594,8 +594,12 @@ async function init() {
   state.spotifyPlaylists = JSON.parse(localStorage.getItem('malletrack_spotify') || '[]');
   renderSpotifyList();
 
-  initMap();
-  await Promise.all([loadSnaps(), loadStatuses(), loadLocations(), loadPins(), loadChatMessages()]);
+  await Promise.all([loadSnaps(), loadStatuses(), loadChatMessages()]);
+  setTimeout(()=>{
+    initMap();
+    loadLocations();
+    loadPins();
+  }, 200);
   renderCrew();
   subscribeRealtime();
   setInterval(updateCountdowns, 1000);
@@ -1287,7 +1291,13 @@ function switchTab(tabId,btn) {
   document.getElementById('tab-karte').style.display=tabId==='tab-karte'?'block':'none';
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   if(btn)btn.classList.add('active');
-  if(tabId==='tab-karte'&&state.mapInstance)setTimeout(()=>state.mapInstance.invalidateSize(),100);
+  if(tabId==='tab-karte'){
+    if(state.mapInstance){
+      setTimeout(()=>{state.mapInstance.invalidateSize();},200);
+    } else {
+      setTimeout(()=>initMap(),200);
+    }
+  }
   if(tabId==='tab-chat'){state.unreadChat=0;updateChatBadge();setTimeout(()=>{const c=document.getElementById('chat-messages');c.scrollTop=c.scrollHeight;},100);}
   if(tabId==='tab-fun'){loadLeaderboard();loadTasks();initRoulette();setTimeout(()=>initHeatmap(),200);}
 }
@@ -1655,9 +1665,11 @@ function flyToHomeBase() {
 
 // INIT
 document.addEventListener('DOMContentLoaded',()=>{
-  init();
+  // Karte muss beim Init sichtbar sein damit Leaflet die Größe korrekt berechnet
   document.getElementById('tab-karte').style.display='block';
   ['tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-spotify'].forEach(id=>document.getElementById(id).style.display='none');
+  init();
+  updateMainCountdown();
 });
 </script>
 </body>
