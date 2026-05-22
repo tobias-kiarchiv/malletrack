@@ -565,19 +565,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .login-preview-name { font-weight: 700; font-size: 16px; }
 .login-preview-room { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
 
-.login-already {
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-sec);
-  margin-top: 8px;
-}
 
-.login-already a {
-  color: var(--neon-cyan);
-  cursor: pointer;
-  text-decoration: none;
-  font-weight: 600;
-}
 </style>
 </head>
 <body>
@@ -649,26 +637,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <button class="login-btn" onclick="completeRegistration()">🌴 Los geht's!</button>
     </div>
 
-    <div class="login-already">
-      Bereits registriert? <a onclick="showReturningLogin()">Hier einloggen</a>
-    </div>
+
 
   </div>
 </div>
 
-<!-- RETURNING LOGIN (für bekannte User die sich neu anmelden) -->
-<div class="modal-backdrop" id="returning-modal" onclick="closeOnBackdrop(event,'returning-modal')">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <div class="modal-title">👋 Willkommen zurück!</div>
-    <div style="font-size:13px;color:var(--text-sec);text-align:center;margin-bottom:20px">
-      Gib deinen Namen ein – wir suchen dein Profil.
-    </div>
-    <div id="returning-profiles" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
-    <div style="font-size:12px;color:var(--text-sec);text-align:center;margin-bottom:10px">— oder neues Profil erstellen —</div>
-    <button class="btn-primary" style="background:rgba(255,255,255,0.1)" onclick="closeModal('returning-modal')">Neu registrieren</button>
-  </div>
-</div>
+
 
 <div id="app">
   <div id="header">
@@ -1010,32 +984,43 @@ let loginState = {
 function checkExistingSession() {
   try {
     const session = JSON.parse(localStorage.getItem(LOGIN_STORAGE_KEY) || 'null');
-    if (session && session.userId && session.name && session.emoji && session.roomCode) {
-      // Session validieren
-      if (VALID_ROOM_CODES.includes(session.roomCode)) {
-        // Direkt einloggen
+    if (session && session.userId && session.name && session.emoji) {
+      // Session ist gültig - isAdmin explizit aus Session lesen
+      // Auch Admin-Sessions sind gültig (roomCode wird intern auf MALLE26 gesetzt)
+      const validRoom = session.roomCode === 'MALLE26' || VALID_ROOM_CODES.includes(session.roomCode);
+      if (validRoom) {
+        // isAdmin Flag sicherstellen
+        session.isAdmin = session.isAdmin === true;
+        // Session updaten (lastSeen)
+        session.lastSeen = new Date().toISOString();
+        localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(session));
         applySession(session);
         return true;
       }
     }
-  } catch(e) {}
+  } catch(e) { console.warn('Session check error:', e); }
   return false;
 }
 
 function applySession(session) {
+  const isAdmin = session.isAdmin === true;
+  console.log('applySession:', session.name, 'isAdmin:', isAdmin);
   state.currentUser = {
     id: session.userId,
     name: session.name,
     emoji: session.emoji,
-    isAdmin: session.isAdmin || false,
+    isAdmin: isAdmin,
   };
   updateHeaderChip();
   hideLockScreen();
   // Admin-Indikator im Header
-  if (session.isAdmin) {
+  if (isAdmin) {
     const chip = document.querySelector('.user-chip');
-    if (chip) chip.style.borderColor = 'rgba(255,214,0,0.6)';
-    setTimeout(() => showToast('👑 Du bist als Admin eingeloggt'), 1000);
+    if (chip) {
+      chip.style.borderColor = 'rgba(255,214,0,0.6)';
+      chip.style.background = 'rgba(255,214,0,0.12)';
+    }
+    setTimeout(() => showToast('👑 Admin-Modus aktiv'), 800);
   }
 }
 
@@ -1138,10 +1123,11 @@ async function completeRegistration() {
     name: loginState.name,
     emoji: loginState.selectedEmoji,
     roomCode: loginState.roomCode,
-    isAdmin: loginState.isAdmin || false,
+    isAdmin: loginState.isAdmin === true, // explizit boolean
     registeredAt: new Date().toISOString(),
     lastSeen: new Date().toISOString(),
   };
+  console.log('Session erstellt:', session.name, 'isAdmin:', session.isAdmin);
 
   // In localStorage speichern (persistiert auch nach Browser-Schließen)
   localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(session));
@@ -1172,37 +1158,7 @@ async function completeRegistration() {
   setTimeout(() => init().catch(e => console.error('Init:', e)), 300);
 }
 
-// Bereits registriert – zurückkehren
-function showReturningLogin() {
-  const profiles = JSON.parse(localStorage.getItem(LOGIN_PROFILES_KEY) || '[]');
-  const container = document.getElementById('returning-profiles');
-  container.innerHTML = '';
-
-  if (profiles.length === 0) {
-    container.innerHTML = '<div style="text-align:center;color:var(--text-sec);font-size:13px;padding:12px">Keine gespeicherten Profile gefunden</div>';
-  } else {
-    profiles.forEach(profile => {
-      const btn = document.createElement('div');
-      btn.style.cssText = 'display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:14px;padding:12px 14px;cursor:pointer;transition:background 0.2s';
-      btn.innerHTML = '<div style="font-size:30px">' + profile.emoji + '</div>'
-        + '<div style="flex:1"><div style="font-weight:700;font-size:15px">' + escHtml(profile.name) + '</div>'
-        + '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">Raum: ' + profile.roomCode + ' · Registriert ' + new Date(profile.registeredAt).toLocaleDateString('de-DE') + '</div></div>'
-        + '<div style="font-size:20px">→</div>';
-      btn.onclick = () => {
-        // Session updaten
-        profile.lastSeen = new Date().toISOString();
-        localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(profile));
-        closeModal('returning-modal');
-        applySession(profile);
-        showToast('👋 Willkommen zurück, ' + profile.emoji + ' ' + profile.name + '!');
-        setTimeout(() => init().catch(e => console.error('Init:', e)), 300);
-      };
-      container.appendChild(btn);
-    });
-  }
-
-  document.getElementById('returning-modal').classList.add('open');
-}
+// showReturningLogin entfernt - nicht mehr benötigt
 
 // Session-Update (lastSeen) beim Schließen/Verlassen
 function updateLastSeen() {
