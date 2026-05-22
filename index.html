@@ -2784,24 +2784,35 @@ async function doLogout(){
 // iOS Safari: Anleitung zur PWA-Installation
 function showIOSInstallGuide() {
   const old = document.getElementById('ios-guide-banner');
-  if(old){ old.remove(); return; }
+  if (old) { old.remove(); return; }
   const banner = document.createElement('div');
   banner.id = 'ios-guide-banner';
-  banner.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;background:var(--bg-card);border:1px solid rgba(0,229,255,0.4);border-radius:20px;padding:20px;z-index:3000';
-  banner.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:12px">'
-    + '<b style="color:var(--neon-cyan)">📱 Push auf iPhone aktivieren</b>'
-    + '<button onclick="document.getElementById('ios-guide-banner').remove()" style="background:none;border:none;color:var(--text-sec);font-size:18px;cursor:pointer">✕</button>'
-    + '</div>'
-    + '<div style="font-size:13px;color:var(--text-sec);line-height:1.9">'
-    + '<b>Schritt 1:</b> Tippe unten auf ⬆️ Teilen<br>'
-    + '<b>Schritt 2:</b> "Zum Home-Bildschirm" antippen<br>'
-    + '<b>Schritt 3:</b> App vom Homescreen öffnen<br>'
-    + '<b>Schritt 4:</b> Im ⚙️-Tab Push aktivieren<br>'
-    + '<div style="margin-top:10px;background:rgba(0,229,255,0.08);border-radius:8px;padding:8px;font-size:11px;color:var(--neon-cyan)">'
-    + '💡 In-App Alerts (Banner) funktionieren immer – auch ohne Push!</div>'
-    + '</div>';
+  banner.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;background:var(--bg-card);border:1px solid rgba(0,229,255,0.4);border-radius:20px;padding:20px;z-index:3000;box-shadow:0 0 20px rgba(0,229,255,0.2)';
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'background:none;border:none;color:var(--text-sec);font-size:18px;cursor:pointer;float:right';
+  closeBtn.onclick = () => banner.remove();
+  const title = document.createElement('div');
+  title.style.cssText = 'font-weight:700;color:var(--neon-cyan);font-size:16px;margin-bottom:12px';
+  title.textContent = '📱 Push auf iPhone aktivieren';
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px';
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+  const steps = document.createElement('div');
+  steps.style.cssText = 'font-size:13px;color:var(--text-sec);line-height:2';
+  steps.innerHTML = '<b style="color:white">1.</b> Tippe unten auf das <b style="color:white">⬆️ Teilen-Symbol</b><br>'
+    + '<b style="color:white">2.</b> Wähle <b style="color:white">Zum Home-Bildschirm</b><br>'
+    + '<b style="color:white">3.</b> App vom Homescreen öffnen<br>'
+    + '<b style="color:white">4.</b> Im ⚙️-Tab Push aktivieren';
+  const hint = document.createElement('div');
+  hint.style.cssText = 'margin-top:12px;background:rgba(0,229,255,0.08);border-radius:8px;padding:10px;font-size:11px;color:var(--neon-cyan)';
+  hint.textContent = '💡 In-App Alerts funktionieren auch ohne Installation!';
+  banner.appendChild(header);
+  banner.appendChild(steps);
+  banner.appendChild(hint);
   document.body.appendChild(banner);
-  setTimeout(()=>{ if(document.getElementById('ios-guide-banner')) document.getElementById('ios-guide-banner').remove(); }, 15000);
+  setTimeout(() => { if (document.getElementById('ios-guide-banner')) document.getElementById('ios-guide-banner').remove(); }, 15000);
 }
 
 // INIT
