@@ -1923,6 +1923,270 @@ function flyToHomeBase() {
   showToast('🏠 Hotel Eden Palma Playa');
 }
 
+// ============================================================
+// QUIZ
+// ============================================================
+const QUIZ_DATA = {
+  "Mallorca 🌴": [
+    {q:"Wie heißt die bekannteste Partymeile?",a:["Schinkenstraße","Ballermann","Playa de Muro","Magaluf"],correct:1},
+    {q:"Was ist die Hauptstadt von Mallorca?",a:["Alcúdia","Manacor","Palma","Inca"],correct:2},
+    {q:"Was ist typisch mallorquinisch?",a:["Paella","Ensaimada","Churros","Gazpacho"],correct:1},
+    {q:"Welcher Club ist riesig auf der Schinkenstraße?",a:["BCM","Pacha","Megapark","Amnesia"],correct:2},
+    {q:"Was kostet ein Bier am Ballermann ca.?",a:["1€","3-5€","8€","12€"],correct:1},
+    {q:"Welche Insel gehört NICHT zu den Balearen?",a:["Ibiza","Menorca","Formentera","Korsika"],correct:3},
+    {q:"Wie nennt man die Badeabschnitte am Ballermann?",a:["Zonas","Playas","Balnearios","Sectores"],correct:2},
+    {q:"In welcher Stadt liegt der Ballermann?",a:["Alcúdia","Palma","Magaluf","Sóller"],correct:1},
+  ],
+  "Fußball ⚽": [
+    {q:"Welcher Verein heißt die Roten?",a:["BVB","FC Bayern","1. FC Köln","Leverkusen"],correct:1},
+    {q:"Wie viele Spieler stehen auf dem Platz?",a:["18","20","22","24"],correct:2},
+    {q:"Wer hat die meisten WM-Titel?",a:["Deutschland","Argentinien","Brasilien","Italien"],correct:2},
+    {q:"Was ist ein Hattrick?",a:["3 Tore in einem Spiel","3 Karten","3 Ecken","3 Elfmeter"],correct:0},
+    {q:"WM 2006 in Deutschland – welche Stadt war Gastgeber-Finale?",a:["Hamburg","München","Berlin","Dortmund"],correct:2},
+    {q:"Tier im Wappen Eintracht Frankfurt?",a:["Löwe","Adler","Bär","Wolf"],correct:1},
+    {q:"Was bedeutet VAR?",a:["Video Assistant Referee","Virtual Area Review","Video Area Replay","Vorder-Außen-Regel"],correct:0},
+    {q:"Wie lang dauert eine Halbzeit?",a:["40 Min","45 Min","50 Min","60 Min"],correct:1},
+  ],
+  "Allgemeinwissen 🌍": [
+    {q:"Hauptstadt von Australien?",a:["Sydney","Melbourne","Canberra","Brisbane"],correct:2},
+    {q:"Wie viele Saiten hat eine Gitarre?",a:["4","5","6","7"],correct:2},
+    {q:"Element mit Kürzel Au?",a:["Silber","Gold","Aluminium","Kupfer"],correct:1},
+    {q:"Wie viele Nullen hat eine Million?",a:["5","6","7","8"],correct:1},
+    {q:"Schnellstes Landtier?",a:["Löwe","Gepard","Antilope","Pferd"],correct:1},
+    {q:"Wie viele Planeten hat unser Sonnensystem?",a:["7","8","9","10"],correct:1},
+    {q:"In welchem Land steht der Eiffelturm?",a:["Belgien","Schweiz","Deutschland","Frankreich"],correct:3},
+    {q:"Wie viele Kontinente hat die Erde?",a:["5","6","7","8"],correct:2},
+  ],
+  "Trinken 🍺": [
+    {q:"Was ist ein Radler?",a:["Bier+Cola","Bier+Limo","Wein+Wasser","Sekt+OJ"],correct:1},
+    {q:"Aus welchem Land kommt Tequila?",a:["Spanien","Kolumbien","Mexiko","Brasilien"],correct:2},
+    {q:"Woraus wird Rum hergestellt?",a:["Kartoffeln","Zuckerrohr","Getreide","Trauben"],correct:1},
+    {q:"Was bedeutet on the rocks?",a:["Ohne Eis","Mit Eis","Mit Sahne","Pur"],correct:1},
+    {q:"Aus welcher Frucht wird Wein gemacht?",a:["Äpfeln","Birnen","Trauben","Pflaumen"],correct:2},
+    {q:"Was ist ein Shandy?",a:["Bier+Limette","Bier+Limo","Gin+Tonic","Rum+Cola"],correct:1},
+    {q:"Wie viel Prozent hat normales Bier?",a:["0.5%","2%","5%","8%"],correct:2},
+    {q:"Whisky vs Whiskey – Unterschied?",a:["Nur Schreibweise","Schottisch vs Irisch","Alter","Farbe"],correct:1},
+  ],
+};
+let quizState={category:"Mallorca 🌴",currentQ:0,score:0,answered:false,questions:[],finished:false};
+
+function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function initQuiz(){
+  const cats=document.getElementById("quiz-cats");if(!cats)return;
+  if(cats.children.length===0){
+    Object.keys(QUIZ_DATA).forEach(cat=>{
+      const btn=document.createElement("button");btn.className="quiz-cat-btn"+(cat===quizState.category?" active":"");btn.textContent=cat;
+      btn.onclick=()=>{quizState.category=cat;quizState.currentQ=0;quizState.score=0;quizState.finished=false;quizState.questions=shuffleArray(QUIZ_DATA[cat]);document.querySelectorAll(".quiz-cat-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");renderQuiz();};
+      cats.appendChild(btn);
+    });
+  }
+  if(!quizState.questions.length)quizState.questions=shuffleArray(QUIZ_DATA[quizState.category]);
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const area=document.getElementById("quiz-area");if(!area)return;
+  const qs=quizState.questions;const total=qs.length;
+  if(quizState.finished||quizState.currentQ>=total){
+    const pct=Math.round((quizState.score/total)*100);
+    let emoji="😅",title="Nicht schlecht!";
+    if(pct>=80){emoji="🏆";title="Malle-Experte!";}else if(pct>=60){emoji="😎";title="Gut gemacht!";}else if(pct<40){emoji="🍺";title="Mehr üben!";}
+    area.innerHTML="<div class='quiz-result-card'><div class='quiz-result-emoji'>"+emoji+"</div><div class='quiz-result-title'>"+title+"</div><div class='quiz-result-sub'>"+quizState.score+" von "+total+" richtig ("+pct+"%)</div></div><button class='btn-primary' onclick='restartQuiz()'>🔄 Nochmal</button>";
+    if(state.currentUser)sendSpecialMessage("🧠 Quiz: "+state.currentUser.emoji+" "+state.currentUser.name+" – "+quizState.score+"/"+total+" "+emoji);
+    return;
+  }
+  const q=qs[quizState.currentQ];quizState.answered=false;
+  const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+quizState.currentQ;
+  area.innerHTML="<div class='quiz-card'><div class='quiz-question-area'><div class='quiz-q-num'>Frage "+(quizState.currentQ+1)+" von "+total+"</div><div class='quiz-q-text'>"+escHtml(q.q)+"</div></div><div class='quiz-answers' id='qai'></div><div class='quiz-footer'><span style='font-size:12px;color:var(--text-sec)'>Tippe auf deine Antwort</span><span style='font-size:12px;color:var(--neon-gold)'>"+quizState.category+"</span></div></div>";
+  const ai=document.getElementById("qai");
+  q.a.forEach((ans,i)=>{const btn=document.createElement("button");btn.className="quiz-answer";btn.textContent=ans;btn.onclick=()=>answerQuiz(i,q.correct);ai.appendChild(btn);});
+}
+
+function answerQuiz(chosen,correct){
+  if(quizState.answered)return;quizState.answered=true;
+  document.querySelectorAll(".quiz-answer").forEach((b,i)=>{b.disabled=true;if(i===correct)b.classList.add("correct");else if(i===chosen)b.classList.add("wrong");else b.classList.add("reveal");});
+  if(chosen===correct){quizState.score++;showToast("✅ Richtig! +1 Punkt");}else{showToast("❌ Falsch! Richtig: "+document.querySelectorAll(".quiz-answer")[correct].textContent);}
+  const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+(quizState.currentQ+1);
+  setTimeout(()=>{quizState.currentQ++;if(quizState.currentQ>=quizState.questions.length)quizState.finished=true;renderQuiz();},1800);
+}
+
+function restartQuiz(){quizState.currentQ=0;quizState.score=0;quizState.finished=false;quizState.questions=shuffleArray(QUIZ_DATA[quizState.category]);renderQuiz();}
+
+// ============================================================
+// PUSH NOTIFICATIONS
+// ============================================================
+const PUSH_PRESETS=[
+  {label:"📍 Wo seid ihr?",msg:"📍 Wo seid ihr alle? Meldet euch!"},
+  {label:"🍺 Runde!",msg:"🍺 Runde geht auf mich – alle her!"},
+  {label:"🚕 Taxi kommt",msg:"🚕 Taxi ist bestellt! Kommt!"},
+  {label:"🏠 Zum Hotel",msg:"🏠 Alle zurück zum Hotel Eden!"},
+  {label:"📸 Snap ansehen",msg:"📸 Neuer Snap – schaut rein!"},
+  {label:"🎉 Wir gehen los",msg:"🎉 Wir gehen los! Alle fertig!"},
+  {label:"🆘 Hilfe!",msg:"🆘 Ich brauche Hilfe!"},
+  {label:"☀️ Aufstehen",msg:"☀️ Guten Morgen! Aufstehen!"},
+];
+
+async function initPushNotifications(){
+  const dot=document.getElementById("push-dot");
+  const statusText=document.getElementById("push-status-text");
+  const enableBtn=document.getElementById("push-enable-btn");
+  const sendArea=document.getElementById("push-send-area");
+  const deniedHint=document.getElementById("push-denied-hint");
+  const presetsEl=document.getElementById("push-presets");
+  if(!dot)return;
+  if(presetsEl&&presetsEl.children.length===0){
+    PUSH_PRESETS.forEach(p=>{const btn=document.createElement("button");btn.className="push-preset";btn.textContent=p.label;btn.onclick=()=>{const inp=document.getElementById("push-msg-input");if(inp)inp.value=p.msg;};presetsEl.appendChild(btn);});
+  }
+  if(!("Notification" in window)){dot.className="push-dot denied";statusText.textContent="❌ Push nicht verfügbar in diesem Browser";return;}
+  const perm=Notification.permission;
+  if(perm==="granted"){
+    dot.className="push-dot active";statusText.textContent="✅ Push aktiv!";
+    if(enableBtn)enableBtn.style.display="none";if(sendArea)sendArea.style.display="block";if(deniedHint)deniedHint.style.display="none";
+    registerServiceWorker();listenForAlerts();
+  }else if(perm==="denied"){
+    dot.className="push-dot denied";statusText.textContent="❌ Push blockiert – in Browser-Einstellungen erlauben";
+    if(enableBtn)enableBtn.style.display="none";if(deniedHint)deniedHint.style.display="block";
+  }else{
+    dot.className="push-dot";statusText.textContent="Push noch nicht aktiviert – tippe den Button!";
+    if(enableBtn)enableBtn.style.display="block";if(sendArea)sendArea.style.display="none";
+  }
+}
+
+async function enablePushNotifications(){
+  if(!("Notification" in window)){showToast("❌ Nicht verfügbar");return;}
+  const btn=document.getElementById("push-enable-btn");
+  if(btn){btn.textContent="⏳ Warte...";btn.disabled=true;}
+  try{
+    const perm=await Notification.requestPermission();
+    if(perm==="granted"){showToast("🔔 Push aktiviert!");await registerServiceWorker();setTimeout(()=>showLocalNotification("🌴 MalleTrack","Push ist aktiv! 🎉"),600);listenForAlerts();}
+    else{showToast("❌ Push abgelehnt");}
+  }catch(e){showToast("Fehler: "+e.message);}
+  await initPushNotifications();
+}
+
+async function registerServiceWorker(){
+  if(!("serviceWorker" in navigator))return;
+  try{const reg=await navigator.serviceWorker.register("/sw.js").catch(()=>null);if(reg)await navigator.serviceWorker.ready.catch(()=>{});}catch(e){console.warn("SW:",e.message);}
+}
+
+function showLocalNotification(title,body){
+  if(Notification.permission!=="granted")return;
+  try{new Notification(title,{body,tag:"malletrack-"+Date.now(),vibrate:[200,100,200]});}catch(e){console.warn("Notif:",e);}
+}
+
+let alertsSubscribed=false;
+function listenForAlerts(){
+  if(alertsSubscribed)return;alertsSubscribed=true;
+  sb.channel("push_ch").on("postgres_changes",{event:"INSERT",schema:"public",table:"push_alerts",filter:"room_id=eq."+ROOM_ID},(payload)=>{
+    const a=payload.new;if(state.currentUser&&a.sender_name===state.currentUser.name)return;
+    const title="📣 "+a.sender_emoji+" "+a.sender_name;const body=a.message||"Schau in die App!";
+    if(document.hidden||!document.hasFocus())showLocalNotification(title,body);
+    showToast("📣 "+a.sender_name+": "+body);showAlertBanner(title,body);
+  }).subscribe();
+}
+
+function showAlertBanner(title,body){
+  const old=document.getElementById("alert-banner");if(old)old.remove();
+  const b=document.createElement("div");b.id="alert-banner";
+  b.style.cssText="position:fixed;top:70px;left:12px;right:12px;background:linear-gradient(135deg,rgba(255,45,120,0.97),rgba(180,0,0,0.97));border-radius:16px;padding:14px 16px;z-index:2000;box-shadow:0 0 30px rgba(255,45,120,0.5);display:flex;align-items:center;gap:12px";
+  b.innerHTML="<div style='font-size:26px'>📣</div><div style='flex:1'><div style='font-weight:700;font-size:14px;color:white'>"+escHtml(title)+"</div><div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px'>"+escHtml(body)+"</div></div><button onclick='this.parentElement.remove()' style='background:rgba(255,255,255,0.2);border:none;border-radius:8px;color:white;padding:4px 10px;cursor:pointer'>✕</button>";
+  document.body.appendChild(b);setTimeout(()=>{if(b.parentElement)b.remove();},6000);
+}
+
+async function sendGroupAlert(){
+  if(!state.currentUser){showToast("⚠️ Profil auswählen!");return;}
+  const inp=document.getElementById("push-msg-input");
+  const msg=(inp&&inp.value.trim())||"📣 Alle in die App!";
+  const btn=document.getElementById("push-send-btn");
+  if(btn){btn.disabled=true;btn.textContent="⏳ Sendet...";}
+  try{
+    await sb.from("push_alerts").insert({room_id:ROOM_ID,sender_name:state.currentUser.name,sender_emoji:state.currentUser.emoji,message:msg});
+    await sendSpecialMessage("📣 ALERT: "+msg);
+    showLocalNotification("✅ Gesendet!","Alle wurden benachrichtigt");
+    showToast("📣 Alert gesendet!");if(inp)inp.value="";
+  }catch(e){showToast("❌ Fehler: "+e.message);}
+  if(btn){btn.disabled=false;btn.textContent="📣 ALLE RUFEN!";}
+}
+
+// ============================================================
+// ADMIN
+// ============================================================
+async function loadAdminTab(){
+  if(state.currentUser){
+    const el=document.getElementById("admin-my-emoji");const nl=document.getElementById("admin-my-name");
+    if(el)el.textContent=state.currentUser.emoji;if(nl)nl.textContent=state.currentUser.name;
+  }
+  await loadAdminPins();await loadAdminMembers();
+}
+
+async function loadAdminPins(){
+  const listEl=document.getElementById("admin-pins-list");if(!listEl)return;
+  const {data}=await sb.from("pins").select("*").eq("room_id",ROOM_ID).order("created_at",{ascending:false});
+  listEl.innerHTML="";
+  if(!data||data.length===0){listEl.innerHTML="<div style='font-size:13px;color:var(--text-sec);text-align:center;padding:12px'>Keine Treffpunkte gesetzt</div>";return;}
+  const seen=new Set();
+  data.forEach(pin=>{
+    if(seen.has(pin.name))return;seen.add(pin.name);
+    const row=document.createElement("div");
+    row.style.cssText="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px";
+    row.innerHTML="<span style='font-size:20px'>"+pin.emoji+"</span><span style='flex:1;font-weight:600;font-size:14px'>"+escHtml(pin.name)+"</span><button onclick='deletePin(""+pin.name+"",this.parentElement)' style='background:rgba(255,45,120,0.2);border:1px solid rgba(255,45,120,0.4);border-radius:8px;color:var(--neon-pink);padding:5px 10px;cursor:pointer;font-size:13px;font-weight:700'>✕</button>";
+    listEl.appendChild(row);
+  });
+}
+
+async function deletePin(pinName,rowEl){
+  await sb.from("pins").delete().eq("room_id",ROOM_ID).eq("name",pinName);
+  if(state.pinMarkers[pinName]){state.mapInstance.removeLayer(state.pinMarkers[pinName].marker);delete state.pinMarkers[pinName];}
+  if(rowEl)rowEl.remove();showToast("🗑️ Treffpunkt gelöscht");
+}
+
+async function loadAdminMembers(){
+  const listEl=document.getElementById("admin-members-list");if(!listEl)return;
+  const {data:locs}=await sb.from("locations").select("*").eq("room_id",ROOM_ID);
+  const {data:stats}=await sb.from("statuses").select("*").eq("room_id",ROOM_ID);
+  const users=new Map();
+  (locs||[]).forEach(l=>users.set(l.user_id,{id:l.user_id,name:l.user_name,emoji:l.user_emoji}));
+  (stats||[]).forEach(s=>{if(!users.has(s.user_id))users.set(s.user_id,{id:s.user_id,name:s.user_name,emoji:s.user_emoji});});
+  listEl.innerHTML="";
+  if(users.size===0){listEl.innerHTML="<div style='font-size:13px;color:var(--text-sec);text-align:center;padding:12px'>Keine anderen Nutzer aktiv</div>";return;}
+  users.forEach(user=>{
+    if(state.currentUser&&user.id===state.currentUser.id)return;
+    const row=document.createElement("div");
+    row.style.cssText="display:flex;align-items:center;gap:10px;background:rgba(255,0,0,0.04);border:1px solid rgba(255,0,0,0.15);border-radius:10px;padding:10px 12px;margin-bottom:6px";
+    row.innerHTML="<span style='font-size:20px'>"+user.emoji+"</span><span style='flex:1;font-weight:600;font-size:14px'>"+escHtml(user.name)+"</span><button onclick='kickUser(""+user.id+"",""+escHtml(user.name)+"",this.parentElement)' style='background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.4);border-radius:8px;color:#ff4444;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700'>Rauswerfen</button>";
+    listEl.appendChild(row);
+  });
+}
+
+async function kickUser(userId,userName,rowEl){
+  if(!confirm("Wirklich "+userName+" rauswerfen?"))return;
+  await sb.from("locations").delete().eq("room_id",ROOM_ID).eq("user_id",userId);
+  await sb.from("statuses").delete().eq("room_id",ROOM_ID).eq("user_id",userId);
+  if(state.markers[userId]){state.mapInstance.removeLayer(state.markers[userId]);delete state.markers[userId];}
+  delete state.crewLocations[userId];delete state.crewStatuses[userId];
+  if(rowEl)rowEl.remove();renderCrew();showToast("👋 "+userName+" wurde entfernt");
+}
+
+function confirmLogout(){document.getElementById("logout-modal").classList.add("open");}
+
+async function doLogout(){
+  if(state.currentUser){
+    await sb.from("locations").delete().eq("room_id",ROOM_ID).eq("user_id",state.currentUser.id);
+    await sb.from("statuses").delete().eq("room_id",ROOM_ID).eq("user_id",state.currentUser.id);
+    if(state.watchId){navigator.geolocation.clearWatch(state.watchId);state.watchId=null;}
+    if(state.markers[state.currentUser.id])state.mapInstance.removeLayer(state.markers[state.currentUser.id]);
+  }
+  localStorage.removeItem("malletrack_profile");
+  state.currentUser=null;state.locationSharing=false;
+  closeModal("logout-modal");
+  document.getElementById("header-emoji").textContent="🦁";
+  document.getElementById("header-name").textContent="Profil";
+  updateSharingButton(false);renderCrew();
+  showToast("👋 Du wurdest abgemeldet!");
+  setTimeout(()=>openProfileModal(),800);
+}
+
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Alle Tabs initial verstecken außer Karte
