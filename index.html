@@ -816,11 +816,32 @@ async function loadOverpassPOIs(map) {
     + 'node["shop"="supermarket"](' + bbox + ');'
     + ');out body;';
 
+  // Mehrere Overpass-Endpunkte versuchen (CORS-Problem bei manchen)
+  const OVERPASS_ENDPOINTS = [
+    'https://overpass.private.coffee/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  ];
+
+  let resp = null;
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      resp = await fetch(endpoint, {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
+      if (resp.ok) break;
+    } catch(e) { resp = null; continue; }
+  }
+
+  // Fallback: Hardcoded Mallorca POIs wenn alle Endpunkte fehlschlagen
+  if (!resp || !resp.ok) {
+    loadHardcodedPOIs(map);
+    return;
+  }
+
   try {
-    const resp = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST', body: 'data=' + encodeURIComponent(query)
-    });
-    if (!resp.ok) return;
     const data = await resp.json();
     const poiIcons   = { bar:'🍺', pub:'🍺', nightclub:'🎉', restaurant:'🍕', fast_food:'🌭', cafe:'☕', atm:'💰', hotel:'🏨', pharmacy:'💊', supermarket:'🛒' };
     const poiColors  = { bar:'#ff6b35', pub:'#ff6b35', nightclub:'#ff2d78', restaurant:'#ffd600', fast_food:'#ffd600', cafe:'#a0522d', atm:'#39ff14', hotel:'#00e5ff', pharmacy:'#39ff14', supermarket:'#00e5ff' };
@@ -866,9 +887,86 @@ async function loadOverpassPOIs(map) {
       });
     });
   } catch(e) {
-    console.warn('Overpass API Fehler (kein Problem, App läuft weiter):', e);
+    console.warn('Overpass API Fehler – lade hardcoded POIs:', e);
+    loadHardcodedPOIs(map);
   }
 }
+
+// Hardcoded Mallorca POIs als Fallback wenn Overpass nicht erreichbar
+function loadHardcodedPOIs(map) {
+  const MALLORCA_POIS = [
+    // Ballermann & Schinkenstraße
+    { lat:39.5283, lng:2.7317, name:'Bierkönig',       emoji:'🍺', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5279, lng:2.7309, name:'Megapark',        emoji:'🎪', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5275, lng:2.7305, name:'Mamma Mia',       emoji:'🥂', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5281, lng:2.7321, name:'Bierpalast',      emoji:'🎵', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5270, lng:2.7295, name:'Schinkenstraße',  emoji:'🌴', type:'bar',       color:'#ff6b35' },
+    { lat:39.5285, lng:2.7330, name:'Ballermann 6',    emoji:'🏖️', type:'bar',       color:'#ff6b35' },
+    { lat:39.5268, lng:2.7288, name:'BCM Club',        emoji:'🎭', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5290, lng:2.7340, name:'Riu Palace',      emoji:'🎉', type:'nightclub', color:'#ff2d78' },
+    // Hotels
+    { lat:39.5323, lng:2.7285, name:'Hotel Eden',      emoji:'🏠', type:'hotel',     color:'#ffd600' },
+    { lat:39.5310, lng:2.7270, name:'Playa Park',      emoji:'🏨', type:'hotel',     color:'#00e5ff' },
+    { lat:39.5295, lng:2.7350, name:'Hotel Saroya',    emoji:'🏨', type:'hotel',     color:'#00e5ff' },
+    // Restaurants & Cafés
+    { lat:39.5305, lng:2.7295, name:'La Palma Rest.',  emoji:'🍕', type:'restaurant',color:'#ffd600' },
+    { lat:39.5315, lng:2.7310, name:'Café del Mar',    emoji:'☕', type:'cafe',      color:'#a0522d' },
+    { lat:39.5278, lng:2.7325, name:'Burger King',     emoji:'🌭', type:'fast_food', color:'#ffd600' },
+    // Supermärkte & Apotheken
+    { lat:39.5320, lng:2.7300, name:'Mercadona',       emoji:'🛒', type:'supermarket',color:'#00e5ff' },
+    { lat:39.5308, lng:2.7280, name:'Supermercado',    emoji:'🛒', type:'supermarket',color:'#00e5ff' },
+    { lat:39.5312, lng:2.7305, name:'Farmacia',        emoji:'💊', type:'pharmacy',  color:'#39ff14' },
+    // ATMs
+    { lat:39.5300, lng:2.7315, name:'Cajero ATM',      emoji:'💰', type:'atm',       color:'#39ff14' },
+    { lat:39.5288, lng:2.7345, name:'CaixaBank ATM',   emoji:'💰', type:'atm',       color:'#39ff14' },
+    // Strand & Transport
+    { lat:39.5260, lng:2.7350, name:'Playa de Palma',  emoji:'🏖️', type:'beach',     color:'#00e5ff' },
+    { lat:39.5330, lng:2.7260, name:'Bus Parada',      emoji:'🚌', type:'bus',       color:'#888'    },
+    { lat:39.5255, lng:2.7380, name:'Taxi Stand',      emoji:'🚕', type:'taxi',      color:'#ffd600' },
+    // Altstadt Palma
+    { lat:39.5696, lng:2.6502, name:'Altstadt Palma',  emoji:'🗺️', type:'tourism',   color:'#00e5ff' },
+    { lat:39.5698, lng:2.6495, name:'Catedral Palma',  emoji:'⛪', type:'tourism',   color:'#00e5ff' },
+    { lat:39.5690, lng:2.6510, name:'Parc de la Mar',  emoji:'🌳', type:'park',      color:'#39ff14' },
+  ];
+
+  MALLORCA_POIS.forEach(poi => {
+    // Hotel Eden nicht doppelt anzeigen
+    if (poi.name === 'Hotel Eden') return;
+
+    const poiIcon = L.divIcon({
+      className: '',
+      html: '<div style="display:flex;flex-direction:column;align-items:center">'
+          + '<div style="background:#0f0f1e;border:1.5px solid ' + poi.color + ';border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 0 5px ' + poi.color + '40">' + poi.emoji + '</div>'
+          + '<div style="background:rgba(10,10,18,0.85);border-radius:4px;padding:1px 4px;font-size:7px;font-weight:700;color:' + poi.color + ';white-space:nowrap;margin-top:1px">' + poi.name.substring(0,14) + '</div>'
+          + '</div>',
+      iconSize:[28,40], iconAnchor:[14,38]
+    });
+
+    const m = L.marker([poi.lat, poi.lng], { icon: poiIcon, zIndexOffset: -100 }).addTo(map);
+    const pLat = poi.lat, pLng = poi.lng, pName = poi.name, pEmoji = poi.emoji;
+    m.on('click', () => {
+      document.getElementById('marker-modal-title').textContent = pEmoji + ' ' + pName;
+      const actions = document.getElementById('marker-actions');
+      actions.innerHTML = '';
+      addAction(actions, '🗺️', 'In Google Maps öffnen', () => {
+        window.open('https://www.google.com/maps/search/' + encodeURIComponent(pName) + '/@' + pLat + ',' + pLng + ',17z', '_blank');
+        closeModal('marker-modal');
+      });
+      addAction(actions, '🧭', 'Navigation starten', () => {
+        window.open('https://www.google.com/maps/dir/?api=1&destination=' + pLat + ',' + pLng, '_blank');
+        closeModal('marker-modal');
+      });
+      addAction(actions, '💬', 'Im Chat teilen', () => {
+        sendSpecialMessage('📍 Tipp: ' + pEmoji + ' ' + pName + ' → https://maps.google.com?q=' + pLat + ',' + pLng);
+        closeModal('marker-modal');
+        switchTab('tab-chat', document.getElementById('chat-tab-btn'));
+      });
+      document.getElementById('marker-modal').classList.add('open');
+    });
+  });
+  console.log('Hardcoded Mallorca POIs geladen (' + MALLORCA_POIS.length + ' Orte)');
+}
+
 
 function openHomeBaseModal() {
   document.getElementById('marker-modal-title').textContent = '🏠 Hotel Eden Palma Playa';
