@@ -866,7 +866,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
         <!-- PUSH NOTIFICATIONS -->
         <div class="push-card">
-          <div class="members-title">🔔 Push-Benachrichtigungen</div>
+          <div class="members-title">📣 Gruppen-Alert</div>
 
           <div class="push-status">
             <div class="push-dot" id="push-dot"></div>
@@ -879,7 +879,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
           <div id="push-send-area" style="display:none">
             <div style="font-size:12px;color:var(--text-sec);margin-bottom:10px">
-              Schnell-Nachrichten:
+              📲 Alle bekommen einen Banner + Chat-Nachricht.<br>
+              Wer Push aktiviert hat: auch eine Handy-Benachrichtigung.
             </div>
             <div class="push-presets" id="push-presets"></div>
             <input class="push-msg-input" id="push-msg-input" placeholder="Eigene Nachricht..." maxlength="80">
@@ -2624,12 +2625,29 @@ async function initPushNotifications(){
   const enableBtn=document.getElementById("push-enable-btn");
   const sendArea=document.getElementById("push-send-area");
   const deniedHint=document.getElementById("push-denied-hint");
+  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone=window.navigator.standalone===true;
   const presetsEl=document.getElementById("push-presets");
   if(!dot)return;
   if(presetsEl&&presetsEl.children.length===0){
     PUSH_PRESETS.forEach(p=>{const btn=document.createElement("button");btn.className="push-preset";btn.textContent=p.label;btn.onclick=()=>{const inp=document.getElementById("push-msg-input");if(inp)inp.value=p.msg;};presetsEl.appendChild(btn);});
   }
-  if(!("Notification" in window)){dot.className="push-dot denied";statusText.textContent="❌ Push nicht verfügbar in diesem Browser";return;}
+  // In-App Alerts immer zeigen
+  if(sendArea) sendArea.style.display='block';
+
+
+  if(!("Notification" in window)){
+    if(isIOS&&!isStandalone){
+      dot.className="push-dot";
+      statusText.textContent="📱 Als App installieren für echte Push-Nachrichten";
+      if(enableBtn){enableBtn.style.display="block";enableBtn.textContent="📱 Anleitung anzeigen";enableBtn.onclick=showIOSInstallGuide;}
+    } else {
+      dot.className="push-dot denied";
+      statusText.textContent="❌ Push nicht verfügbar – nutze Chrome";
+      if(enableBtn) enableBtn.style.display="none";
+    }
+    return;
+  }
   const perm=Notification.permission;
   if(perm==="granted"){
     dot.className="push-dot active";statusText.textContent="✅ Push aktiv!";
@@ -2805,6 +2823,30 @@ async function doLogout(){
       ls.style.display='flex';ls.style.opacity='1';
     }
   },500);
+}
+
+
+// iOS Safari: Anleitung zur PWA-Installation
+function showIOSInstallGuide() {
+  const old = document.getElementById('ios-guide-banner');
+  if(old){ old.remove(); return; }
+  const banner = document.createElement('div');
+  banner.id = 'ios-guide-banner';
+  banner.style.cssText = 'position:fixed;bottom:80px;left:12px;right:12px;background:var(--bg-card);border:1px solid rgba(0,229,255,0.4);border-radius:20px;padding:20px;z-index:3000';
+  banner.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:12px">'
+    + '<b style="color:var(--neon-cyan)">📱 Push auf iPhone aktivieren</b>'
+    + '<button onclick="document.getElementById('ios-guide-banner').remove()" style="background:none;border:none;color:var(--text-sec);font-size:18px;cursor:pointer">✕</button>'
+    + '</div>'
+    + '<div style="font-size:13px;color:var(--text-sec);line-height:1.9">'
+    + '<b>Schritt 1:</b> Tippe unten auf ⬆️ Teilen<br>'
+    + '<b>Schritt 2:</b> "Zum Home-Bildschirm" antippen<br>'
+    + '<b>Schritt 3:</b> App vom Homescreen öffnen<br>'
+    + '<b>Schritt 4:</b> Im ⚙️-Tab Push aktivieren<br>'
+    + '<div style="margin-top:10px;background:rgba(0,229,255,0.08);border-radius:8px;padding:8px;font-size:11px;color:var(--neon-cyan)">'
+    + '💡 In-App Alerts (Banner) funktionieren immer – auch ohne Push!</div>'
+    + '</div>';
+  document.body.appendChild(banner);
+  setTimeout(()=>{ if(document.getElementById('ios-guide-banner')) document.getElementById('ios-guide-banner').remove(); }, 15000);
 }
 
 // INIT
