@@ -582,6 +582,47 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .lb-edit-btn{background:rgba(255,214,0,0.15);border:1px solid rgba(255,214,0,0.3);border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;color:var(--neon-gold);margin-left:6px}
 .lb-edit-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,214,0,0.06);border-top:1px solid var(--border)}
 .lb-pts-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,214,0,0.4);border-radius:8px;padding:4px 10px;color:var(--text-pri);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;width:80px;outline:none;text-align:center}
+
+/* VEREINSLOGOS */
+.club-avatar {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s;
+  overflow: hidden;
+  position: relative;
+  line-height: 1;
+  text-align: center;
+}
+.club-avatar.selected {
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 10px rgba(255,45,120,0.4);
+  transform: scale(1.1);
+}
+.club-avatar:active { transform: scale(0.9); }
+
+/* TRIP RECAP */
+#tab-recap-inner{padding:14px;padding-bottom:80px}
+.recap-header{margin-bottom:16px}
+.recap-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}
+.recap-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
+.recap-stat-val{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--neon-cyan)}
+.recap-stat-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.recap-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.recap-thumb{border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--bg-card);border:1px solid var(--border);cursor:pointer;position:relative}
+.recap-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.recap-thumb-info{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:6px 8px}
+.recap-thumb-name{font-size:10px;font-weight:700;color:white}
+.recap-thumb-time{font-size:9px;color:rgba(255,255,255,0.7)}
+.recap-download-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--neon-cyan),#0099bb);color:#000;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.recap-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:14px;border:1px solid var(--neon-pink);background:rgba(255,45,120,0.1);color:var(--neon-pink);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
 </style>
 </head>
 <body>
@@ -818,6 +859,41 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
 
 
+    <!-- TRIP RECAP TAB -->
+    <div id="tab-recap" class="tab-panel">
+      <div id="tab-recap-inner">
+        <div class="recap-header">
+          <div class="section-title">📸 TRIP RECAP</div>
+          <div style="font-size:12px;color:var(--text-sec);margin-top:4px">Alle Snaps des Trips – auch abgelaufene</div>
+        </div>
+
+        <div class="recap-stats" id="recap-stats">
+          <div class="recap-stat"><div class="recap-stat-val" id="recap-total">–</div><div class="recap-stat-label">Snaps</div></div>
+          <div class="recap-stat"><div class="recap-stat-val" id="recap-members">–</div><div class="recap-stat-label">Personen</div></div>
+          <div class="recap-stat"><div class="recap-stat-val" id="recap-days">4</div><div class="recap-stat-label">Tage</div></div>
+        </div>
+
+        <button class="recap-download-btn" onclick="downloadRecap()">
+          📥 Alle Fotos herunterladen
+        </button>
+        <button class="recap-share-btn" onclick="generateRecapLink()">
+          🔗 Zusammenstellung teilen
+        </button>
+
+        <div style="font-size:11px;color:var(--text-sec);text-align:center;margin:10px 0 16px">
+          Alle Snaps werden dauerhaft gespeichert – auch nach 11 Uhr
+        </div>
+
+        <div class="members-title">Alle Trip-Snaps</div>
+        <div class="recap-grid" id="recap-grid">
+          <div class="empty-feed" style="grid-column:1/-1;padding:30px;opacity:0.5">
+            <div class="empty-icon">📸</div>
+            <div class="empty-text">Snaps werden geladen...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- QUIZ TAB -->
     <div id="tab-quiz" class="tab-panel">
       <div style="padding:14px;padding-bottom:80px">
@@ -947,6 +1023,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="tab-btn" onclick="switchTab('tab-gruppe',this)"><span class="tab-icon">👥</span><span class="tab-label">Crew</span></button>
     <button class="tab-btn" id="chat-tab-btn" onclick="switchTab('tab-chat',this)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
     <button class="tab-btn" onclick="switchTab('tab-fun',this)"><span class="tab-icon">🎰</span><span class="tab-label">Fun</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-recap',this)"><span class="tab-icon">📸</span><span class="tab-label">Recap</span></button>
     <button class="tab-btn" onclick="switchTab('tab-quiz',this)"><span class="tab-icon">🧠</span><span class="tab-label">Quiz</span></button>
     <button class="tab-btn" onclick="switchTab('tab-admin',this)"><span class="tab-icon">⚙️</span><span class="tab-label">Ich</span></button>
     <button class="tab-btn" onclick="switchTab('tab-spotify',this)"><span class="tab-icon">🎵</span><span class="tab-label">Musik</span></button>
@@ -1066,19 +1143,65 @@ function hideLockScreen() {
 }
 
 // Emoji-Grid befüllen
+// Bundesliga + internationale Vereine als farbige Avatare
+const CLUB_AVATARS = [
+  // Bundesliga
+  {id:'fcb',  label:'FCB',  bg:'#dc052d', fg:'white',  border:'#0066b2', desc:'FC Bayern'},
+  {id:'bvb',  label:'BVB',  bg:'#fde100', fg:'black',  border:'#000',    desc:'Dortmund'},
+  {id:'s04',  label:'S04',  bg:'#004d9e', fg:'white',  border:'#fff',    desc:'Schalke'},
+  {id:'bme',  label:'BME',  bg:'#000',    fg:'white',  border:'#fff',    desc:"B'gladbach"},
+  {id:'svw',  label:'SVW',  bg:'#1d9053', fg:'white',  border:'#fff',    desc:'Werder'},
+  {id:'sgf',  label:'SGF',  bg:'#e10000', fg:'black',  border:'#000',    desc:'Frankfurt'},
+  {id:'vfb',  label:'VFB',  bg:'#e30614', fg:'white',  border:'#fff',    desc:'Stuttgart'},
+  {id:'ham',  label:'HSV',  bg:'#0047ab', fg:'white',  border:'#fff',    desc:'Hamburg'},
+  {id:'koe',  label:'KÖL',  bg:'#e4202c', fg:'white',  border:'#fff',    desc:'Köln'},
+  {id:'lev',  label:'LEV',  bg:'#e32119', fg:'black',  border:'#000',    desc:'Leverkusen'},
+  {id:'hei',  label:'TSG',  bg:'#1961ac', fg:'white',  border:'#fff',    desc:'Hoffenheim'},
+  {id:'mai',  label:'M05',  bg:'#e30613', fg:'white',  border:'#fff',    desc:'Mainz'},
+  {id:'aug',  label:'FCA',  bg:'#ba3733', fg:'white',  border:'#fff',    desc:'Augsburg'},
+  {id:'frk',  label:'SCF',  bg:'#e30613', fg:'white',  border:'#000',    desc:'Freiburg'},
+  {id:'rbl',  label:'RBL',  bg:'#dd0741', fg:'white',  border:'#fff',    desc:'Leipzig'},
+  {id:'boc',  label:'BOC',  bg:'#005ca9', fg:'white',  border:'#fff',    desc:'Bochum'},
+  // International
+  {id:'rma',  label:'RMA',  bg:'#ffffff', fg:'#001489',border:'#001489', desc:'Real Madrid'},
+  {id:'bar',  label:'FCB',  bg:'#a50044', fg:'#004d98',border:'#004d98', desc:'Barcelona'},
+  {id:'che',  label:'CFC',  bg:'#034694', fg:'white',  border:'#fff',    desc:'Chelsea'},
+  {id:'afc',  label:'AFC',  bg:'#ef0107', fg:'white',  border:'#fff',    desc:'Arsenal'},
+  {id:'mci',  label:'MCI',  bg:'#6cabdd', fg:'white',  border:'#fff',    desc:'Man City'},
+  {id:'juv',  label:'JUV',  bg:'#000',    fg:'white',  border:'#fff',    desc:'Juventus'},
+  {id:'psg',  label:'PSG',  bg:'#004170', fg:'#da291c',border:'#fff',    desc:'PSG'},
+  {id:'acm',  label:'ACM',  bg:'#fb090b', fg:'black',  border:'#000',    desc:'AC Milan'},
+  // Sonstige
+  {id:'emo',  label:'😎',   bg:'#1a1a2e', fg:'white',  border:'var(--neon-cyan)',  desc:'Cool'},
+  {id:'fir',  label:'🔥',   bg:'#1a1a2e', fg:'white',  border:'var(--neon-pink)',  desc:'Fire'},
+  {id:'sta',  label:'⭐',   bg:'#1a1a2e', fg:'#ffd600', border:'var(--neon-gold)', desc:'Star'},
+  {id:'pal',  label:'🌴',   bg:'#0d4f2e', fg:'white',  border:'var(--neon-green)', desc:'Malle'},
+];
+
 function initLoginEmojis() {
   const grid = document.getElementById('login-emoji-grid');
   if (!grid || grid.children.length > 0) return;
-  const EMOJIS = ['🦁','🌺','🐬','🦋','🦅','🌙','🐉','🦊','🐼','🦄','🔥','⚡','🌴','🍹','😎','🏄','🎸','💎','🌈','🦈','⚽','🏆','🥅','👟','🧤','🎯','🦌','🐯','🐻','🦩','🧸','🤿','🎪','🛥️','🎭'];
-  EMOJIS.forEach(em => {
-    const btn = document.createElement('button');
-    btn.className = 'login-emoji-btn' + (em === loginState.selectedEmoji ? ' selected' : '');
-    btn.textContent = em;
+
+  CLUB_AVATARS.forEach(club => {
+    const btn = document.createElement('div');
+    btn.className = 'club-avatar' + (club.id === loginState.selectedEmoji ? ' selected' : '');
+    btn.title = club.desc;
+    btn.style.cssText = 'background:' + club.bg + ';color:' + club.fg + ';border-color:' + (club.id === loginState.selectedEmoji ? 'var(--neon-pink)' : club.border) + ';font-size:9px;font-weight:900;padding:2px';
+    btn.innerHTML = '<div style="line-height:1.1;text-align:center">' + club.label + '<br><span style="font-size:7px;opacity:0.8">' + club.desc + '</span></div>';
     btn.onclick = () => {
-      loginState.selectedEmoji = em;
-      document.querySelectorAll('.login-emoji-btn').forEach(b => b.classList.remove('selected'));
+      loginState.selectedEmoji = club.id;
+      loginState.selectedClub = club;
+      document.querySelectorAll('.club-avatar').forEach(b => {
+        b.classList.remove('selected');
+        b.style.borderColor = b === btn ? 'var(--neon-pink)' : CLUB_AVATARS.find(c=>c.desc===b.title)?.border || 'var(--border)';
+      });
       btn.classList.add('selected');
-      document.getElementById('preview-avatar').textContent = em;
+      // Preview updaten
+      const prev = document.getElementById('preview-avatar');
+      if (prev) {
+        prev.style.cssText = 'font-size:10px;font-weight:900;background:' + club.bg + ';color:' + club.fg + ';display:flex;align-items:center;justify-content:center;border-radius:50%;width:50px;height:50px';
+        prev.textContent = club.label;
+      }
     };
     grid.appendChild(btn);
   });
@@ -2096,6 +2219,12 @@ function openProfileModal(){
   document.getElementById('profile-modal').classList.add('open');
 }
 function selectEmoji(em){state.selectedEmoji=em;document.querySelectorAll('.emoji-option').forEach(el=>el.classList.toggle('selected',el.textContent===em));}
+function getClubById(id){ return CLUB_AVATARS ? CLUB_AVATARS.find(c=>c.id===id) : null; }
+function renderClubEmoji(id){
+  const club = getClubById(id);
+  if(!club) return id;
+  return '<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:'+club.bg+';color:'+club.fg+';font-size:9px;font-weight:900;border:1.5px solid '+club.border+'">'+club.label+'</span>';
+}
 async function saveProfile(){
   const name=document.getElementById('profile-name-input').value.trim();
   if(!name){showToast('⚠️ Bitte Namen eingeben!');return;}
@@ -2114,7 +2243,7 @@ function switchTab(tabId, btn) {
   try {
     state.activeTab = tabId;
     // Alle Panels verstecken
-    const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-quiz','tab-admin','tab-spotify'];
+    const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-recap','tab-quiz','tab-admin','tab-spotify'];
     ALL_TABS.forEach(id => {
       const el = document.getElementById(id);
       if (el) { el.style.display = 'none'; el.classList.remove('active'); }
@@ -2141,6 +2270,7 @@ function switchTab(tabId, btn) {
       setTimeout(() => { try { initHeatmap(); } catch(e){} }, 300);
     }
     if (tabId === 'tab-quiz') { try { initQuiz(); } catch(e){} }
+    if (tabId === 'tab-recap') { try { loadRecap(); } catch(e){ console.error('recap:', e); } }
     if (tabId === 'tab-admin') {
       try {
         loadAdminTab();
@@ -2469,6 +2599,13 @@ async function loadLeaderboard() {
     editBtn.textContent = lbEditMode ? '✅ Fertig' : '✏️ Bearbeiten';
     editBtn.onclick = toggleLeaderboardEdit;
     editBar.appendChild(editBtn);
+
+    const eventsBtn = document.createElement('button');
+    eventsBtn.className = 'lb-edit-btn';
+    eventsBtn.style.marginLeft = '6px';
+    eventsBtn.textContent = '📊 Events';
+    eventsBtn.onclick = showLeaderboardEvents;
+    editBar.appendChild(eventsBtn);
     lbEl.appendChild(editBar);
     if (lbEditMode) {
       const resetBtn = document.createElement('button');
@@ -3242,6 +3379,256 @@ function resetLeaderboardAdjustments() {
   showToast('🔄 Leaderboard zurückgesetzt');
 }
 
+
+// ============================================================
+// LEADERBOARD: PUNKTE-EVENTS ANZEIGEN UND LÖSCHEN
+// ============================================================
+async function loadLeaderboardEvents() {
+  // Snaps + Aufgaben als Events laden
+  const { data: snaps } = await sb.from('snaps').select('id,author_name,author_emoji,reactions,created_at').eq('room_id', ROOM_ID);
+  const events = [];
+
+  (snaps || []).forEach(snap => {
+    events.push({
+      id: 'snap_' + snap.id,
+      type: 'snap',
+      snapId: snap.id,
+      name: snap.author_name,
+      emoji: snap.author_emoji,
+      pts: 10,
+      label: '📸 Snap',
+      time: snap.created_at,
+    });
+    const totalReactions = Object.values(snap.reactions || {}).reduce((a,b) => a + (parseInt(b)||0), 0);
+    if (totalReactions > 0) {
+      events.push({
+        id: 'react_' + snap.id,
+        type: 'reactions',
+        snapId: snap.id,
+        name: snap.author_name,
+        emoji: snap.author_emoji,
+        pts: totalReactions * 2,
+        label: '❤️ ' + totalReactions + ' Reaktionen',
+        time: snap.created_at,
+      });
+    }
+  });
+
+  // Aufgaben
+  const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+  Object.entries(done).forEach(([taskId, info]) => {
+    if (info && info.user) {
+      events.push({
+        id: 'task_' + taskId,
+        type: 'task',
+        taskId,
+        name: info.user,
+        emoji: info.emoji || '⭐',
+        pts: info.pts || 0,
+        label: '✅ Aufgabe',
+        time: new Date().toISOString(),
+      });
+    }
+  });
+
+  // Manuelle Anpassungen
+  Object.entries(lbManualAdjustments).forEach(([name, pts]) => {
+    if (pts !== 0) {
+      events.push({
+        id: 'manual_' + name,
+        type: 'manual',
+        name,
+        emoji: '👑',
+        pts,
+        label: '👑 Manuell',
+        time: new Date().toISOString(),
+      });
+    }
+  });
+
+  return events.sort((a,b) => new Date(b.time) - new Date(a.time));
+}
+
+async function showLeaderboardEvents() {
+  if (!state.currentUser?.isAdmin) { showToast('❌ Nur für Admins'); return; }
+
+  // Modal erstellen
+  const modal = document.getElementById('lb-events-modal');
+  if (modal) modal.classList.add('open');
+
+  const list = document.getElementById('lb-events-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec)">Lade Events...</div>';
+
+  const events = await loadLeaderboardEvents();
+  list.innerHTML = '';
+
+  if (events.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec)">Keine Punkte-Events gefunden</div>';
+    return;
+  }
+
+  events.forEach(ev => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)';
+
+    const left = document.createElement('div');
+    left.style.cssText = 'flex:1';
+    left.innerHTML = '<div style="font-size:13px;font-weight:700">' + ev.emoji + ' ' + escHtml(ev.name) + '</div>'
+      + '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">' + ev.label + ' · ' + formatTime(ev.time) + '</div>';
+
+    const pts = document.createElement('div');
+    pts.style.cssText = 'font-family:Bebas Neue,cursive;font-size:20px;color:' + (ev.pts > 0 ? 'var(--neon-green)' : 'var(--neon-pink)');
+    pts.textContent = (ev.pts > 0 ? '+' : '') + ev.pts;
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = '🗑️';
+    delBtn.style.cssText = 'background:rgba(255,45,120,0.15);border:1px solid rgba(255,45,120,0.3);border-radius:8px;padding:5px 8px;cursor:pointer;font-size:14px';
+    delBtn.onclick = () => deleteLeaderboardEvent(ev, row);
+
+    row.appendChild(left);
+    row.appendChild(pts);
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+}
+
+async function deleteLeaderboardEvent(ev, rowEl) {
+  if (!confirm('Diesen Eintrag löschen?')) return;
+
+  if (ev.type === 'snap') {
+    // Snap-Punkte entfernen: negativen Ausgleich setzen
+    lbManualAdjustments[ev.name] = (lbManualAdjustments[ev.name] || 0) - ev.pts;
+  } else if (ev.type === 'reactions') {
+    lbManualAdjustments[ev.name] = (lbManualAdjustments[ev.name] || 0) - ev.pts;
+  } else if (ev.type === 'task') {
+    // Aufgabe als nicht erledigt markieren
+    const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+    delete done[ev.taskId];
+    localStorage.setItem('malletrack_tasks_done', JSON.stringify(done));
+  } else if (ev.type === 'manual') {
+    // Manuelle Anpassung auf 0 setzen
+    delete lbManualAdjustments[ev.name];
+  }
+
+  localStorage.setItem('malletrack_lb_adjustments', JSON.stringify(lbManualAdjustments));
+  if (rowEl) rowEl.remove();
+  loadLeaderboard();
+  showToast('🗑️ Eintrag entfernt');
+}
+
+// ============================================================
+// TRIP RECAP - Alle Snaps dauerhaft speichern und anzeigen
+// ============================================================
+async function loadRecap() {
+  const grid = document.getElementById('recap-grid');
+  const totalEl = document.getElementById('recap-total');
+  const membersEl = document.getElementById('recap-members');
+  if (!grid) return;
+
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-sec)">Lade alle Snaps...</div>';
+
+  try {
+    // ALLE Snaps laden - auch abgelaufene (kein expires_at Filter)
+    const { data } = await sb.from('snaps').select('*').eq('room_id', ROOM_ID).order('created_at', { ascending: false });
+
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div class="empty-feed" style="grid-column:1/-1;padding:30px;opacity:0.5"><div class="empty-icon">📸</div><div class="empty-text">Noch keine Snaps</div></div>';
+      return;
+    }
+
+    // Statistiken
+    const members = new Set(data.map(s => s.author_name));
+    if (totalEl) totalEl.textContent = data.length;
+    if (membersEl) membersEl.textContent = members.size;
+
+    grid.innerHTML = '';
+    data.forEach(snap => {
+      const expired = new Date(snap.expires_at) < new Date();
+      const thumb = document.createElement('div');
+      thumb.className = 'recap-thumb';
+      if (expired) thumb.style.opacity = '0.7';
+
+      const img = document.createElement('img');
+      img.src = snap.image_data;
+      img.loading = 'lazy';
+      img.alt = 'Snap';
+
+      const info = document.createElement('div');
+      info.className = 'recap-thumb-info';
+      info.innerHTML = '<div class="recap-thumb-name">' + snap.author_emoji + ' ' + escHtml(snap.author_name) + (expired ? ' 💀' : '') + '</div>'
+        + '<div class="recap-thumb-time">' + formatTime(snap.created_at) + '</div>';
+
+      thumb.appendChild(img);
+      thumb.appendChild(info);
+      thumb.onclick = () => showFullSnap(snap);
+      grid.appendChild(thumb);
+    });
+  } catch(e) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--neon-pink)">Fehler: ' + e.message + '</div>';
+  }
+}
+
+function showFullSnap(snap) {
+  // Vollbild-Overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:5000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px';
+  overlay.onclick = () => overlay.remove();
+
+  const img = document.createElement('img');
+  img.src = snap.image_data;
+  img.style.cssText = 'max-width:100%;max-height:80vh;border-radius:12px;object-fit:contain';
+
+  const info = document.createElement('div');
+  info.style.cssText = 'margin-top:14px;text-align:center;color:white';
+  info.innerHTML = '<div style="font-size:16px;font-weight:700">' + snap.author_emoji + ' ' + escHtml(snap.author_name) + '</div>'
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">' + new Date(snap.created_at).toLocaleString('de-DE') + '</div>';
+
+  const downloadBtn = document.createElement('button');
+  downloadBtn.style.cssText = 'margin-top:14px;background:var(--neon-cyan);border:none;border-radius:12px;padding:10px 24px;font-weight:700;cursor:pointer;font-size:14px';
+  downloadBtn.textContent = '⬇️ Herunterladen';
+  downloadBtn.onclick = (e) => {
+    e.stopPropagation();
+    const a = document.createElement('a');
+    a.href = snap.image_data;
+    a.download = 'malle-snap-' + snap.author_name + '-' + new Date(snap.created_at).toLocaleDateString('de-DE') + '.jpg';
+    a.click();
+  };
+
+  overlay.appendChild(img);
+  overlay.appendChild(info);
+  overlay.appendChild(downloadBtn);
+  document.body.appendChild(overlay);
+}
+
+async function downloadRecap() {
+  showToast('⏳ Bereite Download vor...');
+  try {
+    const { data } = await sb.from('snaps').select('*').eq('room_id', ROOM_ID).order('created_at', { ascending: false });
+    if (!data || data.length === 0) { showToast('Keine Snaps vorhanden'); return; }
+
+    // Jeden Snap einzeln herunterladen
+    data.forEach((snap, i) => {
+      setTimeout(() => {
+        const a = document.createElement('a');
+        a.href = snap.image_data;
+        a.download = 'malle2026-' + String(i+1).padStart(2,'0') + '-' + escHtml(snap.author_name) + '.jpg';
+        a.click();
+      }, i * 300);
+    });
+    showToast('📥 ' + data.length + ' Fotos werden heruntergeladen!');
+  } catch(e) {
+    showToast('❌ Fehler: ' + e.message);
+  }
+}
+
+async function generateRecapLink() {
+  showToast('🔗 Link: ' + window.location.href + '?recap=1');
+  if (navigator.clipboard) {
+    await navigator.clipboard.writeText(window.location.href);
+    showToast('🔗 Link kopiert!');
+  }
+}
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Login-Buttons per JS verdrahten (robuster als inline onclick)
@@ -3271,7 +3658,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Alle Tabs initial verstecken außer Karte
-  const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-quiz','tab-admin','tab-spotify'];
+  const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-recap','tab-quiz','tab-admin','tab-spotify'];
   ALL_TABS.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = id === 'tab-karte' ? 'block' : 'none';
@@ -3291,13 +3678,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   // Tabs immer initialisieren damit App nicht leer ist
-  const ALL_TABS2 = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-quiz','tab-admin','tab-spotify'];
+  const ALL_TABS2 = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-recap','tab-quiz','tab-admin','tab-spotify'];
   ALL_TABS2.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = id === 'tab-karte' ? 'block' : 'none';
   });
 });
 </script>
+
+<!-- LEADERBOARD EVENTS MODAL -->
+<div class="modal-backdrop" id="lb-events-modal" onclick="closeOnBackdrop(event,'lb-events-modal')">
+  <div class="modal-sheet" style="max-height:85vh">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="modal-title" style="margin-bottom:0">📊 Punkte-Events</div>
+      <button onclick="closeModal('lb-events-modal')" style="background:none;border:none;color:var(--text-sec);font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-sec);margin-bottom:14px">Tippe auf 🗑️ um einen Eintrag zu löschen und Punkte abzuziehen.</div>
+    <div id="lb-events-list" style="max-height:60vh;overflow-y:auto"></div>
+  </div>
+</div>
 
 <!-- LOGOUT MODAL -->
 <div class="modal-backdrop" id="logout-modal" onclick="closeOnBackdrop(event,'logout-modal')">
