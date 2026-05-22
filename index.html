@@ -331,9 +331,345 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .push-history-title{font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .push-history-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-sec)}
 .push-history-item:last-child{border-bottom:none}
+
+/* ============================================================
+   LOGIN / ONBOARDING SCREEN
+   ============================================================ */
+#login-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-deep);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+#login-screen::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 30% 20%, rgba(255,45,120,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 70% 80%, rgba(0,229,255,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.login-box {
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-logo-text {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 52px;
+  letter-spacing: 4px;
+  background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+  line-height: 1;
+}
+
+.login-logo-sub {
+  font-size: 13px;
+  color: var(--text-sec);
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 28px 24px;
+  margin-bottom: 16px;
+}
+
+.login-step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+}
+
+.step-dot.active {
+  background: var(--neon-pink);
+  width: 24px;
+  border-radius: 4px;
+}
+
+.step-dot.done {
+  background: var(--neon-green);
+}
+
+.login-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 26px;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  text-align: center;
+}
+
+.login-subtitle {
+  font-size: 13px;
+  color: var(--text-sec);
+  text-align: center;
+  margin-bottom: 22px;
+  line-height: 1.5;
+}
+
+.login-input {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: var(--text-pri);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  outline: none;
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.login-input:focus { border-color: var(--neon-pink); }
+.login-input::placeholder { color: var(--text-sec); }
+
+.login-input.error { border-color: var(--neon-pink); animation: shake 0.3s ease; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.login-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.login-emoji-btn {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.login-emoji-btn:active { transform: scale(0.9); }
+.login-emoji-btn.selected {
+  border-color: var(--neon-pink);
+  background: rgba(255,45,120,0.2);
+  box-shadow: 0 0 10px rgba(255,45,120,0.3);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 15px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, var(--neon-pink), #cc0055);
+  color: white;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(255,45,120,0.4);
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.login-btn:active { transform: scale(0.97); }
+.login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.login-room-input-wrap {
+  position: relative;
+}
+
+.login-room-input-wrap .room-check {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+}
+
+.login-info-box {
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-sec);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.login-info-box span { color: var(--neon-cyan); font-weight: 600; }
+
+.login-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255,45,120,0.08);
+  border: 1px solid rgba(255,45,120,0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.login-preview-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255,45,120,0.15);
+  border: 2px solid rgba(255,45,120,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.login-preview-info { flex: 1; }
+.login-preview-name { font-weight: 700; font-size: 16px; }
+.login-preview-room { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+
+.login-already {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-sec);
+  margin-top: 8px;
+}
+
+.login-already a {
+  color: var(--neon-cyan);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+}
 </style>
 </head>
 <body>
+
+<!-- =================== LOGIN SCREEN =================== -->
+<div id="login-screen">
+  <div class="login-box">
+
+    <div class="login-logo">
+      <span class="login-logo-text">🌴 MALLETRACK</span>
+      <div class="login-logo-sub">Mallorca Summer 2026 · Privatgruppe</div>
+    </div>
+
+    <!-- STEP 1: Raum-Code -->
+    <div class="login-card" id="login-step-1">
+      <div class="login-step-indicator">
+        <div class="step-dot active" id="sd1"></div>
+        <div class="step-dot" id="sd2"></div>
+        <div class="step-dot" id="sd3"></div>
+      </div>
+      <div class="login-title">🔑 Zugangscode</div>
+      <div class="login-subtitle">Gib den geheimen Gruppen-Code ein, den du von Tobi erhalten hast.</div>
+      <div class="login-info-box">
+        Der Code stellt sicher, dass nur <span>eingeladene Personen</span> der Gruppe beitreten können.
+      </div>
+      <div class="login-room-input-wrap">
+        <input class="login-input" id="login-room-code" placeholder="Gruppen-Code eingeben..."
+               maxlength="20" autocomplete="off" autocapitalize="characters"
+               oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')checkRoomCode()">
+        <span class="room-check" id="room-check-icon"></span>
+      </div>
+      <button class="login-btn" onclick="checkRoomCode()">Weiter →</button>
+    </div>
+
+    <!-- STEP 2: Name & Emoji -->
+    <div class="login-card" id="login-step-2" style="display:none">
+      <div class="login-step-indicator">
+        <div class="step-dot done" id="sd1b"></div>
+        <div class="step-dot active" id="sd2b"></div>
+        <div class="step-dot" id="sd3b"></div>
+      </div>
+      <div class="login-title">🎭 Dein Profil</div>
+      <div class="login-subtitle">Wähle ein Emoji und gib deinen Namen ein – so kennen dich die anderen.</div>
+      <div class="login-emoji-grid" id="login-emoji-grid"></div>
+      <input class="login-input" id="login-name-input" placeholder="Dein Name (z.B. Tobi)"
+             maxlength="20" onkeydown="if(event.key==='Enter')goToStep3()">
+      <button class="login-btn" onclick="goToStep3()">Weiter →</button>
+    </div>
+
+    <!-- STEP 3: Bestätigung -->
+    <div class="login-card" id="login-step-3" style="display:none">
+      <div class="login-step-indicator">
+        <div class="step-dot done"></div>
+        <div class="step-dot done"></div>
+        <div class="step-dot active"></div>
+      </div>
+      <div class="login-title">✅ Alles klar?</div>
+      <div class="login-subtitle">So siehst du für die anderen aus:</div>
+      <div class="login-preview">
+        <div class="login-preview-avatar" id="preview-avatar">🦁</div>
+        <div class="login-preview-info">
+          <div class="login-preview-name" id="preview-name">Dein Name</div>
+          <div class="login-preview-room">Raum: <span id="preview-room">MALLE26</span> · Mallorca 2026</div>
+        </div>
+      </div>
+      <div class="login-info-box">
+        Dein Profil wird <span>dauerhaft gespeichert</span>. Du musst dich nur einmal anmelden – auch nach dem Schließen des Browsers kommst du direkt wieder rein.
+      </div>
+      <button class="login-btn" onclick="completeRegistration()">🌴 Los geht's!</button>
+    </div>
+
+    <div class="login-already">
+      Bereits registriert? <a onclick="showReturningLogin()">Hier einloggen</a>
+    </div>
+
+  </div>
+</div>
+
+<!-- RETURNING LOGIN (für bekannte User die sich neu anmelden) -->
+<div class="modal-backdrop" id="returning-modal" onclick="closeOnBackdrop(event,'returning-modal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👋 Willkommen zurück!</div>
+    <div style="font-size:13px;color:var(--text-sec);text-align:center;margin-bottom:20px">
+      Gib deinen Namen ein – wir suchen dein Profil.
+    </div>
+    <div id="returning-profiles" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+    <div style="font-size:12px;color:var(--text-sec);text-align:center;margin-bottom:10px">— oder neues Profil erstellen —</div>
+    <button class="btn-primary" style="background:rgba(255,255,255,0.1)" onclick="closeModal('returning-modal')">Neu registrieren</button>
+  </div>
+</div>
+
 <div id="app">
   <div id="header">
     <div class="logo">🌴 MalleTrack</div>
@@ -642,6 +978,220 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </div>
 
 <script>
+
+// ============================================================
+// LOGIN & REGISTRIERUNG
+// ============================================================
+const VALID_ROOM_CODES = ['MALLE26', 'MALLE2026', 'MALLORCA26', 'TOBI2026'];
+// ↑ Diese Codes können erweitert werden. Nur wer den Code kennt, kommt rein.
+
+const LOGIN_STORAGE_KEY = 'malletrack_v2_session';
+const LOGIN_PROFILES_KEY = 'malletrack_v2_profiles';
+
+let loginState = {
+  roomCode: '',
+  selectedEmoji: '🦁',
+  name: '',
+};
+
+// Beim Start prüfen ob bereits eingeloggt
+function checkExistingSession() {
+  try {
+    const session = JSON.parse(localStorage.getItem(LOGIN_STORAGE_KEY) || 'null');
+    if (session && session.userId && session.name && session.emoji && session.roomCode) {
+      // Session validieren
+      if (VALID_ROOM_CODES.includes(session.roomCode)) {
+        // Direkt einloggen
+        applySession(session);
+        return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+
+function applySession(session) {
+  state.currentUser = {
+    id: session.userId,
+    name: session.name,
+    emoji: session.emoji,
+  };
+  updateHeaderChip();
+  hideLockScreen();
+}
+
+function hideLockScreen() {
+  const ls = document.getElementById('login-screen');
+  if (ls) {
+    ls.style.opacity = '0';
+    ls.style.transition = 'opacity 0.4s';
+    setTimeout(() => { ls.style.display = 'none'; }, 400);
+  }
+}
+
+// Emoji-Grid befüllen
+function initLoginEmojis() {
+  const grid = document.getElementById('login-emoji-grid');
+  if (!grid || grid.children.length > 0) return;
+  const EMOJIS = ['🦁','🌺','🐬','🦋','🦅','🌙','🐉','🦊','🐼','🦄','🔥','⚡','🌴','🍹','😎','🏄','🎸','💎','🌈','🦈','⚽','🏆','🥅','👟','🧤','🎯','🦌','🐯','🐻','🦩','🧸','🤿','🎪','🛥️','🎭'];
+  EMOJIS.forEach(em => {
+    const btn = document.createElement('button');
+    btn.className = 'login-emoji-btn' + (em === loginState.selectedEmoji ? ' selected' : '');
+    btn.textContent = em;
+    btn.onclick = () => {
+      loginState.selectedEmoji = em;
+      document.querySelectorAll('.login-emoji-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('preview-avatar').textContent = em;
+    };
+    grid.appendChild(btn);
+  });
+}
+
+// STEP 1: Raum-Code prüfen
+function checkRoomCode() {
+  const input = document.getElementById('login-room-code');
+  const code = input.value.trim().toUpperCase();
+  const icon = document.getElementById('room-check-icon');
+
+  if (!code) {
+    input.classList.add('error');
+    setTimeout(() => input.classList.remove('error'), 500);
+    return;
+  }
+
+  if (!VALID_ROOM_CODES.includes(code)) {
+    icon.textContent = '❌';
+    input.classList.add('error');
+    setTimeout(() => { input.classList.remove('error'); icon.textContent = ''; }, 1000);
+    showToast('❌ Falscher Code! Frag Tobi.');
+    return;
+  }
+
+  icon.textContent = '✅';
+  loginState.roomCode = code;
+
+  setTimeout(() => {
+    document.getElementById('login-step-1').style.display = 'none';
+    document.getElementById('login-step-2').style.display = 'block';
+    initLoginEmojis();
+    setTimeout(() => document.getElementById('login-name-input').focus(), 300);
+  }, 600);
+}
+
+// STEP 2 → 3
+function goToStep3() {
+  const nameInput = document.getElementById('login-name-input');
+  const name = nameInput.value.trim();
+
+  if (name.length < 2) {
+    nameInput.classList.add('error');
+    setTimeout(() => nameInput.classList.remove('error'), 500);
+    showToast('⚠️ Bitte mindestens 2 Zeichen eingeben');
+    return;
+  }
+
+  loginState.name = name;
+  document.getElementById('preview-avatar').textContent = loginState.selectedEmoji;
+  document.getElementById('preview-name').textContent = name;
+  document.getElementById('preview-room').textContent = loginState.roomCode;
+
+  document.getElementById('login-step-2').style.display = 'none';
+  document.getElementById('login-step-3').style.display = 'block';
+}
+
+// STEP 3: Registrierung abschließen
+async function completeRegistration() {
+  const btn = document.querySelector('#login-step-3 .login-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Wird gespeichert...';
+
+  // User-ID erstellen (stabil basierend auf Name + Emoji)
+  const userId = 'u_' + loginState.name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + loginState.selectedEmoji.codePointAt(0).toString(36);
+
+  const session = {
+    userId,
+    name: loginState.name,
+    emoji: loginState.selectedEmoji,
+    roomCode: loginState.roomCode,
+    registeredAt: new Date().toISOString(),
+    lastSeen: new Date().toISOString(),
+  };
+
+  // In localStorage speichern (persistiert auch nach Browser-Schließen)
+  localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(session));
+
+  // Profil-Liste aktualisieren (für mehrere Geräte/Browser)
+  const profiles = JSON.parse(localStorage.getItem(LOGIN_PROFILES_KEY) || '[]');
+  const existing = profiles.findIndex(p => p.userId === userId);
+  if (existing >= 0) profiles[existing] = session;
+  else profiles.unshift(session);
+  localStorage.setItem(LOGIN_PROFILES_KEY, JSON.stringify(profiles.slice(0, 10)));
+
+  // In Supabase als Status registrieren
+  try {
+    await sb.from('statuses').upsert({
+      room_id: ROOM_ID,
+      user_id: userId,
+      user_name: loginState.name,
+      user_emoji: loginState.selectedEmoji,
+      status: 'Gerade beigetreten 🎉',
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'room_id,user_id' });
+  } catch(e) { console.warn('Status-Registrierung:', e); }
+
+  applySession(session);
+  showToast('🎉 Willkommen, ' + loginState.selectedEmoji + ' ' + loginState.name + '!');
+
+  // App initialisieren
+  setTimeout(() => init().catch(e => console.error('Init:', e)), 300);
+}
+
+// Bereits registriert – zurückkehren
+function showReturningLogin() {
+  const profiles = JSON.parse(localStorage.getItem(LOGIN_PROFILES_KEY) || '[]');
+  const container = document.getElementById('returning-profiles');
+  container.innerHTML = '';
+
+  if (profiles.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-sec);font-size:13px;padding:12px">Keine gespeicherten Profile gefunden</div>';
+  } else {
+    profiles.forEach(profile => {
+      const btn = document.createElement('div');
+      btn.style.cssText = 'display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:14px;padding:12px 14px;cursor:pointer;transition:background 0.2s';
+      btn.innerHTML = '<div style="font-size:30px">' + profile.emoji + '</div>'
+        + '<div style="flex:1"><div style="font-weight:700;font-size:15px">' + escHtml(profile.name) + '</div>'
+        + '<div style="font-size:11px;color:var(--text-sec);margin-top:2px">Raum: ' + profile.roomCode + ' · Registriert ' + new Date(profile.registeredAt).toLocaleDateString('de-DE') + '</div></div>'
+        + '<div style="font-size:20px">→</div>';
+      btn.onclick = () => {
+        // Session updaten
+        profile.lastSeen = new Date().toISOString();
+        localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(profile));
+        closeModal('returning-modal');
+        applySession(profile);
+        showToast('👋 Willkommen zurück, ' + profile.emoji + ' ' + profile.name + '!');
+        setTimeout(() => init().catch(e => console.error('Init:', e)), 300);
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  document.getElementById('returning-modal').classList.add('open');
+}
+
+// Session-Update (lastSeen) beim Schließen/Verlassen
+function updateLastSeen() {
+  try {
+    const session = JSON.parse(localStorage.getItem(LOGIN_STORAGE_KEY) || 'null');
+    if (session) {
+      session.lastSeen = new Date().toISOString();
+      localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(session));
+    }
+  } catch(e) {}
+}
+window.addEventListener('beforeunload', updateLastSeen);
+window.addEventListener('visibilitychange', () => { if (document.hidden) updateLastSeen(); });
+
 // ============================================================
 // SUPABASE
 // ============================================================
@@ -712,9 +1262,18 @@ function waitForLeaflet(callback, attempts) {
 // INIT
 // ============================================================
 async function init() {
-  const saved = localStorage.getItem('malletrack_profile');
-  if (saved) { state.currentUser = JSON.parse(saved); updateHeaderChip(); }
-  else setTimeout(() => openProfileModal(), 700);
+  // Profil wird jetzt über Login-Screen gesetzt
+  // Fallback: aus alter localStorage-Version laden
+  if (!state.currentUser) {
+    const oldProfile = localStorage.getItem('malletrack_profile');
+    if (oldProfile) {
+      try {
+        const p = JSON.parse(oldProfile);
+        state.currentUser = p;
+        updateHeaderChip();
+      } catch(e) {}
+    }
+  }
 
   // Emoji Grid
   const grid = document.getElementById('emoji-grid');
@@ -2182,14 +2741,28 @@ async function doLogout(){
     if(state.watchId){navigator.geolocation.clearWatch(state.watchId);state.watchId=null;}
     if(state.markers[state.currentUser.id])state.mapInstance.removeLayer(state.markers[state.currentUser.id]);
   }
-  localStorage.removeItem("malletrack_profile");
+  // Alte Profile-Keys löschen
+  localStorage.removeItem('malletrack_profile');
+  localStorage.removeItem(LOGIN_STORAGE_KEY);
   state.currentUser=null;state.locationSharing=false;
-  closeModal("logout-modal");
-  document.getElementById("header-emoji").textContent="🦁";
-  document.getElementById("header-name").textContent="Profil";
+  closeModal('logout-modal');
+  document.getElementById('header-emoji').textContent='🦁';
+  document.getElementById('header-name').textContent='Profil';
   updateSharingButton(false);renderCrew();
-  showToast("👋 Du wurdest abgemeldet!");
-  setTimeout(()=>openProfileModal(),800);
+  showToast('👋 Du wurdest abgemeldet!');
+  // Login-Screen wieder anzeigen
+  setTimeout(()=>{
+    const ls=document.getElementById('login-screen');
+    if(ls){
+      // Steps zurücksetzen
+      document.getElementById('login-step-1').style.display='block';
+      document.getElementById('login-step-2').style.display='none';
+      document.getElementById('login-step-3').style.display='none';
+      document.getElementById('login-room-code').value='';
+      document.getElementById('room-check-icon').textContent='';
+      ls.style.display='flex';ls.style.opacity='1';
+    }
+  },500);
 }
 
 // INIT
@@ -2205,8 +2778,13 @@ document.addEventListener('DOMContentLoaded', () => {
   updateMainCountdown();
   setInterval(updateMainCountdown, 1000);
 
-  // App initialisieren
-  init().catch(e => console.error('Init error:', e));
+  // Session prüfen - eingeloggt? → direkt rein, sonst Login-Screen zeigen
+  const hasSession = checkExistingSession();
+  if (hasSession) {
+    // Bereits eingeloggt → App direkt starten
+    init().catch(e => console.error('Init error:', e));
+  }
+  // Sonst: Login-Screen bleibt sichtbar, init() wird nach completeRegistration() aufgerufen
 });
 </script>
 
