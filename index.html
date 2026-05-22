@@ -566,6 +566,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .login-preview-room { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
 
 
+
+/* MAP FILTER */
+.map-filter-bar{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:400;display:flex;gap:6px;overflow-x:auto;padding:4px 12px;max-width:calc(100% - 16px)}
+.map-filter-bar::-webkit-scrollbar{display:none}
+.map-filter-btn{background:rgba(10,10,18,0.88);border:1.5px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;color:var(--text-sec);transition:all 0.2s;backdrop-filter:blur(10px)}
+.map-filter-btn.active{border-color:var(--neon-cyan);color:var(--neon-cyan);background:rgba(0,229,255,0.12)}
+
+/* CHAT MSG DELETE */
+.msg-delete-btn{background:none;border:none;color:var(--text-sec);font-size:12px;cursor:pointer;opacity:0;transition:opacity 0.2s;padding:2px 6px;border-radius:6px;margin-top:2px}
+.msg-bubble:hover .msg-delete-btn{opacity:1}
+.msg-delete-btn:hover{background:rgba(255,45,120,0.2);color:var(--neon-pink)}
+
+/* LEADERBOARD EDIT */
+.lb-edit-btn{background:rgba(255,214,0,0.15);border:1px solid rgba(255,214,0,0.3);border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;color:var(--neon-gold);margin-left:6px}
+.lb-edit-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,214,0,0.06);border-top:1px solid var(--border)}
+.lb-pts-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,214,0,0.4);border-radius:8px;padding:4px 10px;color:var(--text-pri);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;width:80px;outline:none;text-align:center}
 </style>
 </head>
 <body>
@@ -643,7 +659,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 
 
-<div id="app">
+<div id="app" style="display:flex">
   <div id="header">
     <div class="logo">🌴 MalleTrack</div>
     <div style="display:flex;align-items:center;gap:7px">
@@ -659,6 +675,16 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <!-- KARTE -->
     <div id="tab-karte" class="tab-panel active">
       <div id="map"></div>
+      <div class="map-filter-bar" id="map-filter-bar">
+        <button class="map-filter-btn active" data-type="all" onclick="setMapFilter('all',this)">🗺️ Alle</button>
+        <button class="map-filter-btn" data-type="nightclub" onclick="setMapFilter('nightclub',this)">🎉 Clubs</button>
+        <button class="map-filter-btn" data-type="bar" onclick="setMapFilter('bar',this)">🍺 Bars</button>
+        <button class="map-filter-btn" data-type="restaurant" onclick="setMapFilter('restaurant',this)">🍕 Essen</button>
+        <button class="map-filter-btn" data-type="hotel" onclick="setMapFilter('hotel',this)">🏨 Hotels</button>
+        <button class="map-filter-btn" data-type="atm" onclick="setMapFilter('atm',this)">💰 ATM</button>
+        <button class="map-filter-btn" data-type="supermarket" onclick="setMapFilter('supermarket',this)">🛒 Shops</button>
+        <button class="map-filter-btn" data-type="crew" onclick="setMapFilter('crew',this)">👥 Crew</button>
+      </div>
       <div class="map-overlay">
         <button class="btn-primary" id="share-loc-btn" onclick="toggleLocationSharing()">
           <span>📍</span><span id="share-loc-text">Meinen Standort teilen</span>
@@ -840,6 +866,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <!-- PUSH NOTIFICATIONS -->
         <div class="push-card">
           <div class="members-title">📣 Gruppen-Alert</div>
+          <div style="background:rgba(255,214,0,0.08);border:1px solid rgba(255,214,0,0.2);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text-sec);margin-bottom:10px;line-height:1.6">
+            💡 <b style="color:var(--neon-gold)">In-App Banner</b> funktionieren für alle immer.<br>
+            🔔 <b style="color:var(--neon-gold)">Echte Push-Notifications</b> (wenn App geschlossen) nur wenn:<br>
+            &nbsp;&nbsp;• App als PWA installiert (Zum Homescreen)<br>
+            &nbsp;&nbsp;• iOS 16.4+ oder Android Chrome<br>
+            &nbsp;&nbsp;• Push im ⚙️-Tab aktiviert
+          </div>
 
           <div class="push-status">
             <div class="push-dot" id="push-dot"></div>
@@ -1242,6 +1275,14 @@ function waitForLeaflet(callback, attempts) {
 // INIT
 // ============================================================
 async function init() {
+  // Manuelle Leaderboard-Anpassungen laden
+  lbManualAdjustments = JSON.parse(localStorage.getItem('malletrack_lb_adjustments') || '{}');
+
+  // Alerts immer abhören (Banner funktioniert auch ohne Push-Permission)
+  setTimeout(() => {
+    try { listenForAlerts(); } catch(e) { console.warn('Alert listener:', e); }
+  }, 1000);
+
   // Profil wird jetzt über Login-Screen gesetzt
   // Fallback: aus alter localStorage-Version laden
   if (!state.currentUser) {
@@ -1735,6 +1776,9 @@ async function sendLocation(lat,lng) {
     lat,lng,updated_at:new Date().toISOString()
   },{onConflict:'room_id,user_id'});
   updateMarker({user_id:state.currentUser.id,user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,lat,lng});
+  // Dynamische POIs im Umkreis laden
+  state.crewLocations[state.currentUser.id] = {lat,lng};
+  if(state.mapInstance) loadOverpassAroundPoint(lat, lng, state.mapInstance).catch(()=>{});
 }
 function stopLocationSharing() {
   if(state.watchId){navigator.geolocation.clearWatch(state.watchId);state.watchId=null;}
@@ -2171,17 +2215,107 @@ setInterval(updateMainCountdown, 1000);
 // ============================================================
 const ROULETTE_CATEGORIES = {
   'Trinken 🍺': [
-    'Wer trinkt den nächsten Shot?','Alle trinken!','Zwei Finger trinken','Gib deinen Drink weiter','Du zahlst die nächste Runde','Waterfall – alle trinken bis du aufhörst','Niemals habe ich... – wer lügt trinkt','Mixe einen Drink für jemanden'
+    'Wer trinkt den nächsten Shot?',
+    'Alle trinken – prost!',
+    'Zwei Finger trinken',
+    'Gib deinen Drink weiter',
+    'Du zahlst die nächste Runde',
+    'Waterfall – alle trinken bis du aufhörst',
+    'Niemals habe ich... – wer lügt trinkt',
+    'Mixe einen Drink für jemanden',
+    'Trinke auf ex!',
+    'Wähle jemanden der trinken muss',
+    'Alle mit Bart trinken',
+    'Alle mit Sonnenbrille trinken',
+    'Letzte Person die trinkt zahlt',
+    'Stille Post – wer Fehler macht trinkt',
+    'Schere-Stein-Papier – Verlierer trinkt',
   ],
   'Challenges 🎯': [
-    'Mache 10 Liegestütze','Tanze 30 Sek solo auf der Tanzfläche','Singe laut ein Lied','Ruf jemanden zuhause an','Foto mit einem Fremden','Rede 2 Min kein Deutsch','Imitiere eine Person in der Gruppe','Tausche für 5 Min das Handy mit jemandem'
+    'Mache 10 Liegestütze',
+    'Tanze 30 Sek solo auf der Tanzfläche',
+    'Singe laut die erste Strophe eines Liedes',
+    'Ruf jemanden zuhause an',
+    'Foto mit einem wildfremden Menschen',
+    'Rede 2 Minuten kein Deutsch',
+    'Imitiere eine Person in der Gruppe',
+    'Tausche für 5 Min das Handy mit jemandem',
+    'Mache einen Witz – alle müssen lachen',
+    'Bestelle etwas auf Spanisch',
+    'Mache einen Handstand (oder versuche es)',
+    'Bitte einen Fremden um ein Selfie',
+    'Sag 60 Sekunden lang nur Ja',
+    'Gehe rückwärts zum nächsten Platz',
+    '10 Kniebeugen vor allen anderen',
   ],
   'Wer von uns...? 👀': [
-    'Wer ist zuerst eingeschlafen?','Wer hat am meisten Geld ausgegeben?','Wer hat am lautesten geschnarcht?','Wer würde am längsten durchhalten?','Wer ist am besten angezogen?','Wer wäre der schlechteste Pilot?','Wer ist das Gruppengewissen?','Wer würde als Erstes aufgeben?'
+    'Wer ist zuerst eingeschlafen?',
+    'Wer hat am meisten Geld ausgegeben?',
+    'Wer hat am lautesten geschnarcht?',
+    'Wer würde als Erstes aufgeben?',
+    'Wer ist am besten angezogen?',
+    'Wer wäre der schlechteste Fahrer?',
+    'Wer ist das Gruppengewissen?',
+    'Wer hat die meisten Fotos gemacht?',
+    'Wer würde auf einer Insel zuletzt überleben?',
+    'Wer ist am wildesten in der Gruppe?',
+    'Wer schläft am längsten?',
+    'Wer ist am meisten verliebt?',
+    'Wer tanzt am besten?',
+    'Wer wäre der beste Bartender?',
+    'Wer würde sich am schnellsten verirren?',
   ],
   'Malle-Spezial 🌴': [
-    'Macht ein Gruppen-Selfie!','Wählt den nächsten Club per Abstimmung','10€ in den Gruppenpool','Bestellt eine Überraschung für alle','Plant spontan eine Bootstour','Kauft alle dieselbe Sonnenbrille','Macht einen 24h-Handyentzug','Spontaner Karaoke-Abend!'
-  ]
+    'Gruppen-Selfie sofort!',
+    'Nächsten Club per Abstimmung wählen',
+    '10€ in den Gruppenpool',
+    'Überraschung für alle bestellen',
+    'Spontane Bootstour planen',
+    'Alle kaufen dieselbe Sonnenbrille',
+    '1 Stunde kein Social Media',
+    'Karaoke – jeder singt einen Song',
+    'Alle tragen ihre Shirts verkehrt herum',
+    'Gemeinsamer Tanz zum nächsten Song',
+    'Wechselt 10 Min die Paare beim Tanzen',
+    'Alle posten gleichzeitig ein Story',
+    'Jeder ruft einen Kontakt daheim an',
+    'Nächste Runde geht auf den Jüngsten',
+    'Gruppenregel für 30 Min wählen',
+  ],
+  'Wahrheit oder Pflicht 🔥': [
+    'Wahrheit: Was war dein peinlichster Moment?',
+    'Pflicht: Tanze 1 Min alleine in der Mitte',
+    'Wahrheit: In wen warst du zuletzt verliebt?',
+    'Pflicht: Schreibe jemandem eine romantische Nachricht',
+    'Wahrheit: Was ist dein größtes Geheimnis?',
+    'Pflicht: Mache 3 Komplimente an Fremde',
+    'Wahrheit: Was denkst du wirklich über X?',
+    'Pflicht: Singe die nächste Minute laut mit',
+    'Wahrheit: Dein schlimmster Date-Fail?',
+    'Pflicht: Tausche Schuhe mit jemandem für 10 Min',
+    'Wahrheit: Was würdest du anders machen?',
+    'Pflicht: Bitte einen Fremden um seinen besten Witz',
+    'Wahrheit: Dein größter Urlaubs-Fehler?',
+    'Pflicht: Tu so als wärst du ein Hund für 1 Min',
+    'Wahrheit: Wen hier findest du am lustigsten?',
+  ],
+  'Abstimmung 🗳️': [
+    'Wer gewinnt in einem Sing-Off?',
+    'Wer hat heute das beste Outfit?',
+    'Wer würde am längsten ohne Handy auskommen?',
+    'Wer wäre der beste Reiseleiter?',
+    'Wer ist heimlicher Anführer der Gruppe?',
+    'Wer schläft als Erstes ein heute Nacht?',
+    'Wer gibt heute am meisten Geld aus?',
+    'Wer macht die meisten Fotos?',
+    'Nächste Location: Strand, Club oder Bar?',
+    'Wer bekommt den Preis für schlechtesten Tänzer?',
+    'Wer ist der heimliche Romantiker?',
+    'Wer wäre der beste Drag Queen?',
+    'Bestes Urlaubsmoment bisher?',
+    'Wer hat den lustigsten Lacher?',
+    'Wer würde als Erstes Millionär?',
+  ],
 };
 let rouletteCategory = 'Trinken 🍺';
 let wheelSpinning = false;
@@ -2312,13 +2446,41 @@ async function loadLeaderboard() {
     }
   });
 
+  // Manuelle Admin-Anpassungen laden
+  lbManualAdjustments = JSON.parse(localStorage.getItem('malletrack_lb_adjustments') || '{}');
+  Object.entries(lbManualAdjustments).forEach(([name, adj]) => {
+    if (scores[name]) scores[name].pts += adj;
+    else scores[name] = { name, emoji: '⭐', pts: adj, snaps: 0, reactions: 0 };
+  });
+
   const sorted = Object.values(scores).sort((a, b) => b.pts - a.pts);
   const medals = ['🥇','🥈','🥉'];
   const rankClass = ['gold','silver','bronze'];
   lbEl.innerHTML = '';
 
+  // Admin Edit-Button
+  const isAdmin = state.currentUser && state.currentUser.isAdmin;
+  if (isAdmin) {
+    const editBar = document.createElement('div');
+    editBar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)';
+    editBar.innerHTML = '<span style="font-size:12px;color:var(--text-sec)">' + (lbEditMode ? '✏️ Bearbeitungsmodus aktiv' : '👑 Admin: Punkte bearbeiten') + '</span>';
+    const editBtn = document.createElement('button');
+    editBtn.className = 'lb-edit-btn';
+    editBtn.textContent = lbEditMode ? '✅ Fertig' : '✏️ Bearbeiten';
+    editBtn.onclick = toggleLeaderboardEdit;
+    editBar.appendChild(editBtn);
+    lbEl.appendChild(editBar);
+    if (lbEditMode) {
+      const resetBtn = document.createElement('button');
+      resetBtn.style.cssText = 'margin:6px 14px;background:rgba(255,0,0,0.1);border:1px solid rgba(255,0,0,0.3);border-radius:8px;padding:5px 12px;font-size:11px;color:#ff4444;cursor:pointer;width:calc(100% - 28px)';
+      resetBtn.textContent = '🔄 Alle Anpassungen zurücksetzen';
+      resetBtn.onclick = resetLeaderboardAdjustments;
+      lbEl.appendChild(resetBtn);
+    }
+  }
+
   if (sorted.length === 0) {
-    lbEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-sec);font-size:13px">Noch keine Punkte! Macht Snaps & erledigt Aufgaben 🚀</div>';
+    lbEl.innerHTML += '<div style="padding:20px;text-align:center;color:var(--text-sec);font-size:13px">Noch keine Punkte! Macht Snaps & erledigt Aufgaben 🚀</div>';
     return;
   }
 
@@ -2327,15 +2489,28 @@ async function loadLeaderboard() {
     row.className = 'lb-row';
     const rankLabel = i < 3 ? medals[i] : (i+1)+'';
     const rc = i < 3 ? rankClass[i] : '';
-    row.innerHTML = `
-      <div class="lb-rank ${rc}">${rankLabel}</div>
-      <div class="lb-avatar">${entry.emoji}</div>
-      <div class="lb-info">
-        <div class="lb-name">${escHtml(entry.name)}</div>
-        <div class="lb-detail">📸 ${entry.snaps} Snaps · ❤️ ${entry.reactions} Reaktionen</div>
-      </div>
-      <div class="lb-score">${entry.pts}</div>`;
+    row.innerHTML = '<div class="lb-rank ' + rc + '">' + rankLabel + '</div>'
+      + '<div class="lb-avatar">' + entry.emoji + '</div>'
+      + '<div class="lb-info">'
+      + '<div class="lb-name">' + escHtml(entry.name) + '</div>'
+      + '<div class="lb-detail">📸 ' + entry.snaps + ' Snaps · ❤️ ' + entry.reactions + ' Reaktionen</div>'
+      + '</div>'
+      + '<div class="lb-score">' + entry.pts + '</div>';
     lbEl.appendChild(row);
+
+    // Edit-Row für Admins
+    if (isAdmin && lbEditMode) {
+      const editRow = document.createElement('div');
+      editRow.className = 'lb-edit-row';
+      const adj = lbManualAdjustments[entry.name] || 0;
+      editRow.innerHTML = '<span style="font-size:12px;color:var(--text-sec);flex:1">Anpassen:</span>'
+        + '<button onclick="adjustLeaderboardScore('' + escHtml(entry.name) + '',-5)" style="background:rgba(255,45,120,0.2);border:1px solid rgba(255,45,120,0.4);border-radius:8px;padding:3px 10px;color:var(--neon-pink);cursor:pointer;font-weight:700">-5</button>'
+        + '<button onclick="adjustLeaderboardScore('' + escHtml(entry.name) + '',-1)" style="background:rgba(255,45,120,0.15);border:1px solid rgba(255,45,120,0.3);border-radius:8px;padding:3px 8px;color:var(--neon-pink);cursor:pointer;font-weight:700">-1</button>'
+        + '<span style="font-size:12px;color:' + (adj>0?'var(--neon-green)':adj<0?'var(--neon-pink)':'var(--text-sec)') + ';min-width:40px;text-align:center;font-weight:700">' + (adj>0?'+':'') + adj + '</span>'
+        + '<button onclick="adjustLeaderboardScore('' + escHtml(entry.name) + '',1)" style="background:rgba(57,255,20,0.15);border:1px solid rgba(57,255,20,0.3);border-radius:8px;padding:3px 8px;color:var(--neon-green);cursor:pointer;font-weight:700">+1</button>'
+        + '<button onclick="adjustLeaderboardScore('' + escHtml(entry.name) + '',5)" style="background:rgba(57,255,20,0.2);border:1px solid rgba(57,255,20,0.4);border-radius:8px;padding:3px 10px;color:var(--neon-green);cursor:pointer;font-weight:700">+5</button>';
+      lbEl.appendChild(editRow);
+    }
   });
 }
 
@@ -2867,6 +3042,184 @@ async function clearAllPins() {
   }
 }
 
+
+// ============================================================
+// MAP FILTER
+// ============================================================
+let activeMapFilter = 'all';
+let allPOIMarkers = []; // {marker, type}
+
+function setMapFilter(type, btn) {
+  activeMapFilter = type;
+  document.querySelectorAll('.map-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  allPOIMarkers.forEach(({marker, poiType}) => {
+    if (type === 'all') {
+      marker.addTo(state.mapInstance);
+    } else if (type === 'crew') {
+      // Crew-Marker: alle anderen ausblenden
+      state.mapInstance.removeLayer(marker);
+    } else {
+      if (poiType === type) marker.addTo(state.mapInstance);
+      else state.mapInstance.removeLayer(marker);
+    }
+  });
+
+  // Crew-Marker immer sichtbar außer bei anderen Filtern
+  Object.values(state.markers).forEach(m => {
+    if (type === 'crew' || type === 'all') m.addTo(state.mapInstance);
+    else state.mapInstance.removeLayer(m);
+  });
+
+  showToast('🗺️ Filter: ' + (btn ? btn.textContent : type));
+}
+
+// POI-Marker mit Filter-Tracking registrieren
+function addFilteredPOI(lat, lng, icon, type, map) {
+  const m = L.marker([lat, lng], { icon, zIndexOffset: -100 }).addTo(map);
+  allPOIMarkers.push({ marker: m, poiType: type });
+  return m;
+}
+
+// ============================================================
+// DYNAMISCHE POIs basierend auf Gruppen-Standorten
+// ============================================================
+async function loadDynamicPOIs() {
+  if (!state.mapInstance) return;
+  // Alle bekannten Standorte sammeln
+  const locations = Object.values(state.crewLocations);
+  if (locations.length === 0) return;
+
+  // Radius um jeden Standort erweitern (500m)
+  for (const loc of locations) {
+    await loadOverpassAroundPoint(loc.lat, loc.lng, state.mapInstance);
+  }
+}
+
+async function loadOverpassAroundPoint(lat, lng, map) {
+  const radius = 400; // Meter
+  const query = '[out:json][timeout:10];('
+    + 'node["amenity"~"bar|pub|nightclub|restaurant|cafe|atm|pharmacy"]'
+    + '(around:' + radius + ',' + lat + ',' + lng + ');'
+    + 'node["tourism"="hotel"](around:' + radius + ',' + lat + ',' + lng + ');'
+    + 'node["shop"="supermarket"](around:' + radius + ',' + lat + ',' + lng + ');'
+    + ');out body;';
+
+  const ENDPOINTS = [
+    'https://overpass.private.coffee/api/interpreter',
+    'https://overpass.openstreetmap.ru/api/interpreter',
+  ];
+
+  for (const ep of ENDPOINTS) {
+    try {
+      const resp = await fetch(ep, { method: 'POST', body: 'data=' + encodeURIComponent(query) });
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      const poiIcons   = { bar:'🍺', pub:'🍺', nightclub:'🎉', restaurant:'🍕', fast_food:'🌭', cafe:'☕', atm:'💰', hotel:'🏨', pharmacy:'💊', supermarket:'🛒' };
+      const poiColors  = { bar:'#ff6b35', pub:'#ff6b35', nightclub:'#ff2d78', restaurant:'#ffd600', fast_food:'#ffd600', cafe:'#a0522d', atm:'#39ff14', hotel:'#00e5ff', pharmacy:'#39ff14', supermarket:'#00e5ff' };
+
+      (data.elements || []).slice(0, 30).forEach(el => {
+        if (!el.lat || !el.lon) return;
+        const type  = el.tags.amenity || el.tags.tourism || el.tags.shop || '';
+        const icon  = poiIcons[type] || '📍';
+        const color = poiColors[type] || '#888';
+        const name  = el.tags.name || type;
+        if (!name || name.length < 2) return;
+
+        // Duplikate vermeiden
+        const key = Math.round(el.lat*1000) + ',' + Math.round(el.lon*1000);
+        if (allPOIMarkers.find(p => p.key === key)) return;
+
+        const shortName = name.length > 12 ? name.substring(0,11)+'…' : name;
+        const poiIcon = L.divIcon({
+          className: '',
+          html: '<div style="display:flex;flex-direction:column;align-items:center">'
+              + '<div style="background:#0f0f1e;border:1.5px solid ' + color + ';border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px">' + icon + '</div>'
+              + '<div style="background:rgba(10,10,18,0.85);border-radius:4px;padding:1px 4px;font-size:7px;font-weight:700;color:' + color + ';white-space:nowrap;margin-top:1px">' + shortName + '</div>'
+              + '</div>',
+          iconSize:[28,40], iconAnchor:[14,38]
+        });
+
+        const elLat=el.lat, elLon=el.lon, elName=name, elIcon=icon;
+        const m = L.marker([elLat, elLon], { icon: poiIcon, zIndexOffset: -100 }).addTo(map);
+        m.on('click', () => {
+          document.getElementById('marker-modal-title').textContent = elIcon + ' ' + elName;
+          const actions = document.getElementById('marker-actions');
+          actions.innerHTML = '';
+          addAction(actions, '🗺️', 'In Google Maps öffnen', () => {
+            window.open('https://www.google.com/maps/search/' + encodeURIComponent(elName) + '/@' + elLat + ',' + elLon + ',17z', '_blank');
+            closeModal('marker-modal');
+          });
+          addAction(actions, '🧭', 'Navigation starten', () => {
+            window.open('https://www.google.com/maps/dir/?api=1&destination=' + elLat + ',' + elLon, '_blank');
+            closeModal('marker-modal');
+          });
+          document.getElementById('marker-modal').classList.add('open');
+        });
+
+        allPOIMarkers.push({ marker: m, poiType: type, key });
+      });
+      break; // Erster erfolgreicher Endpunkt reicht
+    } catch(e) { continue; }
+  }
+}
+
+// ============================================================
+// CHAT: EIGENE NACHRICHTEN LÖSCHEN
+// ============================================================
+async function deleteMessage(msgId, authorName) {
+  const isOwn = state.currentUser && state.currentUser.name === authorName;
+  const isAdmin = state.currentUser && state.currentUser.isAdmin;
+  if (!isOwn && !isAdmin) { showToast('❌ Keine Berechtigung'); return; }
+  if (!confirm('Nachricht löschen?')) return;
+  try {
+    const { error } = await sb.from('messages').delete().eq('id', msgId);
+    if (error) { showToast('❌ ' + error.message); return; }
+    await loadChatMessages();
+    showToast('🗑️ Nachricht gelöscht');
+  } catch(e) { showToast('❌ ' + e.message); }
+}
+
+// ============================================================
+// LEADERBOARD: ADMIN BEARBEITUNG
+// ============================================================
+let lbEditMode = false;
+let lbManualAdjustments = {};
+
+function toggleLeaderboardEdit() {
+  if (!state.currentUser || !state.currentUser.isAdmin) {
+    showToast('❌ Nur für Admins');
+    return;
+  }
+  lbEditMode = !lbEditMode;
+  loadLeaderboard();
+  showToast(lbEditMode ? '✏️ Bearbeitungsmodus aktiv' : '✅ Bearbeitungsmodus beendet');
+}
+
+function adjustLeaderboardScore(userName, delta) {
+  if (!lbManualAdjustments[userName]) lbManualAdjustments[userName] = 0;
+  lbManualAdjustments[userName] += delta;
+  localStorage.setItem('malletrack_lb_adjustments', JSON.stringify(lbManualAdjustments));
+  loadLeaderboard();
+  showToast((delta > 0 ? '+' : '') + delta + ' Punkte für ' + userName);
+}
+
+function setLeaderboardScore(userName, pts) {
+  const current = lbManualAdjustments[userName] || 0;
+  lbManualAdjustments[userName] = pts;
+  localStorage.setItem('malletrack_lb_adjustments', JSON.stringify(lbManualAdjustments));
+  loadLeaderboard();
+}
+
+function resetLeaderboardAdjustments() {
+  if (!confirm('Alle manuellen Anpassungen zurücksetzen?')) return;
+  lbManualAdjustments = {};
+  localStorage.removeItem('malletrack_lb_adjustments');
+  loadLeaderboard();
+  showToast('🔄 Leaderboard zurückgesetzt');
+}
+
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Login-Buttons per JS verdrahten (robuster als inline onclick)
@@ -2909,8 +3262,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Session prüfen - eingeloggt? direkt rein, sonst Login-Screen zeigen
   const hasSession = checkExistingSession();
   if (hasSession) {
-    init().catch(e => console.error('Init error:', e));
+    init().catch(e => {
+      console.error('Init error:', e);
+      // App trotzdem zeigen auch wenn Init fehlschlägt
+      hideLockScreen();
+    });
   }
+  // Tabs immer initialisieren damit App nicht leer ist
+  const ALL_TABS2 = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-quiz','tab-admin','tab-spotify'];
+  ALL_TABS2.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = id === 'tab-karte' ? 'block' : 'none';
+  });
 });
 </script>
 
