@@ -2493,7 +2493,7 @@ async function loadLeaderboard() {
       + '<div class="lb-avatar">' + entry.emoji + '</div>'
       + '<div class="lb-info">'
       + '<div class="lb-name">' + escHtml(entry.name) + '</div>'
-      + '<div class="lb-detail">📸 ' + entry.snaps + ' Snaps · ❤️ ' + entry.reactions + ' Reaktionen</div>'
+      + '<div class="lb-detail">📸 ' + entry.snaps + ' · ❤️ ' + entry.reactions + '</div>'
       + '</div>'
       + '<div class="lb-score">' + entry.pts + '</div>';
     lbEl.appendChild(row);
@@ -2503,12 +2503,34 @@ async function loadLeaderboard() {
       const editRow = document.createElement('div');
       editRow.className = 'lb-edit-row';
       const adj = lbManualAdjustments[entry.name] || 0;
-      editRow.innerHTML = '<span style="font-size:12px;color:var(--text-sec);flex:1">Anpassen:</span>'
-        + '<button onclick="adjustLeaderboardScore('' + escHtml(entry.name) + '',-5)" style="background:rgba(255,45,120,0.2);border:1px solid rgba(255,45,120,0.4);border-radius:8px;padding:3px 10px;color:var(--neon-pink);cursor:pointer;font-weight:700">-5</button>'
-        + '<button onclick="adjustLeaderboardScore('' + escHtml(entry.name) + '',-1)" style="background:rgba(255,45,120,0.15);border:1px solid rgba(255,45,120,0.3);border-radius:8px;padding:3px 8px;color:var(--neon-pink);cursor:pointer;font-weight:700">-1</button>'
-        + '<span style="font-size:12px;color:' + (adj>0?'var(--neon-green)':adj<0?'var(--neon-pink)':'var(--text-sec)') + ';min-width:40px;text-align:center;font-weight:700">' + (adj>0?'+':'') + adj + '</span>'
-        + '<button onclick="adjustLeaderboardScore('' + escHtml(entry.name) + '',1)" style="background:rgba(57,255,20,0.15);border:1px solid rgba(57,255,20,0.3);border-radius:8px;padding:3px 8px;color:var(--neon-green);cursor:pointer;font-weight:700">+1</button>'
-        + '<button onclick="adjustLeaderboardScore('' + escHtml(entry.name) + '',5)" style="background:rgba(57,255,20,0.2);border:1px solid rgba(57,255,20,0.4);border-radius:8px;padding:3px 10px;color:var(--neon-green);cursor:pointer;font-weight:700">+5</button>';
+      // Buttons via DOM erstellen - keine String-Interpolation mit onclick
+      const adjLabel = document.createElement('span');
+      adjLabel.style.cssText = 'font-size:12px;color:var(--text-sec);flex:1';
+      adjLabel.textContent = 'Anpassen:';
+      editRow.appendChild(adjLabel);
+
+      [[-5,'var(--neon-pink)','rgba(255,45,120,0.2)','rgba(255,45,120,0.4)'],
+       [-1,'var(--neon-pink)','rgba(255,45,120,0.15)','rgba(255,45,120,0.3)']].forEach(([val,col,bg,bdr]) => {
+        const b = document.createElement('button');
+        b.textContent = val;
+        b.style.cssText = 'background:'+bg+';border:1px solid '+bdr+';border-radius:8px;padding:3px 10px;color:'+col+';cursor:pointer;font-weight:700';
+        b.onclick = () => adjustLeaderboardScore(entry.name, val);
+        editRow.appendChild(b);
+      });
+
+      const adjSpan = document.createElement('span');
+      adjSpan.style.cssText = 'font-size:12px;color:'+(adj>0?'var(--neon-green)':adj<0?'var(--neon-pink)':'var(--text-sec)')+';min-width:40px;text-align:center;font-weight:700';
+      adjSpan.textContent = (adj>0?'+':'')+adj;
+      editRow.appendChild(adjSpan);
+
+      [[1,'var(--neon-green)','rgba(57,255,20,0.15)','rgba(57,255,20,0.3)'],
+       [5,'var(--neon-green)','rgba(57,255,20,0.2)','rgba(57,255,20,0.4)']].forEach(([val,col,bg,bdr]) => {
+        const b = document.createElement('button');
+        b.textContent = '+'+val;
+        b.style.cssText = 'background:'+bg+';border:1px solid '+bdr+';border-radius:8px;padding:3px 10px;color:'+col+';cursor:pointer;font-weight:700';
+        b.onclick = () => adjustLeaderboardScore(entry.name, val);
+        editRow.appendChild(b);
+      });
       lbEl.appendChild(editRow);
     }
   });
