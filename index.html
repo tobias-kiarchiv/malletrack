@@ -692,6 +692,19 @@ let state = {
   selectedMember: null
 };
 
+
+// Warte bis Leaflet (L) verfügbar ist
+function waitForLeaflet(callback, attempts) {
+  attempts = attempts || 0;
+  if (typeof L !== 'undefined') {
+    callback();
+  } else if (attempts < 50) {
+    setTimeout(() => waitForLeaflet(callback, attempts + 1), 100);
+  } else {
+    console.error('Leaflet konnte nicht geladen werden');
+  }
+}
+
 // ============================================================
 // INIT
 // ============================================================
@@ -732,11 +745,12 @@ async function init() {
   renderSpotifyList();
 
   await Promise.all([loadSnaps(), loadStatuses(), loadChatMessages()]);
-  setTimeout(()=>{
+  // Leaflet laden und dann Map initialisieren
+  waitForLeaflet(() => {
     initMap();
     loadLocations();
     loadPins();
-  }, 200);
+  });
   renderCrew();
   subscribeRealtime();
   setInterval(updateCountdowns, 1000);
@@ -1541,7 +1555,10 @@ function switchTab(tabId, btn) {
       setTimeout(() => { try { initHeatmap(); } catch(e){} }, 300);
     }
     if (tabId === 'tab-quiz') { try { initQuiz(); } catch(e){} }
-    if (tabId === 'tab-admin') { try { loadAdminTab(); setTimeout(()=>initPushNotifications(), 200); } catch(e){} }
+    if (tabId === 'tab-admin') {
+      try { loadAdminTab(); } catch(e){ console.error('loadAdminTab:', e); }
+      setTimeout(() => { try { initPushNotifications(); } catch(e){ console.error('push:', e); } }, 300);
+    }
   } catch(e) { console.error('switchTab error:', e); }
 }
 function showTabNotif(tabId){/* optional badge logic */}
