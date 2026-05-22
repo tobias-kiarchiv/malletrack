@@ -2815,6 +2815,58 @@ function showIOSInstallGuide() {
   setTimeout(() => { if (document.getElementById('ios-guide-banner')) document.getElementById('ios-guide-banner').remove(); }, 15000);
 }
 
+
+// ============================================================
+// ADMIN EXTRA-FUNKTIONEN
+// ============================================================
+async function clearGroupChat() {
+  if (!state.currentUser || !state.currentUser.isAdmin) {
+    showToast('❌ Nur für Admins');
+    return;
+  }
+  if (!confirm('Wirklich den gesamten Gruppen-Chat leeren?')) return;
+  try {
+    // Alle Nachrichten dieses Raums löschen
+    const { error } = await sb.from('messages').delete().eq('room_id', ROOM_ID);
+    if (error) {
+      console.error('Chat leeren Fehler:', error);
+      showToast('❌ Fehler: ' + error.message);
+      return;
+    }
+    state.chatMessages = [];
+    renderChat();
+    showToast('🗑️ Chat erfolgreich geleert!');
+  } catch(e) {
+    console.error('Chat leeren Exception:', e);
+    showToast('❌ Fehler: ' + e.message);
+  }
+}
+
+async function clearAllPins() {
+  if (!state.currentUser || !state.currentUser.isAdmin) {
+    showToast('❌ Nur für Admins');
+    return;
+  }
+  if (!confirm('Wirklich ALLE Treffpunkte löschen?')) return;
+  try {
+    const { error } = await sb.from('pins').delete().eq('room_id', ROOM_ID);
+    if (error) { showToast('❌ Fehler: ' + error.message); return; }
+    // Alle Marker von der Karte entfernen
+    if (state.pinMarkers) {
+      Object.values(state.pinMarkers).forEach(pm => {
+        if (pm && pm.marker && state.mapInstance) {
+          state.mapInstance.removeLayer(pm.marker);
+        }
+      });
+      state.pinMarkers = {};
+    }
+    showToast('📍 Alle Treffpunkte gelöscht!');
+    await loadAdminPins();
+  } catch(e) {
+    showToast('❌ Fehler: ' + e.message);
+  }
+}
+
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Login-Buttons per JS verdrahten (robuster als inline onclick)
