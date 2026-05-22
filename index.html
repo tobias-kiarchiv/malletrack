@@ -844,9 +844,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <div class="members-title">Mein Profil</div>
           <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
             <div style="font-size:42px" id="admin-my-emoji">🦁</div>
-            <div>
-              <div style="font-weight:700;font-size:16px" id="admin-my-name">–</div>
-              <div style="font-size:12px;color:var(--text-sec)">Raum: MALLE26</div>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px">
+                <span id="admin-my-name">–</span>
+                <span id="admin-role-badge" style="display:none;background:linear-gradient(135deg,rgba(255,214,0,0.25),rgba(255,150,0,0.15));border:1px solid rgba(255,214,0,0.5);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--neon-gold);letter-spacing:0.5px">👑 ADMIN</span>
+              </div>
+              <div style="font-size:12px;color:var(--text-sec);margin-top:2px">Raum: MALLE26</div>
             </div>
           </div>
           <button class="btn-primary" onclick="openProfileModal()" style="margin-bottom:8px">✏️ Profil bearbeiten</button>
@@ -892,10 +895,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </div>
 
         <!-- Admin: Mitglieder -->
-        <div class="admin-section">
-          <div class="admin-title">🔑 Admin-Bereich</div>
-          <div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">Aktive Nutzer aus der Gruppe entfernen (löscht Standort & Status)</div>
-          <div id="admin-members-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div class="admin-section" id="admin-kick-section" style="display:none">
+          <div class="admin-title">👑 Admin-Bereich</div>
+          <div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">Nur du als Admin kannst Nutzer entfernen und den Chat leeren.</div>
+          <div id="admin-members-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+          <button class="danger-btn" onclick="clearGroupChat()" style="margin-top:4px">🗑️ Gruppen-Chat leeren</button>
+          <button class="danger-btn" onclick="clearAllPins()" style="margin-top:6px;background:linear-gradient(135deg,#884400,#552200)">📍 Alle Treffpunkte löschen</button>
+        </div>
+        <!-- Nicht-Admin Hinweis -->
+        <div id="admin-non-admin-hint" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:14px;text-align:center">
+          <div style="font-size:24px;margin-bottom:8px">🔒</div>
+          <div style="font-size:13px;color:var(--text-sec)">Der Admin-Bereich ist nur für Tobi sichtbar.</div>
         </div>
 
       </div>
@@ -983,7 +993,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 // LOGIN & REGISTRIERUNG
 // ============================================================
 const VALID_ROOM_CODES = ['MALLE26', 'MALLE2026', 'MALLORCA26', 'TOBI2026'];
-// ↑ Diese Codes können erweitert werden. Nur wer den Code kennt, kommt rein.
+const ADMIN_CODES = ['TOBI-ADMIN-2026', 'ADMIN26'];
+// ↑ Admin-Codes geben Zugriff auf erweiterte Funktionen
 
 const LOGIN_STORAGE_KEY = 'malletrack_v2_session';
 const LOGIN_PROFILES_KEY = 'malletrack_v2_profiles';
@@ -1015,9 +1026,16 @@ function applySession(session) {
     id: session.userId,
     name: session.name,
     emoji: session.emoji,
+    isAdmin: session.isAdmin || false,
   };
   updateHeaderChip();
   hideLockScreen();
+  // Admin-Indikator im Header
+  if (session.isAdmin) {
+    const chip = document.querySelector('.user-chip');
+    if (chip) chip.style.borderColor = 'rgba(255,214,0,0.6)';
+    setTimeout(() => showToast('👑 Du bist als Admin eingeloggt'), 1000);
+  }
 }
 
 function hideLockScreen() {
@@ -1060,7 +1078,10 @@ function checkRoomCode() {
     return;
   }
 
-  if (!VALID_ROOM_CODES.includes(code)) {
+  const isAdmin = ADMIN_CODES.includes(code);
+  const isValid = VALID_ROOM_CODES.includes(code) || isAdmin;
+
+  if (!isValid) {
     icon.textContent = '❌';
     input.classList.add('error');
     setTimeout(() => { input.classList.remove('error'); icon.textContent = ''; }, 1000);
@@ -1068,8 +1089,10 @@ function checkRoomCode() {
     return;
   }
 
-  icon.textContent = '✅';
-  loginState.roomCode = code;
+  icon.textContent = isAdmin ? '👑' : '✅';
+  if (isAdmin) showToast('👑 Admin-Zugang erkannt!');
+  loginState.roomCode = 'MALLE26'; // immer im gleichen Raum
+  loginState.isAdmin = isAdmin;
 
   setTimeout(() => {
     document.getElementById('login-step-1').style.display = 'none';
@@ -1114,6 +1137,7 @@ async function completeRegistration() {
     name: loginState.name,
     emoji: loginState.selectedEmoji,
     roomCode: loginState.roomCode,
+    isAdmin: loginState.isAdmin || false,
     registeredAt: new Date().toISOString(),
     lastSeen: new Date().toISOString(),
   };
@@ -2118,7 +2142,12 @@ function switchTab(tabId, btn) {
     }
     if (tabId === 'tab-quiz') { try { initQuiz(); } catch(e){} }
     if (tabId === 'tab-admin') {
-      try { loadAdminTab(); } catch(e){ console.error('loadAdminTab:', e); }
+      try {
+        loadAdminTab();
+        // Non-admin hint
+        const hint = document.getElementById('admin-non-admin-hint');
+        if (hint) hint.style.display = (state.currentUser?.isAdmin) ? 'none' : 'block';
+      } catch(e){ console.error('loadAdminTab:', e); }
       setTimeout(() => { try { initPushNotifications(); } catch(e){ console.error('push:', e); } }, 300);
     }
   } catch(e) { console.error('switchTab error:', e); }
@@ -2678,8 +2707,21 @@ async function loadAdminTab(){
   if(state.currentUser){
     const el=document.getElementById("admin-my-emoji");const nl=document.getElementById("admin-my-name");
     if(el)el.textContent=state.currentUser.emoji;if(nl)nl.textContent=state.currentUser.name;
+    // Admin-Badge anzeigen
+    const adminBadgeEl=document.getElementById("admin-role-badge");
+    if(adminBadgeEl){
+      if(state.currentUser.isAdmin){
+        adminBadgeEl.style.display='block';
+      } else {
+        adminBadgeEl.style.display='none';
+      }
+    }
+    // Rauswerfen-Bereich nur für Admins
+    const kickSection=document.getElementById("admin-kick-section");
+    if(kickSection) kickSection.style.display = state.currentUser.isAdmin ? 'block' : 'none';
   }
-  await loadAdminPins();await loadAdminMembers();
+  await loadAdminPins();
+  if(state.currentUser && state.currentUser.isAdmin) await loadAdminMembers();
 }
 
 async function loadAdminPins(){
