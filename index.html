@@ -276,6 +276,57 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .heatmap-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
 .heatmap-stat .hs-val{font-family:'Bebas Neue',cursive;font-size:24px;color:var(--neon-cyan)}
 .heatmap-stat .hs-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px}
+
+/* QUIZ */
+.quiz-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:14px}
+.quiz-question-area{padding:20px;background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(255,45,120,0.08))}
+.quiz-q-num{font-size:10px;font-weight:700;color:var(--neon-cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.quiz-q-text{font-size:16px;font-weight:700;line-height:1.4}
+.quiz-answers{padding:14px;display:flex;flex-direction:column;gap:8px}
+.quiz-answer{background:rgba(255,255,255,0.05);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s;text-align:left}
+.quiz-answer:active{transform:scale(0.98)}
+.quiz-answer.correct{border-color:var(--neon-green);background:rgba(57,255,20,0.15);color:var(--neon-green)}
+.quiz-answer.wrong{border-color:var(--neon-pink);background:rgba(255,45,120,0.15);color:var(--neon-pink)}
+.quiz-answer.reveal{border-color:var(--neon-green);background:rgba(57,255,20,0.08)}
+.quiz-answer:disabled{cursor:default}
+.quiz-footer{padding:12px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.quiz-score-label{font-size:12px;color:var(--text-sec)}
+.quiz-score-val{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--neon-gold)}
+.quiz-cat-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px}
+.quiz-cat-scroll::-webkit-scrollbar{display:none}
+.quiz-cat-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.2s}
+.quiz-cat-btn.active{border-color:var(--neon-cyan);background:rgba(0,229,255,0.15);color:var(--neon-cyan)}
+.quiz-result-card{background:linear-gradient(135deg,rgba(255,214,0,0.15),rgba(255,45,120,0.10));border:1px solid rgba(255,214,0,0.3);border-radius:18px;padding:24px;text-align:center;margin-bottom:14px}
+.quiz-result-emoji{font-size:52px;margin-bottom:8px}
+.quiz-result-title{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:1px;color:var(--neon-gold);margin-bottom:6px}
+.quiz-result-sub{font-size:14px;color:var(--text-sec)}
+/* ABMELDEN MODAL */
+.danger-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:14px;border:none;background:linear-gradient(135deg,#cc0000,#880000);color:white;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
+.danger-btn:active{transform:scale(0.97)}
+.admin-section{background:rgba(255,0,0,0.06);border:1px solid rgba(255,0,0,0.2);border-radius:14px;padding:14px;margin-top:16px}
+.admin-title{font-size:11px;font-weight:700;color:#ff4444;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+
+/* PUSH NOTIFICATIONS */
+.push-card{background:linear-gradient(135deg,rgba(255,214,0,0.12),rgba(255,45,120,0.08));border:1px solid rgba(255,214,0,0.3);border-radius:16px;padding:16px;margin-bottom:14px}
+.push-status{display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px}
+.push-dot{width:8px;height:8px;border-radius:50%;background:#888;flex-shrink:0}
+.push-dot.active{background:var(--neon-green);box-shadow:0 0 6px var(--neon-green)}
+.push-dot.denied{background:var(--neon-pink)}
+.btn-push-enable{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--neon-gold),#ff6b00);color:#000;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.btn-push-alert{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--neon-pink),#cc0055);color:white;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 0 24px rgba(255,45,120,0.5);transition:all 0.2s}
+.btn-push-alert:active{transform:scale(0.97)}
+.btn-push-alert:disabled{opacity:0.5;cursor:not-allowed}
+.push-msg-input{width:100%;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:12px;padding:11px 14px;color:var(--text-pri);font-family:'Space Grotesk',sans-serif;font-size:14px;outline:none;margin-bottom:8px}
+.push-msg-input:focus{border-color:var(--neon-pink)}
+.push-msg-input::placeholder{color:var(--text-sec)}
+.push-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.push-preset{background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.push-preset:active{background:rgba(255,45,120,0.2);border-color:var(--neon-pink)}
+.push-history{margin-top:12px}
+.push-history-title{font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.push-history-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-sec)}
+.push-history-item:last-child{border-bottom:none}
 </style>
 </head>
 <body>
@@ -427,6 +478,89 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
+
+    <!-- QUIZ TAB -->
+    <div id="tab-quiz" class="tab-panel">
+      <div style="padding:14px;padding-bottom:80px">
+        <div class="section-title" style="margin-bottom:14px">🧠 MALLE-QUIZ</div>
+        <div class="quiz-score-bar">
+          <div style="flex:1">
+            <div class="quiz-score-label">Dein Score dieser Runde</div>
+          </div>
+          <div class="quiz-score-val" id="quiz-score-display">0 / 0</div>
+        </div>
+        <div class="quiz-cat-scroll" id="quiz-cats"></div>
+        <div id="quiz-area"></div>
+      </div>
+    </div>
+
+    <!-- ADMIN / PROFIL TAB -->
+    <div id="tab-admin" class="tab-panel">
+      <div style="padding:14px;padding-bottom:80px">
+        <div class="section-title" style="margin-bottom:16px">⚙️ EINSTELLUNGEN</div>
+
+        <!-- Profil -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">
+          <div class="members-title">Mein Profil</div>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+            <div style="font-size:42px" id="admin-my-emoji">🦁</div>
+            <div>
+              <div style="font-weight:700;font-size:16px" id="admin-my-name">–</div>
+              <div style="font-size:12px;color:var(--text-sec)">Raum: MALLE26</div>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="openProfileModal()" style="margin-bottom:8px">✏️ Profil bearbeiten</button>
+          <button class="danger-btn" onclick="confirmLogout()">🚪 Abmelden & App verlassen</button>
+        </div>
+
+        <!-- Treffpunkte verwalten -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px">
+          <div class="members-title">📍 Treffpunkte verwalten</div>
+          <div id="admin-pins-list" style="display:flex;flex-direction:column;gap:8px"></div>
+          <div style="font-size:12px;color:var(--text-sec);margin-top:8px">Tippe auf ✕ um einen Treffpunkt zu löschen</div>
+        </div>
+
+
+        <!-- PUSH NOTIFICATIONS -->
+        <div class="push-card">
+          <div class="members-title">🔔 Push-Benachrichtigungen</div>
+
+          <div class="push-status">
+            <div class="push-dot" id="push-dot"></div>
+            <span id="push-status-text">Status wird geprüft...</span>
+          </div>
+
+          <button class="btn-push-enable" id="push-enable-btn" onclick="enablePushNotifications()" style="display:none">
+            🔔 Push-Benachrichtigungen aktivieren
+          </button>
+
+          <div id="push-send-area" style="display:none">
+            <div style="font-size:12px;color:var(--text-sec);margin-bottom:10px">
+              Schnell-Nachrichten:
+            </div>
+            <div class="push-presets" id="push-presets"></div>
+            <input class="push-msg-input" id="push-msg-input" placeholder="Eigene Nachricht..." maxlength="80">
+            <button class="btn-push-alert" id="push-send-btn" onclick="sendGroupAlert()">
+              📣 ALLE RUFEN!
+            </button>
+          </div>
+
+          <div id="push-denied-hint" style="display:none;font-size:12px;color:var(--neon-pink);padding:8px;background:rgba(255,45,120,0.08);border-radius:8px">
+            ❌ Push wurde blockiert. Bitte in den Browser-Einstellungen erlauben:<br>
+            <b>Adressleiste → 🔒 → Benachrichtigungen → Erlauben</b>
+          </div>
+        </div>
+
+        <!-- Admin: Mitglieder -->
+        <div class="admin-section">
+          <div class="admin-title">🔑 Admin-Bereich</div>
+          <div style="font-size:12px;color:var(--text-sec);margin-bottom:12px">Aktive Nutzer aus der Gruppe entfernen (löscht Standort & Status)</div>
+          <div id="admin-members-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+
+      </div>
+    </div>
+
     <!-- SPOTIFY -->
     <div id="tab-spotify" class="tab-panel">
       <div id="tab-spotify-inner">
@@ -456,6 +590,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="tab-btn" onclick="switchTab('tab-gruppe',this)"><span class="tab-icon">👥</span><span class="tab-label">Crew</span></button>
     <button class="tab-btn" id="chat-tab-btn" onclick="switchTab('tab-chat',this)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
     <button class="tab-btn" onclick="switchTab('tab-fun',this)"><span class="tab-icon">🎰</span><span class="tab-label">Fun</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-quiz',this)"><span class="tab-icon">🧠</span><span class="tab-label">Quiz</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-admin',this)"><span class="tab-icon">⚙️</span><span class="tab-label">Ich</span></button>
     <button class="tab-btn" onclick="switchTab('tab-spotify',this)"><span class="tab-icon">🎵</span><span class="tab-label">Musik</span></button>
   </div>
 </div>
@@ -1279,7 +1415,7 @@ function switchTab(tabId, btn) {
   try {
     state.activeTab = tabId;
     // Alle Panels verstecken
-    const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-spotify'];
+    const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-quiz','tab-admin','tab-spotify'];
     ALL_TABS.forEach(id => {
       const el = document.getElementById(id);
       if (el) { el.style.display = 'none'; el.classList.remove('active'); }
@@ -1305,6 +1441,8 @@ function switchTab(tabId, btn) {
       try { loadLeaderboard(); loadTasks(); initRoulette(); } catch(e){}
       setTimeout(() => { try { initHeatmap(); } catch(e){} }, 300);
     }
+    if (tabId === 'tab-quiz') { try { initQuiz(); } catch(e){} }
+    if (tabId === 'tab-admin') { try { loadAdminTab(); setTimeout(()=>initPushNotifications(), 200); } catch(e){} }
   } catch(e) { console.error('switchTab error:', e); }
 }
 function showTabNotif(tabId){/* optional badge logic */}
@@ -1672,7 +1810,7 @@ function flyToHomeBase() {
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Alle Tabs initial verstecken außer Karte
-  const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-spotify'];
+  const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-quiz','tab-admin','tab-spotify'];
   ALL_TABS.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = id === 'tab-karte' ? 'block' : 'none';
@@ -1686,5 +1824,17 @@ document.addEventListener('DOMContentLoaded', () => {
   init().catch(e => console.error('Init error:', e));
 });
 </script>
+
+<!-- LOGOUT MODAL -->
+<div class="modal-backdrop" id="logout-modal" onclick="closeOnBackdrop(event,'logout-modal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🚪 Abmelden?</div>
+    <div style="text-align:center;color:var(--text-sec);font-size:14px;margin-bottom:20px">Dein Profil, Standort und Status werden aus der Gruppe entfernt.</div>
+    <button class="danger-btn" onclick="doLogout()">🚪 Ja, abmelden</button>
+    <button class="btn-primary" style="margin-top:8px;background:rgba(255,255,255,0.1)" onclick="closeModal('logout-modal')">Abbrechen</button>
+  </div>
+</div>
+
 </body>
 </html>
