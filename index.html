@@ -593,11 +593,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
       <div class="login-room-input-wrap">
         <input class="login-input" id="login-room-code" placeholder="Gruppen-Code eingeben..."
-               maxlength="20" autocomplete="off" autocapitalize="characters"
-               oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')checkRoomCode()">
+               maxlength="20" autocomplete="off" autocapitalize="characters" type="text">
         <span class="room-check" id="room-check-icon"></span>
       </div>
-      <button class="login-btn" onclick="checkRoomCode()">Weiter →</button>
+      <button class="login-btn" id="login-step1-btn" type="button">Weiter →</button>
     </div>
 
     <!-- STEP 2: Name & Emoji -->
@@ -611,8 +610,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="login-subtitle">Wähle ein Emoji und gib deinen Namen ein – so kennen dich die anderen.</div>
       <div class="login-emoji-grid" id="login-emoji-grid"></div>
       <input class="login-input" id="login-name-input" placeholder="Dein Name (z.B. Tobi)"
-             maxlength="20" onkeydown="if(event.key==='Enter')goToStep3()">
-      <button class="login-btn" onclick="goToStep3()">Weiter →</button>
+             maxlength="20" type="text">
+      <button class="login-btn" id="login-step2-btn" type="button">Weiter →</button>
     </div>
 
     <!-- STEP 3: Bestätigung -->
@@ -634,7 +633,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="login-info-box">
         Dein Profil wird <span>dauerhaft gespeichert</span>. Du musst dich nur einmal anmelden – auch nach dem Schließen des Browsers kommst du direkt wieder rein.
       </div>
-      <button class="login-btn" onclick="completeRegistration()">🌴 Los geht's!</button>
+      <button class="login-btn" id="login-step3-btn" type="button">🌴 Los geht's!</button>
     </div>
 
 
@@ -2807,6 +2806,32 @@ function showIOSInstallGuide() {
 
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
+  // Login-Buttons per JS verdrahten (robuster als inline onclick)
+  const step1Btn = document.getElementById('login-step1-btn');
+  const step2Btn = document.getElementById('login-step2-btn');
+  const step3Btn = document.getElementById('login-step3-btn');
+  const roomInput = document.getElementById('login-room-code');
+  const nameInput = document.getElementById('login-name-input');
+
+  if (step1Btn) step1Btn.addEventListener('click', checkRoomCode);
+  if (step2Btn) step2Btn.addEventListener('click', goToStep3);
+  if (step3Btn) step3Btn.addEventListener('click', completeRegistration);
+
+  if (roomInput) {
+    roomInput.addEventListener('input', () => {
+      roomInput.value = roomInput.value.toUpperCase();
+    });
+    roomInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); checkRoomCode(); }
+    });
+  }
+
+  if (nameInput) {
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); goToStep3(); }
+    });
+  }
+
   // Alle Tabs initial verstecken außer Karte
   const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-quiz','tab-admin','tab-spotify'];
   ALL_TABS.forEach(id => {
@@ -2818,13 +2843,11 @@ document.addEventListener('DOMContentLoaded', () => {
   updateMainCountdown();
   setInterval(updateMainCountdown, 1000);
 
-  // Session prüfen - eingeloggt? → direkt rein, sonst Login-Screen zeigen
+  // Session prüfen - eingeloggt? direkt rein, sonst Login-Screen zeigen
   const hasSession = checkExistingSession();
   if (hasSession) {
-    // Bereits eingeloggt → App direkt starten
     init().catch(e => console.error('Init error:', e));
   }
-  // Sonst: Login-Screen bleibt sichtbar, init() wird nach completeRegistration() aufgerufen
 });
 </script>
 
