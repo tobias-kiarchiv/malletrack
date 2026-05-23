@@ -3924,6 +3924,22 @@ let quizMulti = {
 // ============================================================
 // INIT: Quiz-Tab initialisieren
 // ============================================================
+
+// Deterministischer Fisher-Yates Shuffle mit Seed
+function seededShuffle(arr, seed) {
+  const a = [...arr];
+  let s = seed;
+  const rand = () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 let quizInitialized = false;
 
 function initQuiz() {
@@ -4028,16 +4044,18 @@ async function startMultiplayerQuiz() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Startet...'; }
 
   try {
-    // Fragen für diese Session vorbereiten (5 zufällige)
+    // Fragen mit deterministischem Seed (basierend auf Zeit-Minute)
+    // Alle Devices nutzen dieselben Fragen wenn sie in derselben Minute starten
+    const seed = Math.floor(Date.now() / 60000); // Minute als Seed
     const allQ = QUIZ_DATA[quizMulti.category] || QUIZ_DATA['Mallorca 🌴'];
-    quizMulti.questions = shuffleArray([...allQ]).slice(0, QUIZ_QUESTIONS_PER_GAME);
+    quizMulti.questions = seededShuffle([...allQ], seed).slice(0, QUIZ_QUESTIONS_PER_GAME);
 
-    // Session in DB erstellen
+    // Session in DB erstellen - Kategorie speichern damit andere Devices wissen welche
     const { data, error } = await sb.from('quiz_sessions').insert({
       room_id: ROOM_ID,
       status: 'waiting',
       current_question: 0,
-      created_by: state.currentUser.name,
+      created_by: state.currentUser.name + '|' + quizMulti.category + '|' + seed,
       started_at: new Date().toISOString(),
     }).select().single();
 
@@ -4194,9 +4212,22 @@ function subscribeQuizRealtime() {
       if (state.currentUser && session.created_by === state.currentUser.name) return;
       quizMulti.sessionId = session.id;
       quizMulti.status = 'waiting';
+
+      // Fragen aus created_by extrahieren (Format: "Name|Kategorie|Seed")
+      const parts = (session.created_by || '').split('|');
+      if (parts.length >= 3) {
+        const cat = parts[1];
+        const seed = parseInt(parts[2]);
+        const allQ2 = QUIZ_DATA[cat] || QUIZ_DATA['Mallorca 🌴'];
+        quizMulti.questions = seededShuffle([...allQ2], seed).slice(0, QUIZ_QUESTIONS_PER_GAME);
+        quizMulti.category = cat;
+        localStorage.setItem('malletrack_quiz_questions_' + session.id, JSON.stringify(quizMulti.questions));
+      }
+
       showQuizLobbyJoin(session);
-      showToast('🧠 Quiz gestartet! Tippe auf "Beitreten"!');
-      showAlertBanner('🧠 Quiz läuft!', session.created_by + ' hat ein Quiz gestartet – jetzt beitreten!');
+      const hostName = parts[0] || session.created_by;
+      showToast('🧠 ' + hostName + ' hat ein Quiz gestartet!');
+      showAlertBanner('🧠 Quiz läuft!', hostName + ' hat ein Quiz gestartet – jetzt beitreten!');
     })
     .subscribe();
 
@@ -4214,9 +4245,27 @@ function subscribeQuizRealtime() {
         quizMulti.status = 'active';
         quizMulti.currentQ = session.current_question;
 
+        // Fragen laden - aus localStorage oder aus created_by rekonstruieren
+        let questionsLoaded = false;
         const savedQ = localStorage.getItem('malletrack_quiz_questions_' + session.id);
         if (savedQ) {
-          try { quizMulti.questions = JSON.parse(savedQ); } catch(e) {}
+          try { quizMulti.questions = JSON.parse(savedQ); questionsLoaded = true; } catch(e) {}
+        }
+        if (!questionsLoaded) {
+          // Aus created_by rekonstruieren
+          const parts2 = (session.created_by || '').split('|');
+          if (parts2.length >= 3) {
+            const cat2 = parts2[1];
+            const seed2 = parseInt(parts2[2]);
+            const allQ3 = QUIZ_DATA[cat2] || QUIZ_DATA['Mallorca 🌴'];
+            quizMulti.questions = seededShuffle([...allQ3], seed2).slice(0, QUIZ_QUESTIONS_PER_GAME);
+            localStorage.setItem('malletrack_quiz_questions_' + session.id, JSON.stringify(quizMulti.questions));
+          }
+        }
+
+        if (!quizMulti.questions || quizMulti.questions.length === 0) {
+          showToast('❌ Fragen konnten nicht geladen werden');
+          return;
         }
 
         showQuizScreen('question');
