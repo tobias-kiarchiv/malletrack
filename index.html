@@ -925,9 +925,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
                 <div class="quiz-cat-scroll" id="quiz-cats" style="margin-bottom:16px"></div>
                 <div id="quiz-players-preview" class="quiz-players-joined"></div>
               </div>
-              <button class="quiz-start-btn" id="quiz-start-btn" onclick="startMultiplayerQuiz()">
-                🚀 Quiz starten & alle einladen
-              </button>
+              <div id="quiz-start-area">
+                <button class="quiz-start-btn" id="quiz-start-btn" onclick="startMultiplayerQuiz()">
+                  🚀 Quiz starten & alle einladen
+                </button>
+              </div>
               <div id="quiz-join-area" style="display:none">
                 <button class="quiz-join-btn" id="quiz-join-btn" onclick="joinQuizSession()">
                   ✋ Jetzt beitreten!
@@ -3949,7 +3951,8 @@ function initQuiz() {
     });
   }
 
-  // Prüfe ob eine aktive Session läuft
+  // Zunächst Idle-Lobby zeigen, dann prüfen ob Session läuft
+  showQuizLobbyIdle();
   checkActiveQuizSession();
 
   // Realtime abonnieren
@@ -3974,6 +3977,12 @@ async function checkActiveQuizSession() {
       quizMulti.status = session.status;
       quizMulti.currentQ = session.current_question;
 
+      // Fragen aus localStorage laden
+      const savedQ = localStorage.getItem('malletrack_quiz_questions_' + session.id);
+      if (savedQ) {
+        try { quizMulti.questions = JSON.parse(savedQ); } catch(e) {}
+      }
+
       if (session.status === 'waiting') {
         showQuizScreen('waiting');
         startJoinCountdown(session);
@@ -3982,8 +3991,33 @@ async function checkActiveQuizSession() {
         showQuizScreen('question');
         loadCurrentQuestion(session.current_question);
       }
+    } else {
+      // Keine aktive Session - zeige nur Start-Button
+      showQuizLobbyIdle();
     }
   } catch(e) { console.warn('Quiz session check:', e); }
+}
+
+function showQuizLobbyIdle() {
+  // Start-Button zeigen, Join-Button verstecken
+  const startArea = document.getElementById('quiz-start-area');
+  const joinArea = document.getElementById('quiz-join-area');
+  if (startArea) startArea.style.display = 'block';
+  if (joinArea) joinArea.style.display = 'none';
+  const btn = document.getElementById('quiz-start-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '🚀 Quiz starten & alle einladen'; }
+  showQuizScreen('lobby');
+}
+
+function showQuizLobbyJoin(session) {
+  // Join-Button zeigen, Start-Button verstecken
+  const startArea = document.getElementById('quiz-start-area');
+  const joinArea = document.getElementById('quiz-join-area');
+  if (startArea) startArea.style.display = 'none';
+  if (joinArea) joinArea.style.display = 'block';
+  showQuizScreen('lobby');
+  quizMulti.sessionId = session.id;
+  quizMulti.status = session.status;
 }
 
 // ============================================================
@@ -4046,9 +4080,12 @@ async function startMultiplayerQuiz() {
 // BEITRETEN
 // ============================================================
 async function joinQuizSession(sessionId) {
-  if (!state.currentUser) { showToast('⚠️ Bitte einloggen!'); return; }
+  if (!state.currentUser) { showToast('⚠️ Bitte einloggen!'); openProfileModal(); return; }
   const sid = sessionId || quizMulti.sessionId;
-  if (!sid) return;
+  if (!sid) {
+    showToast('❌ Kein aktives Quiz gefunden');
+    return;
+  }
 
   quizMulti.sessionId = sid;
 
@@ -4138,6 +4175,24 @@ let quizSubscribed = false;
 function subscribeQuizRealtime() {
   if (quizSubscribed) return;
   quizSubscribed = true;
+
+  // Neue Session (INSERT) - andere User sehen Join-Button
+  sb.channel('quiz_session_new')
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'quiz_sessions',
+      filter: 'room_id=eq.' + ROOM_ID
+    }, (payload) => {
+      const session = payload.new;
+      if (!session) return;
+      // Nicht der Ersteller - zeige Join-Button
+      if (state.currentUser && session.created_by === state.currentUser.name) return;
+      quizMulti.sessionId = session.id;
+      quizMulti.status = 'waiting';
+      showQuizLobbyJoin(session);
+      showToast('🧠 Quiz gestartet! Tippe auf "Beitreten"!');
+      showAlertBanner('🧠 Quiz läuft!', session.created_by + ' hat ein Quiz gestartet – jetzt beitreten!');
+    })
+    .subscribe();
 
   // Session-Updates
   sb.channel('quiz_session_ch')
@@ -4520,13 +4575,7 @@ function showQuizScreen(screen) {
     if (el) el.style.display = 'block';
   }
 
-  // Join-Button anzeigen wenn waiting und nicht selbst gestartet
-  if (screen === 'lobby' || screen === 'waiting') {
-    const joinArea = document.getElementById('quiz-join-area');
-    if (joinArea && quizMulti.sessionId && quizMulti.status === 'waiting') {
-      joinArea.style.display = 'block';
-    }
-  }
+  // Join/Start Sichtbarkeit wird durch showQuizLobbyIdle/showQuizLobbyJoin gesteuert
 }
 
 // ============================================================
@@ -4545,9 +4594,7 @@ async function resetMultiplayerQuiz() {
     myScore: 0,
     answered: false,
   };
-  showQuizScreen('lobby');
-  const btn = document.getElementById('quiz-start-btn');
-  if (btn) { btn.disabled = false; btn.textContent = '🚀 Quiz starten & alle einladen'; }
+  showQuizLobbyIdle();
   const liveScore = document.getElementById('quiz-live-score');
   if (liveScore) liveScore.textContent = '0';
 }
