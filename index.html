@@ -3916,6 +3916,7 @@ let quizMulti = {
   myScore: 0,
   answerStartTime: null,
   answered: false,
+  sessionFinished: false,
   joinCountdown: null,
   questionTimer: null,
   subscription: null,
@@ -4273,12 +4274,11 @@ function subscribeQuizRealtime() {
       }
 
       if (session.status === 'active' && quizMulti.status === 'active') {
+        // Nur relevant wenn wir hinter der DB zurückliegen (Latecomer)
         if (session.current_question > quizMulti.currentQ) {
-          const prevQ = quizMulti.currentQ;
           quizMulti.currentQ = session.current_question;
           quizMulti.answered = false;
-          await showInterRanking(prevQ, false);
-          setTimeout(() => loadCurrentQuestion(session.current_question), 3500);
+          loadCurrentQuestion(session.current_question);
         }
       }
 
@@ -4356,7 +4356,13 @@ function loadCurrentQuestion(qIndex) {
     if (timeLeft <= 0) {
       clearInterval(quizMulti.questionTimer);
       if (!quizMulti.answered) {
-        // Zeit abgelaufen - keine Punkte
+        quizMulti.answered = true;
+        // Zeit abgelaufen - alle Antworten sperren
+        document.querySelectorAll('.quiz-answer-btn').forEach((btn, i) => {
+          btn.disabled = true;
+          if (i === quizMulti.questions[qIndex].correct) btn.classList.add('correct');
+          else btn.classList.add('reveal');
+        });
         showAnswerResult(false, 0, quizMulti.questions[qIndex].correct);
         scheduleNextQuestion();
       }
@@ -4451,7 +4457,6 @@ function showAnswerResult(isCorrect, points, correctIndex) {
 // NÄCHSTE FRAGE
 // ============================================================
 function scheduleNextQuestion() {
-  // Zwischen-Ranking nach kurzer Pause anzeigen
   setTimeout(async () => {
     const nextQ = quizMulti.currentQ + 1;
     const isLast = nextQ >= QUIZ_QUESTIONS_PER_GAME;
@@ -4459,19 +4464,28 @@ function scheduleNextQuestion() {
     // Zwischen-Ranking anzeigen
     await showInterRanking(quizMulti.currentQ, isLast);
 
-    // Nach 4 Sekunden nächste Frage oder Finale
+    // Nach 4 Sekunden weitermachen
     setTimeout(async () => {
       if (isLast) {
-        await finishQuizSession();
+        // Finale: Erster der fertig ist beendet die Session
+        if (!quizMulti.sessionFinished) {
+          quizMulti.sessionFinished = true;
+          await finishQuizSession();
+        }
       } else {
-        if (state.currentUser?.isAdmin || quizMulti.questions.length > 0) {
+        // Nächste Frage: JEDER lädt lokal die nächste Frage
+        // Der ERSTE der hier ankommt updated auch die DB (für Latecomers)
+        quizMulti.currentQ = nextQ;
+        quizMulti.answered = false;
+        loadCurrentQuestion(nextQ);
+
+        // DB-Update (nur einmal nötig - Race Condition ist OK da idempotent)
+        try {
           await sb.from('quiz_sessions').update({
             current_question: nextQ,
-          }).eq('id', quizMulti.sessionId);
-          quizMulti.currentQ = nextQ;
-          quizMulti.answered = false;
-          loadCurrentQuestion(nextQ);
-        }
+          }).eq('id', quizMulti.sessionId)
+            .eq('current_question', nextQ - 1); // nur wenn noch nicht updated
+        } catch(e) { /* ignore */ }
       }
     }, 4000);
   }, 1500);
