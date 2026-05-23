@@ -3022,18 +3022,8 @@ let quizState={category:"Mallorca 🌴",currentQ:0,score:0,answered:false,questi
 
 function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
-function initQuiz(){
-  const cats=document.getElementById("quiz-cats");if(!cats)return;
-  if(cats.children.length===0){
-    Object.keys(QUIZ_DATA).forEach(cat=>{
-      const btn=document.createElement("button");btn.className="quiz-cat-btn"+(cat===quizState.category?" active":"");btn.textContent=cat;
-      btn.onclick=()=>{quizState.category=cat;quizState.currentQ=0;quizState.score=0;quizState.finished=false;quizState.questions=shuffleArray(QUIZ_DATA[cat]);document.querySelectorAll(".quiz-cat-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");renderQuiz();};
-      cats.appendChild(btn);
-    });
-  }
-  if(!quizState.questions.length)quizState.questions=shuffleArray(QUIZ_DATA[quizState.category]);
-  renderQuiz();
-}
+// initQuiz replaced by multiplayer version
+
 
 function renderQuiz(){
   const area=document.getElementById("quiz-area");if(!area)return;
@@ -3934,8 +3924,16 @@ let quizMulti = {
 // ============================================================
 // INIT: Quiz-Tab initialisieren
 // ============================================================
+let quizInitialized = false;
+
 function initQuiz() {
-  // Kategorie-Auswahl
+  // Realtime nur einmal abonnieren
+  subscribeQuizRealtime();
+
+  // Wenn Quiz gerade läuft - Screen nicht stören
+  if (quizMulti.status === 'active' || quizMulti.status === 'waiting') return;
+
+  // Kategorie-Buttons nur einmal erstellen
   const cats = document.getElementById('quiz-cats');
   if (cats && cats.children.length === 0) {
     Object.keys(QUIZ_DATA).forEach(cat => {
@@ -3951,12 +3949,12 @@ function initQuiz() {
     });
   }
 
-  // Zunächst Idle-Lobby zeigen, dann prüfen ob Session läuft
-  showQuizLobbyIdle();
-  checkActiveQuizSession();
-
-  // Realtime abonnieren
-  subscribeQuizRealtime();
+  // Nur beim ersten Öffnen Session prüfen und Lobby zeigen
+  if (!quizInitialized) {
+    quizInitialized = true;
+    showQuizLobbyIdle();
+    checkActiveQuizSession();
+  }
 }
 
 // ============================================================
@@ -4575,6 +4573,12 @@ async function showQuizRanking() {
 // SCREEN WECHSEL
 // ============================================================
 function showQuizScreen(screen) {
+  // Wenn Quiz aktiv ist, nicht zur Lobby wechseln (verhindert Reset während Quiz läuft)
+  if (screen === 'lobby' && 
+      (quizMulti.status === 'active' || quizMulti.status === 'waiting')) {
+    return;
+  }
+
   const screens = {
     lobby: 'quiz-lobby-screen',
     waiting: 'quiz-waiting-screen',
@@ -4591,8 +4595,6 @@ function showQuizScreen(screen) {
     const el = document.getElementById(target);
     if (el) el.style.display = 'block';
   }
-
-  // Join/Start Sichtbarkeit wird durch showQuizLobbyIdle/showQuizLobbyJoin gesteuert
 }
 
 // ============================================================
