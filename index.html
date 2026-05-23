@@ -2117,7 +2117,13 @@ async function handlePhotoUpload(event) {
     canvas.width=w;canvas.height=h;
     canvas.getContext('2d').drawImage(img,0,0,w,h);
     const compressed=canvas.toDataURL('image/jpeg',0.75);
-    const expiresAt=new Date(Date.now()+SNAP_EXPIRY_HOURS*3600000).toISOString();
+    // Snap läuft bis zum nächsten 11:00 Uhr ab
+    // Foto um 03:00 -> 8h bis 11:00 heute | Foto um 14:00 -> 21h bis 11:00 morgen
+    const _now = new Date();
+    const _expiry = new Date(_now);
+    _expiry.setHours(11, 0, 0, 0);
+    if (_expiry <= _now) _expiry.setDate(_expiry.getDate() + 1);
+    const expiresAt = _expiry.toISOString();
     await sb.from('snaps').insert({
       room_id:ROOM_ID,author_name:state.currentUser.name,author_emoji:state.currentUser.emoji,
       image_data:compressed,location:state.currentLat?'Palma de Mallorca':'Mallorca',
@@ -3908,7 +3914,7 @@ const CIRCUMFERENCE = 2 * Math.PI * 34; // für SVG-Ring
 
 let quizMulti = {
   sessionId: null,
-  status: 'idle', // idle | waiting | active | finished
+  status: 'idle',
   currentQ: 0,
   questions: [],
   category: 'Mallorca 🌴',
@@ -3917,6 +3923,7 @@ let quizMulti = {
   answerStartTime: null,
   answered: false,
   sessionFinished: false,
+  isHost: false,
   joinCountdown: null,
   questionTimer: null,
   subscription: null,
@@ -4066,6 +4073,7 @@ async function startMultiplayerQuiz() {
     quizMulti.status = 'waiting';
     quizMulti.currentQ = 0;
     quizMulti.myScore = 0;
+    quizMulti.isHost = true; // Ersteller ist immer Host
 
     // Quiz-Fragen lokal speichern (alle nutzen dieselben)
     localStorage.setItem('malletrack_quiz_questions_' + data.id,
@@ -4246,21 +4254,22 @@ function subscribeQuizRealtime() {
         quizMulti.status = 'active';
         quizMulti.currentQ = session.current_question;
 
-        // Fragen laden - aus localStorage oder aus created_by rekonstruieren
-        let questionsLoaded = false;
-        const savedQ = localStorage.getItem('malletrack_quiz_questions_' + session.id);
-        if (savedQ) {
-          try { quizMulti.questions = JSON.parse(savedQ); questionsLoaded = true; } catch(e) {}
-        }
-        if (!questionsLoaded) {
-          // Aus created_by rekonstruieren
-          const parts2 = (session.created_by || '').split('|');
-          if (parts2.length >= 3) {
-            const cat2 = parts2[1];
-            const seed2 = parseInt(parts2[2]);
+        // Fragen aus created_by laden (Format: "Name|Kategorie|Seed")
+        const parts2 = (session.created_by || '').split('|');
+        if (parts2.length >= 3) {
+          const cat2 = parts2[1];
+          const seed2 = parseInt(parts2[2]);
+          if (cat2 && !isNaN(seed2)) {
             const allQ3 = QUIZ_DATA[cat2] || QUIZ_DATA['Mallorca 🌴'];
             quizMulti.questions = seededShuffle([...allQ3], seed2).slice(0, QUIZ_QUESTIONS_PER_GAME);
-            localStorage.setItem('malletrack_quiz_questions_' + session.id, JSON.stringify(quizMulti.questions));
+            quizMulti.category = cat2;
+          }
+        }
+        // Fallback: localStorage
+        if (!quizMulti.questions || quizMulti.questions.length === 0) {
+          const savedQ = localStorage.getItem('malletrack_quiz_questions_' + session.id);
+          if (savedQ) {
+            try { quizMulti.questions = JSON.parse(savedQ); } catch(e) {}
           }
         }
 
@@ -4269,6 +4278,7 @@ function subscribeQuizRealtime() {
           return;
         }
 
+        quizMulti.isHost = state.currentUser && state.currentUser.name === (session.created_by || '').split('|')[0];
         showQuizScreen('question');
         loadCurrentQuestion(session.current_question);
       }
@@ -4461,31 +4471,49 @@ function scheduleNextQuestion() {
     const nextQ = quizMulti.currentQ + 1;
     const isLast = nextQ >= QUIZ_QUESTIONS_PER_GAME;
 
-    // Zwischen-Ranking anzeigen
+    // Zwischen-Ranking für alle anzeigen
     await showInterRanking(quizMulti.currentQ, isLast);
 
-    // Nach 4 Sekunden weitermachen
+    // Nach 4 Sekunden: Nur HOST steuert den Ablauf
+    // Andere Geräte reagieren auf Realtime-UPDATE
     setTimeout(async () => {
       if (isLast) {
-        // Finale: Erster der fertig ist beendet die Session
-        if (!quizMulti.sessionFinished) {
+        if (quizMulti.isHost && !quizMulti.sessionFinished) {
           quizMulti.sessionFinished = true;
           await finishQuizSession();
+        } else if (!quizMulti.isHost) {
+          // Nicht-Host: warte auf Realtime 'finished'
+          // Falls nach 6s nichts kommt, selbst beenden
+          setTimeout(() => {
+            if (quizMulti.status !== 'finished') {
+              quizMulti.status = 'finished';
+              showQuizRanking();
+            }
+          }, 6000);
         }
       } else {
-        // Nächste Frage: JEDER lädt lokal die nächste Frage
-        // Der ERSTE der hier ankommt updated auch die DB (für Latecomers)
-        quizMulti.currentQ = nextQ;
-        quizMulti.answered = false;
-        loadCurrentQuestion(nextQ);
-
-        // DB-Update (nur einmal nötig - Race Condition ist OK da idempotent)
-        try {
-          await sb.from('quiz_sessions').update({
-            current_question: nextQ,
-          }).eq('id', quizMulti.sessionId)
-            .eq('current_question', nextQ - 1); // nur wenn noch nicht updated
-        } catch(e) { /* ignore */ }
+        if (quizMulti.isHost) {
+          // Host updated DB -> triggert Realtime bei allen
+          quizMulti.currentQ = nextQ;
+          quizMulti.answered = false;
+          try {
+            await sb.from('quiz_sessions').update({
+              current_question: nextQ,
+            }).eq('id', quizMulti.sessionId);
+          } catch(e) { console.warn('Quiz DB update:', e); }
+          loadCurrentQuestion(nextQ);
+        }
+        // Nicht-Host: wartet auf Realtime UPDATE (handled in subscribeQuizRealtime)
+        // Fallback: falls nach 8s nichts kommt, selbst laden
+        else {
+          setTimeout(() => {
+            if (quizMulti.currentQ < nextQ) {
+              quizMulti.currentQ = nextQ;
+              quizMulti.answered = false;
+              loadCurrentQuestion(nextQ);
+            }
+          }, 8000);
+        }
       }
     }, 4000);
   }, 1500);
