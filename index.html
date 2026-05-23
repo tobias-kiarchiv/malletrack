@@ -4095,19 +4095,27 @@ async function joinQuizSession(sessionId) {
     try { quizMulti.questions = JSON.parse(savedQ); } catch(e) {}
   }
 
-  // Antwort mit 0 Punkten als "beigetreten" registrieren (nur für Tracking)
-  // Wir nutzen question_index = -1 als Join-Marker
-  await sb.from('quiz_answers').upsert({
-    session_id: sid,
-    room_id: ROOM_ID,
-    user_name: state.currentUser.name,
-    user_emoji: state.currentUser.emoji,
-    question_index: -1, // Join-Marker
-    answer_index: -1,
-    is_correct: false,
-    response_ms: 0,
-    points: 0,
-  }, { onConflict: 'session_id,user_name,question_index' });
+  // Prüfen ob schon beigetreten
+  const { data: existing } = await sb.from('quiz_answers')
+    .select('id')
+    .eq('session_id', sid)
+    .eq('user_name', state.currentUser.name)
+    .eq('question_index', -1)
+    .limit(1);
+
+  if (!existing || existing.length === 0) {
+    await sb.from('quiz_answers').insert({
+      session_id: sid,
+      room_id: ROOM_ID,
+      user_name: state.currentUser.name,
+      user_emoji: state.currentUser.emoji,
+      question_index: -1,
+      answer_index: -1,
+      is_correct: false,
+      response_ms: 0,
+      points: 0,
+    });
+  }
 
   loadJoinedPlayers();
   showToast('✋ Beigetreten! Warte auf den Start...');
@@ -4343,19 +4351,28 @@ async function submitAnswer(chosen, correct, total) {
 
   showAnswerResult(isCorrect, points, correct);
 
-  // In DB speichern
+  // In DB speichern - prüfen ob bereits geantwortet
   try {
-    await sb.from('quiz_answers').insert({
-      session_id: quizMulti.sessionId,
-      room_id: ROOM_ID,
-      user_name: state.currentUser.name,
-      user_emoji: state.currentUser.emoji,
-      question_index: quizMulti.currentQ,
-      answer_index: chosen,
-      is_correct: isCorrect,
-      response_ms: responseMs,
-      points,
-    });
+    const { data: alreadyAnswered } = await sb.from('quiz_answers')
+      .select('id')
+      .eq('session_id', quizMulti.sessionId)
+      .eq('user_name', state.currentUser.name)
+      .eq('question_index', quizMulti.currentQ)
+      .limit(1);
+
+    if (!alreadyAnswered || alreadyAnswered.length === 0) {
+      await sb.from('quiz_answers').insert({
+        session_id: quizMulti.sessionId,
+        room_id: ROOM_ID,
+        user_name: state.currentUser.name,
+        user_emoji: state.currentUser.emoji,
+        question_index: quizMulti.currentQ,
+        answer_index: chosen,
+        is_correct: isCorrect,
+        response_ms: responseMs,
+        points,
+      });
+    }
   } catch(e) { console.warn('Answer save:', e); }
 
   // Wenn Admin: nächste Frage einleiten
