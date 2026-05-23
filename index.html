@@ -4144,7 +4144,7 @@ function subscribeQuizRealtime() {
     .on('postgres_changes', {
       event: 'UPDATE', schema: 'public', table: 'quiz_sessions',
       filter: 'room_id=eq.' + ROOM_ID
-    }, (payload) => {
+    }, async (payload) => {
       const session = payload.new;
       if (!session) return;
 
@@ -4153,7 +4153,6 @@ function subscribeQuizRealtime() {
         quizMulti.status = 'active';
         quizMulti.currentQ = session.current_question;
 
-        // Fragen laden
         const savedQ = localStorage.getItem('malletrack_quiz_questions_' + session.id);
         if (savedQ) {
           try { quizMulti.questions = JSON.parse(savedQ); } catch(e) {}
@@ -4165,15 +4164,11 @@ function subscribeQuizRealtime() {
 
       if (session.status === 'active' && quizMulti.status === 'active') {
         if (session.current_question > quizMulti.currentQ) {
-          // Zwischen-Ranking kurz zeigen dann neue Frage laden
           const prevQ = quizMulti.currentQ;
           quizMulti.currentQ = session.current_question;
           quizMulti.answered = false;
-          // Zwischen-Ranking für 3 Sek anzeigen
           await showInterRanking(prevQ, false);
-          setTimeout(() => {
-            loadCurrentQuestion(session.current_question);
-          }, 3500);
+          setTimeout(() => loadCurrentQuestion(session.current_question), 3500);
         }
       }
 

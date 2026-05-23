@@ -11,9 +11,16 @@ self.addEventListener('activate', (e) => {
 
 // Fetch-Handler: Netzwerk-First, kein Caching (vermeidet Message-Channel-Error)
 self.addEventListener('fetch', (e) => {
-  // Nur GET-Requests durchlassen, alles andere ignorieren
+  // Nur same-origin GET-Requests cachen, alles andere direkt durchlassen
   if (e.request.method !== 'GET') return;
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  const url = new URL(e.request.url);
+  // Externe APIs nicht abfangen (Supabase, Overpass etc.)
+  if (url.origin !== self.location.origin) return;
+  e.respondWith(
+    fetch(e.request).catch(() => {
+      return caches.match(e.request).then(r => r || new Response('', {status: 503}));
+    })
+  );
 });
 
 self.addEventListener('push', (e) => {
