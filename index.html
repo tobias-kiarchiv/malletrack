@@ -623,6 +623,23 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .recap-thumb-time{font-size:9px;color:rgba(255,255,255,0.7)}
 .recap-download-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--neon-cyan),#0099bb);color:#000;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
 .recap-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:14px;border:1px solid var(--neon-pink);background:rgba(255,45,120,0.1);color:var(--neon-pink);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+
+/* INSTAGRAM */
+.insta-card{background:linear-gradient(135deg,rgba(214,41,118,0.12),rgba(255,220,128,0.08));border:1px solid rgba(214,41,118,0.3);border-radius:18px;padding:18px;margin-bottom:14px}
+.insta-logo{font-size:32px;margin-bottom:6px;display:block;text-align:center}
+.insta-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:12px}
+.insta-post{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;position:relative;background:var(--bg-card)}
+.insta-post img{width:100%;height:100%;object-fit:cover;display:block}
+.insta-post-overlay{position:absolute;inset:0;background:rgba(0,0,0,0);transition:background 0.2s;display:flex;align-items:center;justify-content:center}
+.insta-post:active .insta-post-overlay{background:rgba(0,0,0,0.3)}
+.insta-post-type{position:absolute;top:5px;right:5px;font-size:14px}
+.insta-account-row{display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.insta-account-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.insta-account-info{flex:1}
+.insta-account-name{font-weight:700;font-size:14px}
+.insta-account-handle{font-size:11px;color:var(--text-sec);margin-top:1px}
+.insta-remove-btn{background:rgba(255,45,120,0.15);border:1px solid rgba(255,45,120,0.3);border-radius:8px;padding:4px 10px;color:var(--neon-pink);font-size:12px;cursor:pointer}
+.insta-load-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border-radius:12px;border:1px solid rgba(214,41,118,0.4);background:rgba(214,41,118,0.1);color:#e1306c;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px}
 </style>
 </head>
 <body>
@@ -804,8 +821,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 
     <!-- SPASS TAB (Roulette + Leaderboard + Aufgaben + Heatmap) -->
-    <div id="tab-fun" class="tab-panel">
-      <div id="tab-fun-inner">
+    <div id="tab-funquiz" class="tab-panel">
+      <div id="tab-funquiz-inner">
 
         <!-- COUNTDOWN -->
         <div class="section-title" style="margin-bottom:14px">MALLE 2026 🌴</div>
@@ -894,18 +911,49 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
-    <!-- QUIZ TAB -->
-    <div id="tab-quiz" class="tab-panel">
+
+
+    <!-- INSTAGRAM TAB -->
+    <div id="tab-insta" class="tab-panel">
       <div style="padding:14px;padding-bottom:80px">
-        <div class="section-title" style="margin-bottom:14px">🧠 MALLE-QUIZ</div>
-        <div class="quiz-score-bar">
-          <div style="flex:1">
-            <div class="quiz-score-label">Dein Score dieser Runde</div>
+        <div class="section-title" style="margin-bottom:14px">📸 INSTAGRAM</div>
+
+        <!-- Account hinzufügen -->
+        <div class="insta-card">
+          <span class="insta-logo">📷</span>
+          <div style="font-size:13px;color:var(--text-sec);text-align:center;margin-bottom:14px;line-height:1.5">
+            Füge Instagram-Accounts der Crew hinzu.<br>
+            Alle öffentlichen Posts werden hier angezeigt.
           </div>
-          <div class="quiz-score-val" id="quiz-score-display">0 / 0</div>
+          <div style="display:flex;gap:8px">
+            <input class="login-input" id="insta-handle-input" placeholder="@username" 
+                   style="margin-bottom:0;flex:1" type="text" autocomplete="off">
+            <button style="background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);border:none;border-radius:12px;padding:10px 16px;color:white;font-weight:700;cursor:pointer;font-size:14px;white-space:nowrap" 
+                    id="insta-add-btn">+ Hinzufügen</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-sec);margin-top:8px;text-align:center">
+            💡 Nur öffentliche Accounts können angezeigt werden
+          </div>
         </div>
-        <div class="quiz-cat-scroll" id="quiz-cats"></div>
-        <div id="quiz-area"></div>
+
+        <!-- Gespeicherte Accounts -->
+        <div class="members-title">Crew-Accounts</div>
+        <div id="insta-accounts-list" style="margin-bottom:18px"></div>
+
+        <!-- Posts-Feed -->
+        <div id="insta-feed-section" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div class="members-title" style="margin-bottom:0">Letzte Posts</div>
+            <button class="insta-load-btn" style="width:auto;padding:6px 14px" onclick="refreshInstaFeed()">🔄 Aktualisieren</button>
+          </div>
+          <div id="insta-posts-grid" class="insta-grid"></div>
+        </div>
+
+        <!-- Info wenn keine Accounts -->
+        <div id="insta-empty" style="text-align:center;padding:30px;opacity:0.5">
+          <div style="font-size:40px;margin-bottom:8px">📷</div>
+          <div style="font-size:13px;color:var(--text-sec)">Noch keine Accounts hinzugefügt</div>
+        </div>
       </div>
     </div>
 
@@ -1019,14 +1067,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <div id="tabbar">
     <button class="tab-btn active" onclick="switchTab('tab-karte',this)"><span class="tab-icon">🗺️</span><span class="tab-label">Radar</span></button>
-    <button class="tab-btn" onclick="switchTab('tab-snaps',this)"><span class="tab-icon">📸</span><span class="tab-label">Snaps</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-snaps',this)"><span class="tab-icon">📷</span><span class="tab-label">Snaps</span></button>
     <button class="tab-btn" onclick="switchTab('tab-gruppe',this)"><span class="tab-icon">👥</span><span class="tab-label">Crew</span></button>
     <button class="tab-btn" id="chat-tab-btn" onclick="switchTab('tab-chat',this)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
-    <button class="tab-btn" onclick="switchTab('tab-fun',this)"><span class="tab-icon">🎰</span><span class="tab-label">Fun</span></button>
-    <button class="tab-btn" onclick="switchTab('tab-recap',this)"><span class="tab-icon">📸</span><span class="tab-label">Recap</span></button>
-    <button class="tab-btn" onclick="switchTab('tab-quiz',this)"><span class="tab-icon">🧠</span><span class="tab-label">Quiz</span></button>
-    <button class="tab-btn" onclick="switchTab('tab-admin',this)"><span class="tab-icon">⚙️</span><span class="tab-label">Ich</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-funquiz',this)"><span class="tab-icon">🎰</span><span class="tab-label">Fun</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-insta',this)"><span class="tab-icon">📸</span><span class="tab-label">Insta</span></button>
     <button class="tab-btn" onclick="switchTab('tab-spotify',this)"><span class="tab-icon">🎵</span><span class="tab-label">Musik</span></button>
+    <button class="tab-btn" onclick="switchTab('tab-admin',this)"><span class="tab-icon">⚙️</span><span class="tab-label">Ich</span></button>
   </div>
 </div>
 
@@ -2243,7 +2290,7 @@ function switchTab(tabId, btn) {
   try {
     state.activeTab = tabId;
     // Alle Panels verstecken
-    const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-recap','tab-quiz','tab-admin','tab-spotify'];
+    const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-funquiz','tab-recap','tab-insta','tab-admin','tab-spotify'];
     ALL_TABS.forEach(id => {
       const el = document.getElementById(id);
       if (el) { el.style.display = 'none'; el.classList.remove('active'); }
@@ -3629,6 +3676,114 @@ async function generateRecapLink() {
     showToast('🔗 Link kopiert!');
   }
 }
+
+// ============================================================
+// INSTAGRAM INTEGRATION
+// ============================================================
+const INSTA_STORAGE_KEY = 'malletrack_insta_accounts';
+
+function initInstaTab() {
+  const addBtn = document.getElementById('insta-add-btn');
+  const input = document.getElementById('insta-handle-input');
+  if (addBtn && !addBtn._bound) { addBtn.onclick = addInstaAccount; addBtn._bound = true; }
+  if (input && !input._bound) { input.addEventListener('keydown', e => { if(e.key==='Enter') addInstaAccount(); }); input._bound = true; }
+  renderInstaAccounts();
+}
+
+function getInstaAccounts() { return JSON.parse(localStorage.getItem(INSTA_STORAGE_KEY) || '[]'); }
+function saveInstaAccounts(a) { localStorage.setItem(INSTA_STORAGE_KEY, JSON.stringify(a)); }
+
+function addInstaAccount() {
+  const input = document.getElementById('insta-handle-input'); if (!input) return;
+  let handle = input.value.trim().replace(/^@/,'').toLowerCase();
+  if (!handle) { showToast('Bitte Username eingeben'); return; }
+  const accounts = getInstaAccounts();
+  if (accounts.find(a => a.handle === handle)) { showToast('Bereits hinzugefügt'); return; }
+  accounts.push({ handle, addedBy: state.currentUser?.name || 'Unbekannt', addedAt: new Date().toISOString() });
+  saveInstaAccounts(accounts);
+  input.value = '';
+  renderInstaAccounts();
+  showToast('📷 @' + handle + ' hinzugefügt!');
+}
+
+function removeInstaAccount(handle) {
+  saveInstaAccounts(getInstaAccounts().filter(a => a.handle !== handle));
+  renderInstaAccounts();
+  showToast('Entfernt: @' + handle);
+}
+
+function renderInstaAccounts() {
+  const listEl = document.getElementById('insta-accounts-list');
+  const emptyEl = document.getElementById('insta-empty');
+  const feedSection = document.getElementById('insta-feed-section');
+  if (!listEl) return;
+  const accounts = getInstaAccounts();
+  listEl.innerHTML = '';
+  if (accounts.length === 0) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    if (feedSection) feedSection.style.display = 'none';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (feedSection) feedSection.style.display = 'block';
+  accounts.forEach(acc => {
+    const row = document.createElement('div');
+    row.className = 'insta-account-row';
+    row.innerHTML = '<div class="insta-account-avatar">' + acc.handle.substring(0,2).toUpperCase() + '</div>'
+      + '<div class="insta-account-info"><div class="insta-account-name">@' + escHtml(acc.handle) + '</div>'
+      + '<div class="insta-account-handle">Von ' + escHtml(acc.addedBy) + '</div></div>';
+    const openBtn = document.createElement('button');
+    openBtn.style.cssText = 'background:rgba(214,41,118,0.15);border:1px solid rgba(214,41,118,0.3);border-radius:8px;padding:4px 10px;color:#e1306c;font-size:14px;cursor:pointer;margin-right:6px';
+    openBtn.textContent = '↗️';
+    openBtn.onclick = () => window.open('https://www.instagram.com/' + acc.handle + '/', '_blank');
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'insta-remove-btn';
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = () => removeInstaAccount(acc.handle);
+    row.appendChild(openBtn); row.appendChild(removeBtn);
+    listEl.appendChild(row);
+  });
+  renderInstaPosts(accounts);
+}
+
+function renderInstaPosts(accounts) {
+  const grid = document.getElementById('insta-posts-grid'); if (!grid) return;
+  grid.innerHTML = '';
+  accounts.forEach(acc => {
+    const tile = document.createElement('div');
+    tile.className = 'insta-post';
+    tile.style.cssText = 'background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:8px';
+    const init = document.createElement('div');
+    init.style.cssText = 'font-size:24px;font-weight:900;color:white';
+    init.textContent = acc.handle.substring(0,2).toUpperCase();
+    const hdl = document.createElement('div');
+    hdl.style.cssText = 'font-size:9px;color:rgba(255,255,255,0.9);font-weight:700;margin-top:3px';
+    hdl.textContent = '@' + acc.handle;
+    const lnk = document.createElement('div');
+    lnk.style.cssText = 'font-size:9px;color:rgba(255,255,255,0.6);margin-top:2px';
+    lnk.textContent = '→ Instagram';
+    tile.appendChild(init); tile.appendChild(hdl); tile.appendChild(lnk);
+    tile.onclick = () => window.open('https://www.instagram.com/' + acc.handle + '/', '_blank');
+    grid.appendChild(tile);
+  });
+  // Info-Box
+  const info = document.createElement('div');
+  info.style.cssText = 'grid-column:1/-1;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.15);border-radius:10px;padding:12px;font-size:11px;color:var(--text-sec);line-height:1.6;margin-top:6px';
+  info.innerHTML = '<b style="color:var(--neon-cyan)">💡 Tipp:</b> Tippe auf ein Profil um direkt zu Instagram zu gelangen. '
+    + 'Markiert euch gegenseitig in Stories mit <b style="color:white">#malle2026crew</b> für maximale Reichweite!';
+  grid.appendChild(info);
+}
+
+function refreshInstaFeed() { renderInstaAccounts(); showToast('Aktualisiert!'); }
+
+// ============================================================
+// RECAP - Admin-only vor Trip-Ende
+// ============================================================
+const TRIP_END_TIME = new Date('2026-07-05T23:00:00').getTime();
+function isRecapAvailable() {
+  return (state.currentUser && state.currentUser.isAdmin === true) || Date.now() > TRIP_END_TIME;
+}
+
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Login-Buttons per JS verdrahten (robuster als inline onclick)
@@ -3658,7 +3813,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Alle Tabs initial verstecken außer Karte
-  const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-recap','tab-quiz','tab-admin','tab-spotify'];
+  const ALL_TABS = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-funquiz','tab-recap','tab-insta','tab-admin','tab-spotify'];
   ALL_TABS.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = id === 'tab-karte' ? 'block' : 'none';
@@ -3678,7 +3833,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   // Tabs immer initialisieren damit App nicht leer ist
-  const ALL_TABS2 = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-fun','tab-recap','tab-quiz','tab-admin','tab-spotify'];
+  const ALL_TABS2 = ['tab-karte','tab-snaps','tab-gruppe','tab-chat','tab-funquiz','tab-recap','tab-insta','tab-admin','tab-spotify'];
   ALL_TABS2.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = id === 'tab-karte' ? 'block' : 'none';
