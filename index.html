@@ -640,6 +640,42 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .insta-account-handle{font-size:11px;color:var(--text-sec);margin-top:1px}
 .insta-remove-btn{background:rgba(255,45,120,0.15);border:1px solid rgba(255,45,120,0.3);border-radius:8px;padding:4px 10px;color:var(--neon-pink);font-size:12px;cursor:pointer}
 .insta-load-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border-radius:12px;border:1px solid rgba(214,41,118,0.4);background:rgba(214,41,118,0.1);color:#e1306c;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px}
+
+/* MULTIPLAYER QUIZ */
+.quiz-lobby{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:20px;text-align:center;margin-bottom:14px}
+.quiz-lobby-title{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:1px;margin-bottom:8px}
+.quiz-start-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--neon-cyan),#0099bb);color:#000;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:800;cursor:pointer;box-shadow:0 0 24px rgba(0,229,255,0.4);margin-bottom:10px;letter-spacing:0.3px}
+.quiz-start-btn:active{transform:scale(0.97)}
+.quiz-start-btn:disabled{opacity:0.5;cursor:not-allowed}
+.quiz-join-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;border:2px solid var(--neon-green);background:rgba(57,255,20,0.1);color:var(--neon-green);font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.quiz-join-btn:active{transform:scale(0.97)}
+.quiz-players-joined{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}
+.quiz-player-chip{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;color:var(--neon-cyan);display:flex;align-items:center;gap:6px}
+.quiz-countdown-ring{width:80px;height:80px;margin:0 auto 16px;position:relative}
+.quiz-countdown-ring svg{transform:rotate(-90deg)}
+.quiz-countdown-ring .ring-bg{fill:none;stroke:rgba(255,255,255,0.1);stroke-width:6}
+.quiz-countdown-ring .ring-fg{fill:none;stroke:var(--neon-cyan);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+.quiz-countdown-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:32px;color:var(--neon-cyan)}
+.quiz-live-header{background:linear-gradient(135deg,rgba(0,229,255,0.1),rgba(255,45,120,0.08));border:1px solid rgba(0,229,255,0.3);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.quiz-q-timer{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--neon-pink)}
+.quiz-q-timer.urgent{color:var(--neon-pink);animation:blink 0.5s ease-in-out infinite}
+.quiz-answer-btn{width:100%;padding:14px 16px;border-radius:14px;border:2px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text-pri);font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s;text-align:left;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.quiz-answer-btn:active{transform:scale(0.98)}
+.quiz-answer-btn.selected{border-color:var(--neon-cyan);background:rgba(0,229,255,0.15)}
+.quiz-answer-btn.correct{border-color:var(--neon-green);background:rgba(57,255,20,0.15);color:var(--neon-green)}
+.quiz-answer-btn.wrong{border-color:var(--neon-pink);background:rgba(255,45,120,0.15);color:var(--neon-pink)}
+.quiz-answer-btn.reveal{border-color:var(--neon-green);background:rgba(57,255,20,0.05)}
+.quiz-answer-btn:disabled{cursor:default}
+.quiz-answer-letter{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.quiz-waiting-screen{text-align:center;padding:30px 20px}
+.quiz-ranking{display:flex;flex-direction:column;gap:10px}
+.quiz-rank-row{display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:12px 16px;animation:slideIn 0.4s ease-out}
+.quiz-rank-row.me{border-color:rgba(0,229,255,0.4);background:rgba(0,229,255,0.06)}
+.quiz-rank-medal{font-family:'Bebas Neue',cursive;font-size:24px;width:32px;text-align:center}
+.quiz-rank-info{flex:1}
+.quiz-rank-name{font-weight:700;font-size:15px}
+.quiz-rank-detail{font-size:11px;color:var(--text-sec);margin-top:2px}
+.quiz-rank-score{font-family:'Bebas Neue',cursive;font-size:26px;color:var(--neon-gold)}
 </style>
 </head>
 <body>
@@ -873,15 +909,90 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div id="heatmap-map" style="height:300px;border-radius:16px;overflow:hidden;border:1px solid var(--border)"></div>
 
 
-        <!-- QUIZ -->
+        <!-- MULTIPLAYER QUIZ -->
         <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
-          <div class="section-title" style="margin-bottom:12px">🧠 MALLE-QUIZ</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <div style="font-size:12px;color:var(--text-sec)">Teste dein Malle-Wissen!</div>
-            <div class="quiz-score-val" id="quiz-score-display" style="font-family:'Bebas Neue',cursive;font-size:22px;color:var(--neon-gold)">0 / 0</div>
+          <div class="section-title" style="margin-bottom:14px">🧠 MALLE-QUIZ</div>
+          <div id="quiz-main-area">
+            <!-- Lobby / Start Screen -->
+            <div id="quiz-lobby-screen">
+              <div class="quiz-lobby">
+                <div style="font-size:48px;margin-bottom:8px">🧠</div>
+                <div class="quiz-lobby-title">Multiplayer Quiz</div>
+                <div style="font-size:13px;color:var(--text-sec);margin-bottom:16px;line-height:1.6">
+                  Alle Teilnehmer haben <b style="color:white">30 Sekunden</b> um beizutreten.<br>
+                  5 Fragen · Punkte nach Richtigkeit + Geschwindigkeit
+                </div>
+                <div class="quiz-cat-scroll" id="quiz-cats" style="margin-bottom:16px"></div>
+                <div id="quiz-players-preview" class="quiz-players-joined"></div>
+              </div>
+              <button class="quiz-start-btn" id="quiz-start-btn" onclick="startMultiplayerQuiz()">
+                🚀 Quiz starten & alle einladen
+              </button>
+              <div id="quiz-join-area" style="display:none">
+                <button class="quiz-join-btn" id="quiz-join-btn" onclick="joinQuizSession()">
+                  ✋ Jetzt beitreten!
+                </button>
+                <div id="quiz-join-countdown" style="text-align:center;margin-bottom:10px"></div>
+              </div>
+            </div>
+
+            <!-- Countdown Screen (30 Sek beitreten) -->
+            <div id="quiz-waiting-screen" style="display:none">
+              <div class="quiz-lobby" style="margin-bottom:14px">
+                <div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Quiz startet in</div>
+                <div class="quiz-countdown-ring">
+                  <svg width="80" height="80" viewBox="0 0 80 80">
+                    <circle class="ring-bg" cx="40" cy="40" r="34"/>
+                    <circle class="ring-fg" id="quiz-ring" cx="40" cy="40" r="34"
+                      stroke-dasharray="213.6" stroke-dashoffset="0"/>
+                  </svg>
+                  <div class="quiz-countdown-num" id="quiz-countdown-num">30</div>
+                </div>
+                <div style="font-size:13px;color:var(--text-sec);margin-top:8px">Warte auf Mitspieler...</div>
+              </div>
+              <div class="members-title">Beigetreten</div>
+              <div id="quiz-joined-players" class="quiz-players-joined"></div>
+            </div>
+
+            <!-- Zwischen-Ranking Screen -->
+            <div id="quiz-interranking-screen" style="display:none">
+              <div style="text-align:center;margin-bottom:14px">
+                <div id="quiz-interrank-title" style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:1px;color:var(--neon-gold)">Nach Frage 1</div>
+                <div id="quiz-interrank-next" style="font-size:13px;color:var(--text-sec);margin-top:4px">Nächste Frage in <span id="quiz-next-countdown" style="color:var(--neon-cyan);font-weight:700">3</span>s</div>
+              </div>
+              <div id="quiz-interranking-list" class="quiz-ranking"></div>
+            </div>
+
+            <!-- Frage Screen -->
+            <div id="quiz-question-screen" style="display:none">
+              <div class="quiz-live-header">
+                <div>
+                  <div style="font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px">Frage</div>
+                  <div style="font-family:'Bebas Neue',cursive;font-size:22px" id="quiz-q-counter">1 / 5</div>
+                </div>
+                <div id="quiz-q-timer" class="quiz-q-timer">15</div>
+                <div style="text-align:right">
+                  <div style="font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px">Punkte</div>
+                  <div style="font-family:'Bebas Neue',cursive;font-size:22px;color:var(--neon-gold)" id="quiz-live-score">0</div>
+                </div>
+              </div>
+              <div id="quiz-q-text" style="font-size:17px;font-weight:700;line-height:1.4;margin-bottom:16px;padding:16px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border)"></div>
+              <div id="quiz-answers-area"></div>
+              <div id="quiz-answer-result" style="display:none;text-align:center;padding:16px;border-radius:14px;margin-top:8px;font-size:15px;font-weight:700"></div>
+            </div>
+
+            <!-- Ranking Screen -->
+            <div id="quiz-ranking-screen" style="display:none">
+              <div style="text-align:center;margin-bottom:20px">
+                <div style="font-size:48px;margin-bottom:8px">🏆</div>
+                <div class="quiz-lobby-title">Ergebnis</div>
+              </div>
+              <div class="quiz-ranking" id="quiz-ranking-list"></div>
+              <button class="quiz-start-btn" style="margin-top:16px;background:linear-gradient(135deg,var(--neon-pink),#cc0055)" onclick="resetMultiplayerQuiz()">
+                🔄 Neues Quiz starten
+              </button>
+            </div>
           </div>
-          <div class="quiz-cat-scroll" id="quiz-cats"></div>
-          <div id="quiz-area"></div>
         </div>
       </div>
     </div>
@@ -1456,9 +1567,10 @@ async function init() {
   // Manuelle Leaderboard-Anpassungen laden
   lbManualAdjustments = JSON.parse(localStorage.getItem('malletrack_lb_adjustments') || '{}');
 
-  // Alerts immer abhören (Banner funktioniert auch ohne Push-Permission)
+  // Alerts immer abhören
   setTimeout(() => {
     try { listenForAlerts(); } catch(e) { console.warn('Alert listener:', e); }
+    try { subscribeQuizRealtime(); } catch(e) { console.warn('Quiz listener:', e); }
   }, 1000);
 
   // Profil wird jetzt über Login-Screen gesetzt
@@ -3792,6 +3904,661 @@ function isRecapAvailable() {
   return (state.currentUser && state.currentUser.isAdmin === true) || Date.now() > TRIP_END_TIME;
 }
 
+
+// ============================================================
+// MULTIPLAYER QUIZ ENGINE
+// ============================================================
+const QUIZ_QUESTIONS_PER_GAME = 5;
+const QUIZ_JOIN_SECONDS = 30;
+const QUIZ_ANSWER_SECONDS = 15;
+const QUIZ_MAX_POINTS_PER_Q = 1000; // Basis-Punkte pro Frage
+const CIRCUMFERENCE = 2 * Math.PI * 34; // für SVG-Ring
+
+let quizMulti = {
+  sessionId: null,
+  status: 'idle', // idle | waiting | active | finished
+  currentQ: 0,
+  questions: [],
+  category: 'Mallorca 🌴',
+  joinedPlayers: [],
+  myScore: 0,
+  answerStartTime: null,
+  answered: false,
+  joinCountdown: null,
+  questionTimer: null,
+  subscription: null,
+};
+
+// ============================================================
+// INIT: Quiz-Tab initialisieren
+// ============================================================
+function initQuiz() {
+  // Kategorie-Auswahl
+  const cats = document.getElementById('quiz-cats');
+  if (cats && cats.children.length === 0) {
+    Object.keys(QUIZ_DATA).forEach(cat => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-cat-btn' + (cat === quizMulti.category ? ' active' : '');
+      btn.textContent = cat;
+      btn.onclick = () => {
+        quizMulti.category = cat;
+        document.querySelectorAll('.quiz-cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+      cats.appendChild(btn);
+    });
+  }
+
+  // Prüfe ob eine aktive Session läuft
+  checkActiveQuizSession();
+
+  // Realtime abonnieren
+  subscribeQuizRealtime();
+}
+
+// ============================================================
+// SESSION PRÜFEN
+// ============================================================
+async function checkActiveQuizSession() {
+  try {
+    const { data } = await sb.from('quiz_sessions')
+      .select('*')
+      .eq('room_id', ROOM_ID)
+      .in('status', ['waiting', 'active'])
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (data && data.length > 0) {
+      const session = data[0];
+      quizMulti.sessionId = session.id;
+      quizMulti.status = session.status;
+      quizMulti.currentQ = session.current_question;
+
+      if (session.status === 'waiting') {
+        showQuizScreen('waiting');
+        startJoinCountdown(session);
+        loadJoinedPlayers();
+      } else if (session.status === 'active') {
+        showQuizScreen('question');
+        loadCurrentQuestion(session.current_question);
+      }
+    }
+  } catch(e) { console.warn('Quiz session check:', e); }
+}
+
+// ============================================================
+// QUIZ STARTEN (Admin oder jeder)
+// ============================================================
+async function startMultiplayerQuiz() {
+  if (!state.currentUser) { showToast('⚠️ Bitte einloggen!'); return; }
+
+  const btn = document.getElementById('quiz-start-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Startet...'; }
+
+  try {
+    // Fragen für diese Session vorbereiten (5 zufällige)
+    const allQ = QUIZ_DATA[quizMulti.category] || QUIZ_DATA['Mallorca 🌴'];
+    quizMulti.questions = shuffleArray([...allQ]).slice(0, QUIZ_QUESTIONS_PER_GAME);
+
+    // Session in DB erstellen
+    const { data, error } = await sb.from('quiz_sessions').insert({
+      room_id: ROOM_ID,
+      status: 'waiting',
+      current_question: 0,
+      created_by: state.currentUser.name,
+      started_at: new Date().toISOString(),
+    }).select().single();
+
+    if (error) throw error;
+
+    quizMulti.sessionId = data.id;
+    quizMulti.status = 'waiting';
+    quizMulti.currentQ = 0;
+    quizMulti.myScore = 0;
+
+    // Quiz-Fragen lokal speichern (alle nutzen dieselben)
+    localStorage.setItem('malletrack_quiz_questions_' + data.id,
+      JSON.stringify(quizMulti.questions));
+
+    // Direkt beitreten
+    await joinQuizSession(data.id);
+
+    // Push Alert senden
+    await sb.from('push_alerts').insert({
+      room_id: ROOM_ID,
+      sender_name: '🧠 Quiz',
+      sender_emoji: '🧠',
+      message: state.currentUser.emoji + ' ' + state.currentUser.name
+        + ' hat ein Quiz gestartet! Du hast 30 Sekunden um beizutreten! 🏆',
+    });
+
+    showQuizScreen('waiting');
+    startJoinCountdown(data);
+
+  } catch(e) {
+    console.error('Quiz start error:', e);
+    showToast('❌ Fehler: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '🚀 Quiz starten & alle einladen'; }
+  }
+}
+
+// ============================================================
+// BEITRETEN
+// ============================================================
+async function joinQuizSession(sessionId) {
+  if (!state.currentUser) { showToast('⚠️ Bitte einloggen!'); return; }
+  const sid = sessionId || quizMulti.sessionId;
+  if (!sid) return;
+
+  quizMulti.sessionId = sid;
+
+  // Fragen aus localStorage laden falls vorhanden
+  const savedQ = localStorage.getItem('malletrack_quiz_questions_' + sid);
+  if (savedQ) {
+    try { quizMulti.questions = JSON.parse(savedQ); } catch(e) {}
+  }
+
+  // Antwort mit 0 Punkten als "beigetreten" registrieren (nur für Tracking)
+  // Wir nutzen question_index = -1 als Join-Marker
+  await sb.from('quiz_answers').upsert({
+    session_id: sid,
+    room_id: ROOM_ID,
+    user_name: state.currentUser.name,
+    user_emoji: state.currentUser.emoji,
+    question_index: -1, // Join-Marker
+    answer_index: -1,
+    is_correct: false,
+    response_ms: 0,
+    points: 0,
+  }, { onConflict: 'session_id,user_name,question_index' });
+
+  loadJoinedPlayers();
+  showToast('✋ Beigetreten! Warte auf den Start...');
+}
+
+// ============================================================
+// JOIN COUNTDOWN (30 Sekunden)
+// ============================================================
+function startJoinCountdown(session) {
+  let remaining = QUIZ_JOIN_SECONDS;
+  const ring = document.getElementById('quiz-ring');
+  const num = document.getElementById('quiz-countdown-num');
+
+  if (ring) ring.style.strokeDashoffset = '0';
+
+  clearInterval(quizMulti.joinCountdown);
+  quizMulti.joinCountdown = setInterval(async () => {
+    remaining--;
+
+    if (num) num.textContent = remaining;
+    if (ring) {
+      const offset = CIRCUMFERENCE * (1 - remaining / QUIZ_JOIN_SECONDS);
+      ring.style.strokeDashoffset = offset;
+      if (remaining <= 10) ring.style.stroke = 'var(--neon-pink)';
+    }
+
+    if (remaining <= 0) {
+      clearInterval(quizMulti.joinCountdown);
+      // Quiz starten
+      await sb.from('quiz_sessions').update({
+        status: 'active',
+        current_question: 0,
+      }).eq('id', quizMulti.sessionId);
+    }
+  }, 1000);
+}
+
+// ============================================================
+// BEIGETRETENE SPIELER LADEN
+// ============================================================
+async function loadJoinedPlayers() {
+  const container = document.getElementById('quiz-joined-players');
+  const preview = document.getElementById('quiz-players-preview');
+  if (!quizMulti.sessionId) return;
+
+  const { data } = await sb.from('quiz_answers')
+    .select('user_name,user_emoji')
+    .eq('session_id', quizMulti.sessionId)
+    .eq('question_index', -1);
+
+  quizMulti.joinedPlayers = data || [];
+
+  const html = quizMulti.joinedPlayers.map(p =>
+    '<div class="quiz-player-chip">' + p.user_emoji + ' ' + escHtml(p.user_name) + '</div>'
+  ).join('');
+
+  if (container) container.innerHTML = html || '<div style="color:var(--text-sec);font-size:13px">Noch niemand beigetreten...</div>';
+  if (preview) preview.innerHTML = html;
+}
+
+// ============================================================
+// REALTIME SUBSCRIPTION
+// ============================================================
+let quizSubscribed = false;
+function subscribeQuizRealtime() {
+  if (quizSubscribed) return;
+  quizSubscribed = true;
+
+  // Session-Updates
+  sb.channel('quiz_session_ch')
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'quiz_sessions',
+      filter: 'room_id=eq.' + ROOM_ID
+    }, (payload) => {
+      const session = payload.new;
+      if (!session) return;
+
+      if (session.status === 'active' && quizMulti.status !== 'active') {
+        clearInterval(quizMulti.joinCountdown);
+        quizMulti.status = 'active';
+        quizMulti.currentQ = session.current_question;
+
+        // Fragen laden
+        const savedQ = localStorage.getItem('malletrack_quiz_questions_' + session.id);
+        if (savedQ) {
+          try { quizMulti.questions = JSON.parse(savedQ); } catch(e) {}
+        }
+
+        showQuizScreen('question');
+        loadCurrentQuestion(session.current_question);
+      }
+
+      if (session.status === 'active' && quizMulti.status === 'active') {
+        if (session.current_question > quizMulti.currentQ) {
+          // Zwischen-Ranking kurz zeigen dann neue Frage laden
+          const prevQ = quizMulti.currentQ;
+          quizMulti.currentQ = session.current_question;
+          quizMulti.answered = false;
+          // Zwischen-Ranking für 3 Sek anzeigen
+          await showInterRanking(prevQ, false);
+          setTimeout(() => {
+            loadCurrentQuestion(session.current_question);
+          }, 3500);
+        }
+      }
+
+      if (session.status === 'finished') {
+        clearInterval(quizMulti.questionTimer);
+        quizMulti.status = 'finished';
+        showQuizRanking();
+      }
+    })
+    .subscribe();
+
+  // Antwort-Updates (für Spieler-Liste)
+  sb.channel('quiz_answers_ch')
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'quiz_answers',
+      filter: 'room_id=eq.' + ROOM_ID
+    }, (payload) => {
+      if (payload.new.question_index === -1) {
+        loadJoinedPlayers();
+      }
+    })
+    .subscribe();
+}
+
+// ============================================================
+// FRAGE ANZEIGEN
+// ============================================================
+function loadCurrentQuestion(qIndex) {
+  clearInterval(quizMulti.questionTimer);
+
+  const questions = quizMulti.questions;
+  if (!questions || qIndex >= questions.length) {
+    // Quiz beendet
+    finishQuizSession();
+    return;
+  }
+
+  const q = questions[qIndex];
+  quizMulti.answered = false;
+  quizMulti.answerStartTime = Date.now();
+
+  // UI updaten
+  const qText = document.getElementById('quiz-q-text');
+  const qCounter = document.getElementById('quiz-q-counter');
+  const answersArea = document.getElementById('quiz-answers-area');
+  const resultArea = document.getElementById('quiz-answer-result');
+  const timerEl = document.getElementById('quiz-q-timer');
+
+  if (qText) qText.textContent = q.q;
+  if (qCounter) qCounter.textContent = (qIndex + 1) + ' / ' + QUIZ_QUESTIONS_PER_GAME;
+  if (resultArea) resultArea.style.display = 'none';
+  if (timerEl) { timerEl.textContent = QUIZ_ANSWER_SECONDS; timerEl.className = 'quiz-q-timer'; }
+
+  // Antwort-Buttons
+  if (answersArea) {
+    answersArea.innerHTML = '';
+    const letters = ['A','B','C','D'];
+    q.a.forEach((answer, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-answer-btn';
+      btn.innerHTML = '<div class="quiz-answer-letter">' + letters[i] + '</div>' + escHtml(answer);
+      btn.onclick = () => submitAnswer(i, q.correct, q.a.length);
+      answersArea.appendChild(btn);
+    });
+  }
+
+  // 15-Sekunden Timer
+  let timeLeft = QUIZ_ANSWER_SECONDS;
+  quizMulti.questionTimer = setInterval(() => {
+    timeLeft--;
+    if (timerEl) {
+      timerEl.textContent = timeLeft;
+      if (timeLeft <= 5) timerEl.className = 'quiz-q-timer urgent';
+    }
+    if (timeLeft <= 0) {
+      clearInterval(quizMulti.questionTimer);
+      if (!quizMulti.answered) {
+        // Zeit abgelaufen - keine Punkte
+        showAnswerResult(false, 0, quizMulti.questions[qIndex].correct);
+        scheduleNextQuestion();
+      }
+    }
+  }, 1000);
+}
+
+// ============================================================
+// ANTWORT ABGEBEN
+// ============================================================
+async function submitAnswer(chosen, correct, total) {
+  if (quizMulti.answered) return;
+  quizMulti.answered = true;
+  clearInterval(quizMulti.questionTimer);
+
+  const responseMs = Date.now() - quizMulti.answerStartTime;
+  const isCorrect = chosen === correct;
+
+  // Punkte berechnen: max 1000 für sofortige Antwort, weniger je länger
+  let points = 0;
+  if (isCorrect) {
+    const speedBonus = Math.max(0, 1 - (responseMs / (QUIZ_ANSWER_SECONDS * 1000)));
+    points = Math.round(500 + 500 * speedBonus); // 500-1000 Punkte
+  }
+
+  quizMulti.myScore += points;
+
+  // Buttons stylen
+  document.querySelectorAll('.quiz-answer-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === correct) btn.classList.add('correct');
+    else if (i === chosen) btn.classList.add(isCorrect ? 'correct' : 'wrong');
+    else btn.classList.add('reveal');
+  });
+
+  // Score updaten
+  const scoreEl = document.getElementById('quiz-live-score');
+  if (scoreEl) scoreEl.textContent = quizMulti.myScore;
+
+  showAnswerResult(isCorrect, points, correct);
+
+  // In DB speichern
+  try {
+    await sb.from('quiz_answers').insert({
+      session_id: quizMulti.sessionId,
+      room_id: ROOM_ID,
+      user_name: state.currentUser.name,
+      user_emoji: state.currentUser.emoji,
+      question_index: quizMulti.currentQ,
+      answer_index: chosen,
+      is_correct: isCorrect,
+      response_ms: responseMs,
+      points,
+    });
+  } catch(e) { console.warn('Answer save:', e); }
+
+  // Wenn Admin: nächste Frage einleiten
+  if (state.currentUser?.isAdmin) {
+    scheduleNextQuestion();
+  }
+}
+
+function showAnswerResult(isCorrect, points, correctIndex) {
+  const resultArea = document.getElementById('quiz-answer-result');
+  if (!resultArea) return;
+  resultArea.style.display = 'block';
+  if (isCorrect) {
+    resultArea.style.background = 'rgba(57,255,20,0.15)';
+    resultArea.style.border = '1px solid var(--neon-green)';
+    resultArea.style.color = 'var(--neon-green)';
+    resultArea.textContent = '✅ Richtig! +' + points + ' Punkte 🔥';
+  } else {
+    resultArea.style.background = 'rgba(255,45,120,0.15)';
+    resultArea.style.border = '1px solid var(--neon-pink)';
+    resultArea.style.color = 'var(--neon-pink)';
+    const correctBtn = document.querySelectorAll('.quiz-answer-btn')[correctIndex];
+    const correctText = correctBtn ? correctBtn.textContent.trim().substring(1) : '';
+    resultArea.textContent = '❌ Falsch! Richtig: ' + correctText;
+  }
+}
+
+// ============================================================
+// NÄCHSTE FRAGE
+// ============================================================
+function scheduleNextQuestion() {
+  // Zwischen-Ranking nach kurzer Pause anzeigen
+  setTimeout(async () => {
+    const nextQ = quizMulti.currentQ + 1;
+    const isLast = nextQ >= QUIZ_QUESTIONS_PER_GAME;
+
+    // Zwischen-Ranking anzeigen
+    await showInterRanking(quizMulti.currentQ, isLast);
+
+    // Nach 4 Sekunden nächste Frage oder Finale
+    setTimeout(async () => {
+      if (isLast) {
+        await finishQuizSession();
+      } else {
+        if (state.currentUser?.isAdmin || quizMulti.questions.length > 0) {
+          await sb.from('quiz_sessions').update({
+            current_question: nextQ,
+          }).eq('id', quizMulti.sessionId);
+          quizMulti.currentQ = nextQ;
+          quizMulti.answered = false;
+          loadCurrentQuestion(nextQ);
+        }
+      }
+    }, 4000);
+  }, 1500);
+}
+
+async function showInterRanking(currentQIndex, isFinal) {
+  showQuizScreen('interranking');
+
+  const titleEl = document.getElementById('quiz-interrank-title');
+  const nextEl = document.getElementById('quiz-interrank-next');
+  const listEl = document.getElementById('quiz-interranking-list');
+  const countdownEl = document.getElementById('quiz-next-countdown');
+
+  if (titleEl) titleEl.textContent = isFinal ? '🏁 Letzte Frage!' : 'Nach Frage ' + (currentQIndex + 1) + ' / ' + QUIZ_QUESTIONS_PER_GAME;
+  if (nextEl) nextEl.style.display = isFinal ? 'none' : 'block';
+
+  // Countdown 4→1
+  let ct = 4;
+  if (countdownEl) countdownEl.textContent = ct;
+  const ctInterval = setInterval(() => {
+    ct--;
+    if (countdownEl) countdownEl.textContent = ct;
+    if (ct <= 0) clearInterval(ctInterval);
+  }, 1000);
+
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-sec);font-size:13px">Lade Zwischenstand...</div>';
+
+  try {
+    // Alle Antworten bis jetzt laden
+    const { data } = await sb.from('quiz_answers')
+      .select('user_name,user_emoji,points,is_correct,response_ms')
+      .eq('session_id', quizMulti.sessionId)
+      .neq('question_index', -1)
+      .lte('question_index', currentQIndex);
+
+    // Punkte aggregieren
+    const scores = {};
+    (data || []).forEach(ans => {
+      if (!scores[ans.user_name]) {
+        scores[ans.user_name] = { name: ans.user_name, emoji: ans.user_emoji, pts: 0, correct: 0 };
+      }
+      scores[ans.user_name].pts += ans.points;
+      if (ans.is_correct) scores[ans.user_name].correct++;
+    });
+
+    const sorted = Object.values(scores).sort((a,b) => b.pts - a.pts);
+    const medals = ['🥇','🥈','🥉'];
+
+    listEl.innerHTML = '';
+    sorted.forEach((entry, i) => {
+      const isMe = state.currentUser && entry.name === state.currentUser.name;
+      const row = document.createElement('div');
+      row.className = 'quiz-rank-row' + (isMe ? ' me' : '');
+      row.style.animation = 'slideIn 0.3s ease-out ' + (i * 0.08) + 's both';
+      row.innerHTML = '<div class="quiz-rank-medal">' + (i < 3 ? medals[i] : (i+1)) + '</div>'
+        + '<div style="font-size:26px">' + entry.emoji + '</div>'
+        + '<div class="quiz-rank-info">'
+        + '<div class="quiz-rank-name">' + escHtml(entry.name) + (isMe ? ' 👈' : '') + '</div>'
+        + '<div class="quiz-rank-detail">✅ ' + entry.correct + ' richtig</div>'
+        + '</div>'
+        + '<div class="quiz-rank-score">' + entry.pts + '</div>';
+      listEl.appendChild(row);
+    });
+  } catch(e) {
+    listEl.innerHTML = '<div style="color:var(--neon-pink);padding:12px">' + e.message + '</div>';
+  }
+}
+
+// ============================================================
+// QUIZ BEENDEN
+// ============================================================
+async function finishQuizSession() {
+  clearInterval(quizMulti.questionTimer);
+  clearInterval(quizMulti.joinCountdown);
+  await sb.from('quiz_sessions').update({ status: 'finished' }).eq('id', quizMulti.sessionId);
+  quizMulti.status = 'finished';
+  showQuizRanking();
+}
+
+// ============================================================
+// RANKING ANZEIGEN
+// ============================================================
+async function showQuizRanking() {
+  showQuizScreen('ranking');
+
+  const rankingList = document.getElementById('quiz-ranking-list');
+  if (!rankingList) return;
+  rankingList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec)">Lade Ergebnisse...</div>';
+
+  try {
+    // Alle Antworten laden (außer Join-Marker)
+    const { data } = await sb.from('quiz_answers')
+      .select('*')
+      .eq('session_id', quizMulti.sessionId)
+      .neq('question_index', -1);
+
+    // Punkte pro Spieler summieren
+    const scores = {};
+    (data || []).forEach(ans => {
+      if (!scores[ans.user_name]) {
+        scores[ans.user_name] = {
+          name: ans.user_name,
+          emoji: ans.user_emoji,
+          pts: 0,
+          correct: 0,
+          totalMs: 0,
+          count: 0,
+        };
+      }
+      scores[ans.user_name].pts += ans.points;
+      if (ans.is_correct) scores[ans.user_name].correct++;
+      scores[ans.user_name].totalMs += ans.response_ms;
+      scores[ans.user_name].count++;
+    });
+
+    const sorted = Object.values(scores).sort((a, b) => b.pts - a.pts || a.totalMs - b.totalMs);
+    const medals = ['🥇','🥈','🥉'];
+
+    rankingList.innerHTML = '';
+    sorted.forEach((entry, i) => {
+      const isMe = state.currentUser && entry.name === state.currentUser.name;
+      const avgMs = entry.count > 0 ? Math.round(entry.totalMs / entry.count / 100) / 10 : 0;
+      const row = document.createElement('div');
+      row.className = 'quiz-rank-row' + (isMe ? ' me' : '');
+      row.innerHTML = '<div class="quiz-rank-medal">' + (i < 3 ? medals[i] : (i+1)) + '</div>'
+        + '<div style="font-size:28px">' + entry.emoji + '</div>'
+        + '<div class="quiz-rank-info">'
+        + '<div class="quiz-rank-name">' + escHtml(entry.name) + (isMe ? ' 👈' : '') + '</div>'
+        + '<div class="quiz-rank-detail">✅ ' + entry.correct + '/' + QUIZ_QUESTIONS_PER_GAME + ' richtig · ⚡ ' + avgMs + 's Ø</div>'
+        + '</div>'
+        + '<div class="quiz-rank-score">' + entry.pts + '</div>';
+      rankingList.appendChild(row);
+    });
+
+    // In Chat posten
+    if (sorted.length > 0 && state.currentUser?.isAdmin) {
+      const winner = sorted[0];
+      sendSpecialMessage('🏆 Quiz-Ergebnis: ' + winner.emoji + ' ' + winner.name
+        + ' gewinnt mit ' + winner.pts + ' Punkten! (' + winner.correct + '/' + QUIZ_QUESTIONS_PER_GAME + ' richtig)');
+    }
+  } catch(e) {
+    rankingList.innerHTML = '<div style="color:var(--neon-pink);padding:20px">Fehler: ' + e.message + '</div>';
+  }
+}
+
+// ============================================================
+// SCREEN WECHSEL
+// ============================================================
+function showQuizScreen(screen) {
+  const screens = {
+    lobby: 'quiz-lobby-screen',
+    waiting: 'quiz-waiting-screen',
+    question: 'quiz-question-screen',
+    interranking: 'quiz-interranking-screen',
+    ranking: 'quiz-ranking-screen',
+  };
+  Object.values(screens).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const target = screens[screen];
+  if (target) {
+    const el = document.getElementById(target);
+    if (el) el.style.display = 'block';
+  }
+
+  // Join-Button anzeigen wenn waiting und nicht selbst gestartet
+  if (screen === 'lobby' || screen === 'waiting') {
+    const joinArea = document.getElementById('quiz-join-area');
+    if (joinArea && quizMulti.sessionId && quizMulti.status === 'waiting') {
+      joinArea.style.display = 'block';
+    }
+  }
+}
+
+// ============================================================
+// RESET
+// ============================================================
+async function resetMultiplayerQuiz() {
+  clearInterval(quizMulti.joinCountdown);
+  clearInterval(quizMulti.questionTimer);
+  quizMulti = {
+    ...quizMulti,
+    sessionId: null,
+    status: 'idle',
+    currentQ: 0,
+    questions: [],
+    joinedPlayers: [],
+    myScore: 0,
+    answered: false,
+  };
+  showQuizScreen('lobby');
+  const btn = document.getElementById('quiz-start-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '🚀 Quiz starten & alle einladen'; }
+  const liveScore = document.getElementById('quiz-live-score');
+  if (liveScore) liveScore.textContent = '0';
+}
+
+// Alte Solo-Quiz Funktionen (nicht mehr primär genutzt)
+function restartQuiz() { resetMultiplayerQuiz(); }
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Login-Buttons per JS verdrahten (robuster als inline onclick)
