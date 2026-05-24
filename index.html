@@ -4398,11 +4398,26 @@ function subscribeQuizRealtime() {
       }
 
       if (session.status === 'active' && quizMulti.status === 'active') {
-        // Nur relevant wenn wir hinter der DB zurückliegen (Latecomer)
         if (session.current_question > quizMulti.currentQ) {
-          quizMulti.currentQ = session.current_question;
+          const newQ = session.current_question;
+          quizMulti.currentQ = newQ;
           quizMulti.answered = false;
-          loadCurrentQuestion(session.current_question);
+
+          // Prüfe ob Zwischen-Ranking gerade angezeigt wird
+          const interScreen = document.getElementById('quiz-interranking-screen');
+          const interVisible = interScreen && interScreen.style.display !== 'none';
+
+          if (interVisible) {
+            // Zwischen-Ranking läuft noch - warte bis es fertig ist (max 5s)
+            // Das Zwischen-Ranking hat 4s Countdown, also kurz danach laden
+            setTimeout(() => {
+              quizMulti.answered = false;
+              loadCurrentQuestion(newQ);
+            }, 4500);
+          } else {
+            // Direkt laden
+            loadCurrentQuestion(newQ);
+          }
         }
       }
 
@@ -4481,13 +4496,13 @@ function loadCurrentQuestion(qIndex) {
       clearInterval(quizMulti.questionTimer);
       if (!quizMulti.answered) {
         quizMulti.answered = true;
-        // Zeit abgelaufen - alle Antworten sperren
         document.querySelectorAll('.quiz-answer-btn').forEach((btn, i) => {
           btn.disabled = true;
           if (i === quizMulti.questions[qIndex].correct) btn.classList.add('correct');
           else btn.classList.add('reveal');
         });
         showAnswerResult(false, 0, quizMulti.questions[qIndex].correct);
+        // Alle zeigen Zwischen-Ranking, Host steuert weiter
         scheduleNextQuestion();
       }
     }
@@ -4581,53 +4596,36 @@ function showAnswerResult(isCorrect, points, correctIndex) {
 // NÄCHSTE FRAGE
 // ============================================================
 function scheduleNextQuestion() {
+  const snapQ = quizMulti.currentQ; // Snapshot der aktuellen Frage
+  const nextQ = snapQ + 1;
+  const isLast = nextQ >= QUIZ_QUESTIONS_PER_GAME;
+
   setTimeout(async () => {
-    const nextQ = quizMulti.currentQ + 1;
-    const isLast = nextQ >= QUIZ_QUESTIONS_PER_GAME;
+    // Zwischen-Ranking anzeigen
+    await showInterRanking(snapQ, isLast);
 
-    // Zwischen-Ranking für alle anzeigen
-    await showInterRanking(quizMulti.currentQ, isLast);
-
-    // Nach 4 Sekunden: Nur HOST steuert den Ablauf
-    // Andere Geräte reagieren auf Realtime-UPDATE
+    // Nach 4s: Host steuert, alle anderen warten auf Realtime
     setTimeout(async () => {
       if (isLast) {
         if (quizMulti.isHost && !quizMulti.sessionFinished) {
           quizMulti.sessionFinished = true;
           await finishQuizSession();
-        } else if (!quizMulti.isHost) {
-          // Nicht-Host: warte auf Realtime 'finished'
-          // Falls nach 6s nichts kommt, selbst beenden
-          setTimeout(() => {
-            if (quizMulti.status !== 'finished') {
-              quizMulti.status = 'finished';
-              showQuizRanking();
-            }
-          }, 6000);
         }
+        // Nicht-Host: Realtime 'finished' kommt via subscribeQuizRealtime
       } else {
         if (quizMulti.isHost) {
-          // Host updated DB -> triggert Realtime bei allen
+          try {
+            await sb.from('quiz_sessions')
+              .update({ current_question: nextQ })
+              .eq('id', quizMulti.sessionId);
+          } catch(e) { console.warn('Quiz next Q:', e); }
+          // Host lädt lokal (Realtime kommt auch zurück aber Guard verhindert Doppel)
           quizMulti.currentQ = nextQ;
           quizMulti.answered = false;
-          try {
-            await sb.from('quiz_sessions').update({
-              current_question: nextQ,
-            }).eq('id', quizMulti.sessionId);
-          } catch(e) { console.warn('Quiz DB update:', e); }
           loadCurrentQuestion(nextQ);
         }
-        // Nicht-Host: wartet auf Realtime UPDATE (handled in subscribeQuizRealtime)
-        // Fallback: falls nach 8s nichts kommt, selbst laden
-        else {
-          setTimeout(() => {
-            if (quizMulti.currentQ < nextQ) {
-              quizMulti.currentQ = nextQ;
-              quizMulti.answered = false;
-              loadCurrentQuestion(nextQ);
-            }
-          }, 8000);
-        }
+        // Nicht-Host: wartet auf Realtime UPDATE
+        // showInterRanking hält sie beschäftigt, Realtime lädt dann neue Frage
       }
     }, 4000);
   }, 1500);
