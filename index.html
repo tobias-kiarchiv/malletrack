@@ -786,12 +786,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div id="map"></div>
       <div class="map-filter-bar" id="map-filter-bar">
         <button class="map-filter-btn active" data-type="all" onclick="setMapFilter('all',this)">🗺️ Alle</button>
-        <button class="map-filter-btn" data-type="nightclub" onclick="setMapFilter('nightclub',this)">🎉 Clubs</button>
-        <button class="map-filter-btn" data-type="bar" onclick="setMapFilter('bar',this)">🍺 Bars</button>
-        <button class="map-filter-btn" data-type="restaurant" onclick="setMapFilter('restaurant',this)">🍕 Essen</button>
-        <button class="map-filter-btn" data-type="hotel" onclick="setMapFilter('hotel',this)">🏨 Hotels</button>
-        <button class="map-filter-btn" data-type="atm" onclick="setMapFilter('atm',this)">💰 ATM</button>
-        <button class="map-filter-btn" data-type="supermarket" onclick="setMapFilter('supermarket',this)">🛒 Shops</button>
+        <button class="map-filter-btn" data-type="restaurant" onclick="setMapFilter('restaurant',this)">🍕 Essen ⭐4.5+</button>
+        <button class="map-filter-btn" data-type="bar" onclick="setMapFilter('bar',this)">🍺 Bars ⭐4.5+</button>
+        <button class="map-filter-btn" data-type="nightclub" onclick="setMapFilter('nightclub',this)">🎉 Clubs ⭐4.5+</button>
+        <button class="map-filter-btn" data-type="supermarket" onclick="setMapFilter('supermarket',this)">🛒 Supermärkte</button>
+        <button class="map-filter-btn" data-type="atm" onclick="setMapFilter('atm',this)">💰 Bankomaten</button>
         <button class="map-filter-btn" data-type="crew" onclick="setMapFilter('crew',this)">👥 Crew</button>
       </div>
       <div class="map-overlay">
@@ -3445,25 +3444,27 @@ function setMapFilter(type, btn) {
   document.querySelectorAll('.map-filter-btn').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
 
+  // Overpass POIs (Fallback)
   allPOIMarkers.forEach(({marker, poiType}) => {
-    if (type === 'all') {
-      marker.addTo(state.mapInstance);
-    } else if (type === 'crew') {
-      // Crew-Marker: alle anderen ausblenden
-      state.mapInstance.removeLayer(marker);
-    } else {
-      if (poiType === type) marker.addTo(state.mapInstance);
-      else state.mapInstance.removeLayer(marker);
-    }
+    if (type === 'all') marker.addTo(state.mapInstance);
+    else if (type === 'crew') state.mapInstance.removeLayer(marker);
+    else if (poiType === type) marker.addTo(state.mapInstance);
+    else state.mapInstance.removeLayer(marker);
   });
 
-  // Crew-Marker immer sichtbar außer bei anderen Filtern
+  // Google Places POIs
+  googlePOIMarkers.forEach(({marker, filterKey}) => {
+    if (type === 'all') marker.addTo(state.mapInstance);
+    else if (type === 'crew') state.mapInstance.removeLayer(marker);
+    else if (filterKey === type) marker.addTo(state.mapInstance);
+    else state.mapInstance.removeLayer(marker);
+  });
+
+  // Crew-Marker
   Object.values(state.markers).forEach(m => {
     if (type === 'crew' || type === 'all') m.addTo(state.mapInstance);
     else state.mapInstance.removeLayer(m);
   });
-
-  showToast('🗺️ Filter: ' + (btn ? btn.textContent : type));
 }
 
 // POI-Marker mit Filter-Tracking registrieren
@@ -4884,6 +4885,119 @@ function renderHashtagPosts(tags) {
     grid.appendChild(info);
   }
 }
+
+// ============================================================
+// GOOGLE PLACES API – echte POIs mit Bewertungen
+// ============================================================
+const GOOGLE_PLACES_KEY = "AIzaSyAFNph1TgIAvq-acZFrQXOu-i__VUda2pI";
+
+// Typen die geladen werden + Mindest-Rating
+const PLACES_CONFIG = [
+  { type: 'supermarket',  label: '🛒', color: '#00e5ff',  minRating: 0,   filterKey: 'supermarket' },
+  { type: 'atm',          label: '💰', color: '#39ff14',  minRating: 0,   filterKey: 'atm'         },
+  { type: 'restaurant',   label: '🍕', color: '#ffd600',  minRating: 4.5, filterKey: 'restaurant'  },
+  { type: 'bar',          label: '🍺', color: '#ff8c00',  minRating: 4.5, filterKey: 'bar'         },
+  { type: 'night_club',   label: '🎉', color: '#ff2d78',  minRating: 4.5, filterKey: 'nightclub'   },
+];
+
+let googlePOIMarkers = []; // {marker, filterKey, rating}
+let placesLoaded = false;
+
+async function loadGooglePlaces(lat, lng, map) {
+  if (!map) return;
+
+  for (const cfg of PLACES_CONFIG) {
+    try {
+      // Google Places Nearby Search via CORS-freiem Proxy
+      const url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+        + '?location=' + lat + ',' + lng
+        + '&radius=1500'
+        + '&type=' + cfg.type
+        + '&key=' + GOOGLE_PLACES_KEY;
+
+      // Direkte Anfrage (funktioniert wenn API-Key keine HTTP-Referrer-Einschränkung hat)
+      const resp = await fetch(url);
+      const data = await resp.json();
+
+      if (data.status === 'REQUEST_DENIED' || data.status === 'INVALID_REQUEST') {
+        console.warn('Places API:', data.status, data.error_message);
+        continue;
+      }
+
+      (data.results || []).forEach(place => {
+        const rating = place.rating || 0;
+        // Mindest-Bewertung prüfen
+        if (cfg.minRating > 0 && rating < cfg.minRating) return;
+        if (!place.geometry) return;
+
+        const pLat = place.geometry.location.lat;
+        const pLng = place.geometry.location.lng;
+        const name = place.name || cfg.type;
+        const stars = rating > 0 ? ' ⭐' + rating.toFixed(1) : '';
+
+        // Marker erstellen
+        const icon = L.divIcon({
+          className: '',
+          html: '<div style="display:flex;flex-direction:column;align-items:center">'
+            + '<div style="background:#0f0f1e;border:2px solid ' + cfg.color + ';border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 0 8px ' + cfg.color + '40">' + cfg.label + '</div>'
+            + '<div style="background:rgba(10,10,18,0.88);border-radius:4px;padding:1px 5px;font-size:7px;font-weight:700;color:' + cfg.color + ';white-space:nowrap;margin-top:1px;max-width:70px;overflow:hidden;text-overflow:ellipsis">' + name.substring(0,12) + (rating > 0 ? ' ⭐' + rating.toFixed(1) : '') + '</div>'
+            + '</div>',
+          iconSize: [30, 46],
+          iconAnchor: [15, 44]
+        });
+
+        const marker = L.marker([pLat, pLng], { icon, zIndexOffset: -50 }).addTo(map);
+
+        // Popup mit Details
+        marker.on('click', () => {
+          const openNow = place.opening_hours ? (place.opening_hours.open_now ? '🟢 Geöffnet' : '🔴 Geschlossen') : '';
+          const ratingBar = rating > 0
+            ? '<div style="color:#ffd600;font-size:13px;margin:4px 0">'
+              + '★'.repeat(Math.floor(rating)) + (rating % 1 >= 0.5 ? '½' : '')
+              + '<span style="font-size:11px;color:var(--text-sec);margin-left:4px">' + rating.toFixed(1) + ' / 5</span>'
+              + '</div>'
+            : '';
+          const totalRatings = place.user_ratings_total ? '<div style="font-size:10px;color:var(--text-sec)">' + place.user_ratings_total + ' Bewertungen</div>' : '';
+
+          document.getElementById('marker-modal-title').textContent = cfg.label + ' ' + name;
+          const actions = document.getElementById('marker-actions');
+          actions.innerHTML = ratingBar + totalRatings
+            + (openNow ? '<div style="font-size:12px;margin:6px 0">' + openNow + '</div>' : '');
+
+          addAction(actions, '🗺️', 'In Google Maps öffnen', () => {
+            window.open('https://www.google.com/maps/place/?q=place_id:' + place.place_id, '_blank');
+            closeModal('marker-modal');
+          });
+          addAction(actions, '🧭', 'Navigation starten', () => {
+            window.open('https://www.google.com/maps/dir/?api=1&destination=' + pLat + ',' + pLng, '_blank');
+            closeModal('marker-modal');
+          });
+          document.getElementById('marker-modal').classList.add('open');
+        });
+
+        googlePOIMarkers.push({ marker, filterKey: cfg.filterKey, rating });
+      });
+
+    } catch(e) {
+      console.warn('Places load error:', cfg.type, e.message);
+    }
+  }
+
+  placesLoaded = true;
+  showToast('📍 ' + googlePOIMarkers.length + ' Orte geladen');
+}
+
+// Filter für Google POIs
+function filterGooglePOIs(type) {
+  googlePOIMarkers.forEach(({ marker, filterKey }) => {
+    if (type === 'all' || type === filterKey) {
+      marker.addTo(state.mapInstance);
+    } else {
+      state.mapInstance.removeLayer(marker);
+    }
+  });
+}
+
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Instagram-Button direkt binden (zusätzlich zu onclick im HTML)
