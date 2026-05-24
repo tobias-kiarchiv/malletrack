@@ -4919,9 +4919,11 @@ function loadGooglePlaces(lat, lng, map) {
     return;
   }
 
-  // SDK dynamisch laden
+  // SDK dynamisch laden mit async
   const script = document.createElement('script');
-  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAFNph1TgIAvq-acZFrQXOu-i__VUda2pI&v=beta&libraries=places';
+  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAFNph1TgIAvq-acZFrQXOu-i__VUda2pI&v=beta&libraries=places&loading=async';
+  script.async = true;
+  script.defer = true;
   script.onload = () => _doGooglePlacesSearch(lat, lng, map);
   script.onerror = () => console.warn('Google Places SDK konnte nicht geladen werden');
   document.head.appendChild(script);
