@@ -1051,9 +1051,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </div>
           <div style="display:flex;gap:8px">
             <input class="login-input" id="insta-handle-input" placeholder="@username" 
-                   style="margin-bottom:0;flex:1" type="text" autocomplete="off">
+                   style="margin-bottom:0;flex:1" type="text" autocomplete="off"
+                   onkeydown="if(event.key==='Enter')addInstaAccount()">
             <button style="background:linear-gradient(135deg,#f09433,#dc2743,#bc1888);border:none;border-radius:12px;padding:10px 16px;color:white;font-weight:700;cursor:pointer;font-size:14px;white-space:nowrap" 
-                    id="insta-add-btn">+ Hinzufügen</button>
+                    id="insta-add-btn" onclick="addInstaAccount()">+ Hinzufügen</button>
           </div>
           <div style="font-size:11px;color:var(--text-sec);margin-top:8px;text-align:center">
             💡 Nur öffentliche Accounts können angezeigt werden
@@ -2440,11 +2441,13 @@ function switchTab(tabId, btn) {
       state.unreadChat = 0; updateChatBadge();
       setTimeout(() => { const c = document.getElementById('chat-messages'); if(c) c.scrollTop = c.scrollHeight; }, 100);
     }
-    if (tabId === 'tab-fun') {
-      try { loadLeaderboard(); loadTasks(); initRoulette(); } catch(e){}
+    if (tabId === 'tab-funquiz') {
+      try { loadLeaderboard(); loadTasks(); initRoulette(); initQuiz(); } catch(e){ console.error('funquiz:',e); }
       setTimeout(() => { try { initHeatmap(); } catch(e){} }, 300);
     }
-    if (tabId === 'tab-quiz') { try { initQuiz(); } catch(e){} }
+    if (tabId === 'tab-insta') {
+      try { renderInstaAccounts(); } catch(e){ console.error('insta:', e); }
+    }
     if (tabId === 'tab-recap') { try { loadRecap(); } catch(e){ console.error('recap:', e); } }
     if (tabId === 'tab-admin') {
       try {
@@ -3812,12 +3815,14 @@ function getInstaAccounts() { return JSON.parse(localStorage.getItem(INSTA_STORA
 function saveInstaAccounts(a) { localStorage.setItem(INSTA_STORAGE_KEY, JSON.stringify(a)); }
 
 function addInstaAccount() {
-  const input = document.getElementById('insta-handle-input'); if (!input) return;
-  let handle = input.value.trim().replace(/^@/,'').toLowerCase();
-  if (!handle) { showToast('Bitte Username eingeben'); return; }
+  const input = document.getElementById('insta-handle-input');
+  if (!input) { console.error('insta input not found'); return; }
+  let handle = input.value.trim().replace(/^@/,'').replace(/\s/g,'').toLowerCase();
+  if (!handle || handle.length < 1) { showToast('⚠️ Bitte Username eingeben'); return; }
   const accounts = getInstaAccounts();
-  if (accounts.find(a => a.handle === handle)) { showToast('Bereits hinzugefügt'); return; }
-  accounts.push({ handle, addedBy: state.currentUser?.name || 'Unbekannt', addedAt: new Date().toISOString() });
+  if (accounts.find(a => a.handle === handle)) { showToast('⚠️ @' + handle + ' bereits hinzugefügt'); return; }
+  const addedBy = (state.currentUser && state.currentUser.name) ? state.currentUser.name : 'Unbekannt';
+  accounts.push({ handle, addedBy, addedAt: new Date().toISOString() });
   saveInstaAccounts(accounts);
   input.value = '';
   renderInstaAccounts();
@@ -3831,6 +3836,15 @@ function removeInstaAccount(handle) {
 }
 
 function renderInstaAccounts() {
+  // Button und Input immer neu binden
+  const addBtn = document.getElementById('insta-add-btn');
+  const addInput = document.getElementById('insta-handle-input');
+  if (addBtn) addBtn.onclick = addInstaAccount;
+  if (addInput && !addInput._instabound) {
+    addInput._instabound = true;
+    addInput.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();addInstaAccount();} });
+  }
+
   const listEl = document.getElementById('insta-accounts-list');
   const emptyEl = document.getElementById('insta-empty');
   const feedSection = document.getElementById('insta-feed-section');
@@ -4713,6 +4727,14 @@ async function resetMultiplayerQuiz() {
 function restartQuiz() { resetMultiplayerQuiz(); }
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
+  // Instagram-Button direkt binden (zusätzlich zu onclick im HTML)
+  const instaBtn = document.getElementById('insta-add-btn');
+  const instaInput = document.getElementById('insta-handle-input');
+  if (instaBtn) instaBtn.onclick = addInstaAccount;
+  if (instaInput) instaInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addInstaAccount(); }
+  });
+
   // Login-Buttons per JS verdrahten (robuster als inline onclick)
   const step1Btn = document.getElementById('login-step1-btn');
   const step2Btn = document.getElementById('login-step2-btn');
