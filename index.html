@@ -4921,80 +4921,95 @@ function loadGooglePlaces(lat, lng, map) {
 
   // SDK dynamisch laden
   const script = document.createElement('script');
-  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAFNph1TgIAvq-acZFrQXOu-i__VUda2pI&libraries=places';
+  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAFNph1TgIAvq-acZFrQXOu-i__VUda2pI&v=beta&libraries=places';
   script.onload = () => _doGooglePlacesSearch(lat, lng, map);
   script.onerror = () => console.warn('Google Places SDK konnte nicht geladen werden');
   document.head.appendChild(script);
 }
 
-function _doGooglePlacesSearch(lat, lng, map) {
+async function _doGooglePlacesSearch(lat, lng, map) {
   try {
-    const dummyDiv = document.createElement('div');
-    const gmap = new window.google.maps.Map(dummyDiv, { center: { lat, lng }, zoom: 15 });
-    const service = new window.google.maps.places.PlacesService(gmap);
-    const center = new window.google.maps.LatLng(lat, lng);
-    let loaded = 0;
-    const total = PLACES_CONFIG.length;
+    const { Place, SearchNearbyRankPreference } = await window.google.maps.importLibrary('places');
 
-    PLACES_CONFIG.forEach(cfg => {
-      service.nearbySearch({ location: center, radius: 1500, type: cfg.type },
-        (results, status) => {
-          loaded++;
-          if (status === 'OK' && results) {
-            results.forEach(place => {
-              const rating = place.rating || 0;
-              if (cfg.minRating > 0 && rating < cfg.minRating) return;
-              if (!place.geometry || !place.geometry.location) return;
+    for (const cfg of PLACES_CONFIG) {
+      try {
+        const request = {
+          fields: ['displayName','location','rating','userRatingCount','regularOpeningHours','id','types'],
+          locationRestriction: {
+            center: { lat, lng },
+            radius: 1500,
+          },
+          includedPrimaryTypes: [cfg.type],
+          maxResultCount: 20,
+          rankPreference: SearchNearbyRankPreference.POPULARITY,
+        };
 
-              const pLat = place.geometry.location.lat();
-              const pLng = place.geometry.location.lng();
-              const name = place.name || '';
-              const shortName = name.length > 14 ? name.substring(0,13) + '…' : name;
-              const ratingTxt = rating > 0 ? ' ⭐' + rating.toFixed(1) : '';
+        const { places } = await Place.searchNearby(request);
 
-              const icon = L.divIcon({
-                className: '',
-                html: '<div style="display:flex;flex-direction:column;align-items:center">'
-                  + '<div style="background:#0f0f1e;border:2px solid ' + cfg.color + ';border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px">' + cfg.label + '</div>'
-                  + '<div style="background:rgba(10,10,18,0.9);border-radius:4px;padding:1px 5px;font-size:7px;font-weight:700;color:' + cfg.color + ';white-space:nowrap;margin-top:1px">' + shortName + ratingTxt + '</div>'
-                  + '</div>',
-                iconSize: [30, 46], iconAnchor: [15, 44]
-              });
+        (places || []).forEach(place => {
+          const rating = place.rating || 0;
+          if (cfg.minRating > 0 && rating < cfg.minRating) return;
+          if (!place.location) return;
 
-              const marker = L.marker([pLat, pLng], { icon, zIndexOffset: -50 }).addTo(map);
-              marker.on('click', () => {
-                const openNow = (place.opening_hours && place.opening_hours.isOpen)
-                  ? (place.opening_hours.isOpen() ? '🟢 Geöffnet' : '🔴 Geschlossen') : '';
-                const starsHtml = rating > 0
-                  ? '<div style="color:#ffd600;font-size:15px;margin:4px 0">★'.repeat(Math.floor(rating))
-                    + '<span style="font-size:12px;color:var(--text-sec);margin-left:4px">' + rating.toFixed(1) + '/5'
-                    + (place.user_ratings_total ? ' (' + place.user_ratings_total + ')' : '') + '</span></div>'
-                  : '';
-                document.getElementById('marker-modal-title').textContent = cfg.label + ' ' + name;
-                const actions = document.getElementById('marker-actions');
-                actions.innerHTML = starsHtml + (openNow ? '<div style="font-size:13px;margin-bottom:8px">' + openNow + '</div>' : '');
-                addAction(actions, '🗺️', 'Google Maps öffnen', () => {
-                  window.open('https://www.google.com/maps/place/?q=place_id:' + place.place_id, '_blank');
-                  closeModal('marker-modal');
-                });
-                addAction(actions, '🧭', 'Navigation starten', () => {
-                  window.open('https://www.google.com/maps/dir/?api=1&destination=' + pLat + ',' + pLng, '_blank');
-                  closeModal('marker-modal');
-                });
-                document.getElementById('marker-modal').classList.add('open');
-              });
-              googlePOIMarkers.push({ marker, filterKey: cfg.filterKey, rating });
+          const pLat = place.location.lat();
+          const pLng = place.location.lng();
+          const name = place.displayName || '';
+          const shortName = name.length > 14 ? name.substring(0,13) + '…' : name;
+          const ratingTxt = rating > 0 ? ' ⭐' + rating.toFixed(1) : '';
+
+          const icon = L.divIcon({
+            className: '',
+            html: '<div style="display:flex;flex-direction:column;align-items:center">'
+              + '<div style="background:#0f0f1e;border:2px solid ' + cfg.color + ';border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px">' + cfg.label + '</div>'
+              + '<div style="background:rgba(10,10,18,0.9);border-radius:4px;padding:1px 5px;font-size:7px;font-weight:700;color:' + cfg.color + ';white-space:nowrap;margin-top:1px">' + shortName + ratingTxt + '</div>'
+              + '</div>',
+            iconSize: [30, 46], iconAnchor: [15, 44]
+          });
+
+          const marker = L.marker([pLat, pLng], { icon, zIndexOffset: -50 }).addTo(map);
+
+          marker.on('click', () => {
+            const isOpen = place.regularOpeningHours?.periods?.length > 0;
+            const openNow = isOpen ? '' : '';
+            const rating2 = place.rating || 0;
+            const starsHtml = rating2 > 0
+              ? '<div style="color:#ffd600;font-size:15px;margin:4px 0">'
+                + '★'.repeat(Math.floor(rating2))
+                + '<span style="font-size:12px;color:var(--text-sec);margin-left:4px">'
+                + rating2.toFixed(1) + '/5'
+                + (place.userRatingCount ? ' (' + place.userRatingCount + ')' : '')
+                + '</span></div>' : '';
+
+            document.getElementById('marker-modal-title').textContent = cfg.label + ' ' + name;
+            const actions = document.getElementById('marker-actions');
+            actions.innerHTML = starsHtml;
+
+            addAction(actions, '🗺️', 'Google Maps öffnen', () => {
+              window.open('https://www.google.com/maps/place/?q=place_id:' + place.id, '_blank');
+              closeModal('marker-modal');
             });
-          }
-          if (loaded === total) {
-            placesLoaded = true;
-            showToast('📍 ' + googlePOIMarkers.length + ' Orte gefunden');
-          }
-        }
-      );
-    });
+            addAction(actions, '🧭', 'Navigation starten', () => {
+              window.open('https://www.google.com/maps/dir/?api=1&destination=' + pLat + ',' + pLng, '_blank');
+              closeModal('marker-modal');
+            });
+            document.getElementById('marker-modal').classList.add('open');
+          });
+
+          googlePOIMarkers.push({ marker, filterKey: cfg.filterKey, rating });
+        });
+
+      } catch(e) {
+        console.warn('Places search error for', cfg.type, e.message);
+      }
+    }
+
+    placesLoaded = true;
+    if (googlePOIMarkers.length > 0) {
+      showToast('📍 ' + googlePOIMarkers.length + ' Orte mit Google gefunden');
+    }
+
   } catch(e) {
-    console.warn('Google Places Fehler:', e);
+    console.warn('Google Places (New) Fehler:', e.message);
   }
 }
 
