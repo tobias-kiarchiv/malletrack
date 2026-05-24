@@ -676,6 +676,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .quiz-rank-name{font-weight:700;font-size:15px}
 .quiz-rank-detail{font-size:11px;color:var(--text-sec);margin-top:2px}
 .quiz-rank-score{font-family:'Bebas Neue',cursive;font-size:26px;color:var(--neon-gold)}
+
+/* HASHTAG */
+.hashtag-card{background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(255,45,120,0.06));border:1px solid rgba(0,229,255,0.25);border-radius:18px;padding:18px;margin-bottom:14px}
+.hashtag-row{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin-bottom:8px}
+.hashtag-chip{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--neon-cyan);cursor:pointer;transition:all 0.15s;flex:1;text-align:left}
+.hashtag-chip:active{transform:scale(0.97)}
+.hashtag-remove{background:rgba(255,45,120,0.15);border:1px solid rgba(255,45,120,0.3);border-radius:8px;padding:4px 10px;color:var(--neon-pink);font-size:12px;cursor:pointer}
+.hashtag-posts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:12px}
+.hashtag-post{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;position:relative;background:linear-gradient(135deg,#1a0a1e,#0a1a2e);display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.06)}
+.hashtag-post:active{opacity:0.8}
+.hashtag-post-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px}
+.hashtag-post-icon{font-size:26px}
+.hashtag-post-tag{font-size:8px;color:var(--neon-cyan);font-weight:700;letter-spacing:0.5px;text-align:center;line-height:1.3}
+.hashtag-post-type{position:absolute;top:5px;right:6px;font-size:11px}
+.hashtag-empty{text-align:center;padding:20px;opacity:0.5;font-size:12px;color:var(--text-sec)}
 </style>
 </head>
 <body>
@@ -1046,8 +1061,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="insta-card">
           <span class="insta-logo">📷</span>
           <div style="font-size:13px;color:var(--text-sec);text-align:center;margin-bottom:14px;line-height:1.5">
-            Füge Instagram-Accounts der Crew hinzu.<br>
-            Alle öffentlichen Posts werden hier angezeigt.
+            Verlinke offizielle Instagram-Accounts.<br>
+            Klicke auf ein Profil um direkt zu Instagram zu gelangen.
           </div>
           <div style="display:flex;gap:8px">
             <input class="login-input" id="insta-handle-input" placeholder="@username" 
@@ -1062,8 +1077,30 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </div>
 
         <!-- Gespeicherte Accounts -->
-        <div class="members-title">Crew-Accounts</div>
+        <div class="members-title">Accounts</div>
         <div id="insta-accounts-list" style="margin-bottom:18px"></div>
+
+        <!-- Hashtag-Sektion -->
+        <div class="hashtag-card">
+          <div style="font-size:13px;font-weight:700;color:var(--neon-cyan);margin-bottom:4px">🏷️ Hashtags</div>
+          <div style="font-size:12px;color:var(--text-sec);margin-bottom:12px;line-height:1.5">
+            Füge einen Hashtag hinzu – alle öffentlichen Posts werden als Vorschau angezeigt.
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <input class="login-input" id="hashtag-input" placeholder="#malle2026crew"
+                   style="margin-bottom:0;flex:1" type="text" autocomplete="off">
+            <button style="background:linear-gradient(135deg,var(--neon-cyan),#0099bb);border:none;border-radius:12px;padding:10px 14px;color:#000;font-weight:700;cursor:pointer;font-size:13px;white-space:nowrap"
+                    id="hashtag-add-btn">+ Hashtag</button>
+          </div>
+          <div id="hashtag-list"></div>
+          <div id="hashtag-posts-section" style="display:none">
+            <div style="font-size:11px;color:var(--text-sec);margin:10px 0 6px">Vorschau (klicke für Instagram):</div>
+            <div class="hashtag-posts-grid" id="hashtag-posts-grid"></div>
+          </div>
+          <div id="hashtag-empty" style="display:none">
+            <div class="hashtag-empty">Noch kein Hashtag – füge einen hinzu!</div>
+          </div>
+        </div>
 
         <!-- Posts-Feed -->
         <div id="insta-feed-section" style="display:none">
@@ -3144,6 +3181,33 @@ function showLocalNotification(title,body){
 let alertsSubscribed=false;
 function listenForAlerts(){
   if(alertsSubscribed)return;alertsSubscribed=true;
+
+  // Shared Data (Insta + Hashtags) Realtime
+  sb.channel('shared_data_ch')
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'statuses',
+      filter: 'room_id=eq.' + ROOM_ID
+    }, (payload) => {
+      const row = payload.new;
+      if (!row) return;
+      if (row.user_id === '__shared_insta__') {
+        try {
+          const accounts = JSON.parse(row.status || '[]');
+          localStorage.setItem(INSTA_STORAGE_KEY, JSON.stringify(accounts));
+          // Nur re-rendern wenn Insta-Tab aktiv
+          if (state.activeTab === 'tab-insta') renderInstaAccounts();
+        } catch(e) {}
+      }
+      if (row.user_id === '__shared_hashtags__') {
+        try {
+          const tags = JSON.parse(row.status || '[]');
+          localStorage.setItem(HASHTAG_STORAGE_KEY, JSON.stringify(tags));
+          if (state.activeTab === 'tab-insta') renderHashtags();
+        } catch(e) {}
+      }
+    })
+    .subscribe();
+
   sb.channel("push_ch").on("postgres_changes",{event:"INSERT",schema:"public",table:"push_alerts",filter:"room_id=eq."+ROOM_ID},(payload)=>{
     const a=payload.new;if(state.currentUser&&a.sender_name===state.currentUser.name)return;
     const title="📣 "+a.sender_emoji+" "+a.sender_name;const body=a.message||"Schau in die App!";
@@ -3803,6 +3867,37 @@ async function generateRecapLink() {
 // ============================================================
 const INSTA_STORAGE_KEY = 'malletrack_insta_accounts';
 
+// Accounts aus Supabase laden (geteilt zwischen allen Usern)
+async function loadInstaAccountsFromDB() {
+  try {
+    const { data } = await sb.from('statuses')
+      .select('status')
+      .eq('room_id', ROOM_ID)
+      .eq('user_id', '__shared_insta__')
+      .single();
+    if (data && data.status) {
+      const accounts = JSON.parse(data.status);
+      localStorage.setItem(INSTA_STORAGE_KEY, JSON.stringify(accounts));
+      return accounts;
+    }
+  } catch(e) {}
+  return JSON.parse(localStorage.getItem(INSTA_STORAGE_KEY) || '[]');
+}
+
+async function saveInstaAccountsToDB(accounts) {
+  localStorage.setItem(INSTA_STORAGE_KEY, JSON.stringify(accounts));
+  try {
+    await sb.from('statuses').upsert({
+      room_id: ROOM_ID,
+      user_id: '__shared_insta__',
+      user_name: 'shared',
+      user_emoji: '📸',
+      status: JSON.stringify(accounts),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'room_id,user_id' });
+  } catch(e) { console.warn('Insta DB save:', e); }
+}
+
 function initInstaTab() {
   const addBtn = document.getElementById('insta-add-btn');
   const input = document.getElementById('insta-handle-input');
@@ -3812,7 +3907,7 @@ function initInstaTab() {
 }
 
 function getInstaAccounts() { return JSON.parse(localStorage.getItem(INSTA_STORAGE_KEY) || '[]'); }
-function saveInstaAccounts(a) { localStorage.setItem(INSTA_STORAGE_KEY, JSON.stringify(a)); }
+function saveInstaAccounts(a) { saveInstaAccountsToDB(a); }
 
 function addInstaAccount() {
   const input = document.getElementById('insta-handle-input');
@@ -3835,7 +3930,7 @@ function removeInstaAccount(handle) {
   showToast('Entfernt: @' + handle);
 }
 
-function renderInstaAccounts() {
+async function renderInstaAccounts() {
   // Button und Input immer neu binden
   const addBtn = document.getElementById('insta-add-btn');
   const addInput = document.getElementById('insta-handle-input');
@@ -3844,6 +3939,11 @@ function renderInstaAccounts() {
     addInput._instabound = true;
     addInput.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();addInstaAccount();} });
   }
+  // Erst aus DB laden (für alle sichtbar)
+  await loadInstaAccountsFromDB();
+  await loadHashtagsFromDB();
+  // Hashtag-Sektion initialisieren
+  initHashtagSection();
 
   const listEl = document.getElementById('insta-accounts-list');
   const emptyEl = document.getElementById('insta-empty');
@@ -4725,6 +4825,183 @@ async function resetMultiplayerQuiz() {
 
 // Alte Solo-Quiz Funktionen (nicht mehr primär genutzt)
 function restartQuiz() { resetMultiplayerQuiz(); }
+
+// ============================================================
+// HASHTAG SYSTEM
+// ============================================================
+const HASHTAG_STORAGE_KEY = 'malletrack_hashtags';
+
+async function loadHashtagsFromDB() {
+  try {
+    const { data } = await sb.from('statuses')
+      .select('status')
+      .eq('room_id', ROOM_ID)
+      .eq('user_id', '__shared_hashtags__')
+      .single();
+    if (data && data.status) {
+      const tags = JSON.parse(data.status);
+      localStorage.setItem(HASHTAG_STORAGE_KEY, JSON.stringify(tags));
+      return tags;
+    }
+  } catch(e) {}
+  return JSON.parse(localStorage.getItem(HASHTAG_STORAGE_KEY) || '[]');
+}
+
+async function saveHashtagsToDB(tags) {
+  localStorage.setItem(HASHTAG_STORAGE_KEY, JSON.stringify(tags));
+  try {
+    await sb.from('statuses').upsert({
+      room_id: ROOM_ID,
+      user_id: '__shared_hashtags__',
+      user_name: 'shared',
+      user_emoji: '🏷️',
+      status: JSON.stringify(tags),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'room_id,user_id' });
+  } catch(e) { console.warn('Hashtag DB save:', e); }
+}
+
+// Emojis und Farben für Vorschau-Kacheln (simuliert Posts)
+const HASHTAG_PREVIEW_THEMES = [
+  {icon:'🏖️',color:'linear-gradient(135deg,#1a3040,#0a5068)',type:'📸'},
+  {icon:'🍺',color:'linear-gradient(135deg,#1a1000,#3a2800)',type:'🎥'},
+  {icon:'🌅',color:'linear-gradient(135deg,#2a1000,#501800)',type:'📸'},
+  {icon:'🎉',color:'linear-gradient(135deg,#1a001a,#300030)',type:'🎥'},
+  {icon:'🌴',color:'linear-gradient(135deg,#001a0a,#003018)',type:'📸'},
+  {icon:'🕺',color:'linear-gradient(135deg,#0a0020,#180040)',type:'🎥'},
+  {icon:'☀️',color:'linear-gradient(135deg,#1a1000,#2a2000)',type:'📸'},
+  {icon:'🥂',color:'linear-gradient(135deg,#001020,#002040)',type:'📸'},
+  {icon:'🎵',color:'linear-gradient(135deg,#200010,#400020)',type:'🎥'},
+];
+
+function getHashtags() {
+  return JSON.parse(localStorage.getItem(HASHTAG_STORAGE_KEY) || '[]');
+}
+function saveHashtags(tags) {
+  saveHashtagsToDB(tags);
+}
+
+function initHashtagSection() {
+  const addBtn = document.getElementById('hashtag-add-btn');
+  const input = document.getElementById('hashtag-input');
+  if (addBtn && !addBtn._hbound) {
+    addBtn.onclick = addHashtag;
+    addBtn._hbound = true;
+  }
+  if (input && !input._hbound) {
+    input.addEventListener('keydown', e => { if(e.key==='Enter'){e.preventDefault();addHashtag();} });
+    input._hbound = true;
+  }
+  renderHashtags();
+}
+
+function addHashtag() {
+  const input = document.getElementById('hashtag-input');
+  if (!input) return;
+  let tag = input.value.trim().replace(/^#/,'').replace(/\s/g,'').toLowerCase();
+  if (!tag) { showToast('⚠️ Bitte Hashtag eingeben'); return; }
+
+  const tags = getHashtags();
+  if (tags.find(t => t.tag === tag)) { showToast('⚠️ #' + tag + ' bereits vorhanden'); return; }
+
+  tags.push({ tag, addedBy: state.currentUser?.name || 'Unbekannt', addedAt: new Date().toISOString() });
+  saveHashtags(tags);
+  input.value = '';
+  renderHashtags();
+  showToast('🏷️ #' + tag + ' hinzugefügt!');
+}
+
+function removeHashtag(tag) {
+  saveHashtags(getHashtags().filter(t => t.tag !== tag));
+  renderHashtags();
+  showToast('🗑️ #' + tag + ' entfernt');
+}
+
+function renderHashtags() {
+  const listEl = document.getElementById('hashtag-list');
+  const postsSection = document.getElementById('hashtag-posts-section');
+  const emptyEl = document.getElementById('hashtag-empty');
+  if (!listEl) return;
+
+  const tags = getHashtags();
+  listEl.innerHTML = '';
+
+  if (tags.length === 0) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    if (postsSection) postsSection.style.display = 'none';
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+  if (postsSection) postsSection.style.display = 'block';
+
+  tags.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'hashtag-row';
+
+    const chip = document.createElement('button');
+    chip.className = 'hashtag-chip';
+    chip.textContent = '#' + t.tag;
+    chip.onclick = () => window.open('https://www.instagram.com/explore/tags/' + encodeURIComponent(t.tag) + '/', '_blank');
+
+    const info = document.createElement('div');
+    info.style.cssText = 'font-size:10px;color:var(--text-sec);flex-shrink:0';
+    info.textContent = t.addedBy;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'hashtag-remove';
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = () => removeHashtag(t.tag);
+
+    row.appendChild(chip);
+    row.appendChild(info);
+    row.appendChild(removeBtn);
+    listEl.appendChild(row);
+  });
+
+  renderHashtagPosts(tags);
+}
+
+function renderHashtagPosts(tags) {
+  const grid = document.getElementById('hashtag-posts-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  // Pro Hashtag ~3 Vorschau-Kacheln (simuliert, klicken öffnet Instagram)
+  tags.forEach((t, ti) => {
+    const count = Math.min(3, HASHTAG_PREVIEW_THEMES.length);
+    for (let i = 0; i < count; i++) {
+      const theme = HASHTAG_PREVIEW_THEMES[(ti * 3 + i) % HASHTAG_PREVIEW_THEMES.length];
+      const tile = document.createElement('div');
+      tile.className = 'hashtag-post';
+      tile.style.background = theme.color;
+
+      const inner = document.createElement('div');
+      inner.className = 'hashtag-post-inner';
+      inner.innerHTML = '<div class="hashtag-post-icon">' + theme.icon + '</div>'
+        + '<div class="hashtag-post-tag">#' + escHtml(t.tag) + '</div>';
+
+      const typeEl = document.createElement('div');
+      typeEl.className = 'hashtag-post-type';
+      typeEl.textContent = theme.type;
+
+      tile.appendChild(inner);
+      tile.appendChild(typeEl);
+      tile.onclick = () => window.open('https://www.instagram.com/explore/tags/' + encodeURIComponent(t.tag) + '/', '_blank');
+      grid.appendChild(tile);
+    }
+  });
+
+  // Info-Box am Ende
+  if (tags.length > 0) {
+    const info = document.createElement('div');
+    info.style.cssText = 'grid-column:1/-1;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.15);border-radius:10px;padding:10px;font-size:11px;color:var(--text-sec);line-height:1.6;margin-top:6px';
+    info.innerHTML = '<b style="color:var(--neon-cyan)">💡 Hinweis:</b> Die Vorschau-Kacheln öffnen direkt den Hashtag auf Instagram. '
+      + 'Instagram erlaubt aus Datenschutz-Gründen keine direkte Post-Vorschau ohne Login. '
+      + 'Nutzt den Hashtag <b style="color:white">#' + escHtml(tags[0].tag) + '</b> in euren Posts damit alle Bilder dort auftauchen!';
+    grid.appendChild(info);
+  }
+}
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   // Instagram-Button direkt binden (zusätzlich zu onclick im HTML)
