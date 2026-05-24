@@ -3870,17 +3870,17 @@ const INSTA_STORAGE_KEY = 'malletrack_insta_accounts';
 // Accounts aus Supabase laden (geteilt zwischen allen Usern)
 async function loadInstaAccountsFromDB() {
   try {
-    const { data } = await sb.from('statuses')
+    const { data, error } = await sb.from('statuses')
       .select('status')
       .eq('room_id', ROOM_ID)
       .eq('user_id', '__shared_insta__')
-      .single();
-    if (data && data.status) {
-      const accounts = JSON.parse(data.status);
+      .limit(1);
+    if (!error && data && data.length > 0 && data[0].status) {
+      const accounts = JSON.parse(data[0].status);
       localStorage.setItem(INSTA_STORAGE_KEY, JSON.stringify(accounts));
       return accounts;
     }
-  } catch(e) {}
+  } catch(e) { console.warn('loadInsta:', e); }
   return JSON.parse(localStorage.getItem(INSTA_STORAGE_KEY) || '[]');
 }
 
@@ -4833,17 +4833,17 @@ const HASHTAG_STORAGE_KEY = 'malletrack_hashtags';
 
 async function loadHashtagsFromDB() {
   try {
-    const { data } = await sb.from('statuses')
+    const { data, error } = await sb.from('statuses')
       .select('status')
       .eq('room_id', ROOM_ID)
       .eq('user_id', '__shared_hashtags__')
-      .single();
-    if (data && data.status) {
-      const tags = JSON.parse(data.status);
+      .limit(1);
+    if (!error && data && data.length > 0 && data[0].status) {
+      const tags = JSON.parse(data[0].status);
       localStorage.setItem(HASHTAG_STORAGE_KEY, JSON.stringify(tags));
       return tags;
     }
-  } catch(e) {}
+  } catch(e) { console.warn('loadHashtags:', e); }
   return JSON.parse(localStorage.getItem(HASHTAG_STORAGE_KEY) || '[]');
 }
 
