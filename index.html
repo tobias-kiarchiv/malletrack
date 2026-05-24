@@ -4398,26 +4398,13 @@ function subscribeQuizRealtime() {
       }
 
       if (session.status === 'active' && quizMulti.status === 'active') {
+        // Nur für Latecomers: wenn DB weiter ist als lokaler Stand
+        // (normale Teilnehmer laden selbst via scheduleNextQuestion)
         if (session.current_question > quizMulti.currentQ) {
           const newQ = session.current_question;
           quizMulti.currentQ = newQ;
           quizMulti.answered = false;
-
-          // Prüfe ob Zwischen-Ranking gerade angezeigt wird
-          const interScreen = document.getElementById('quiz-interranking-screen');
-          const interVisible = interScreen && interScreen.style.display !== 'none';
-
-          if (interVisible) {
-            // Zwischen-Ranking läuft noch - warte bis es fertig ist (max 5s)
-            // Das Zwischen-Ranking hat 4s Countdown, also kurz danach laden
-            setTimeout(() => {
-              quizMulti.answered = false;
-              loadCurrentQuestion(newQ);
-            }, 4500);
-          } else {
-            // Direkt laden
-            loadCurrentQuestion(newQ);
-          }
+          loadCurrentQuestion(newQ);
         }
       }
 
@@ -4596,39 +4583,38 @@ function showAnswerResult(isCorrect, points, correctIndex) {
 // NÄCHSTE FRAGE
 // ============================================================
 function scheduleNextQuestion() {
-  const snapQ = quizMulti.currentQ; // Snapshot der aktuellen Frage
+  const snapQ = quizMulti.currentQ;
   const nextQ = snapQ + 1;
   const isLast = nextQ >= QUIZ_QUESTIONS_PER_GAME;
 
+  // Kurze Pause damit Antwort-Feedback sichtbar ist
   setTimeout(async () => {
-    // Zwischen-Ranking anzeigen
+    // Zwischen-Ranking anzeigen - wartet wirklich 4 Sekunden
     await showInterRanking(snapQ, isLast);
 
-    // Nach 4s: Host steuert, alle anderen warten auf Realtime
-    setTimeout(async () => {
-      if (isLast) {
-        if (quizMulti.isHost && !quizMulti.sessionFinished) {
-          quizMulti.sessionFinished = true;
-          await finishQuizSession();
-        }
-        // Nicht-Host: Realtime 'finished' kommt via subscribeQuizRealtime
-      } else {
-        if (quizMulti.isHost) {
-          try {
-            await sb.from('quiz_sessions')
-              .update({ current_question: nextQ })
-              .eq('id', quizMulti.sessionId);
-          } catch(e) { console.warn('Quiz next Q:', e); }
-          // Host lädt lokal (Realtime kommt auch zurück aber Guard verhindert Doppel)
-          quizMulti.currentQ = nextQ;
-          quizMulti.answered = false;
-          loadCurrentQuestion(nextQ);
-        }
-        // Nicht-Host: wartet auf Realtime UPDATE
-        // showInterRanking hält sie beschäftigt, Realtime lädt dann neue Frage
+    // Jetzt (nach echten 4s) weitermachen
+    if (isLast) {
+      if (!quizMulti.sessionFinished) {
+        quizMulti.sessionFinished = true;
+        // Alle beenden gleichzeitig - wer zuerst kommt macht DB-Update
+        await finishQuizSession();
       }
-    }, 4000);
-  }, 1500);
+    } else {
+      quizMulti.currentQ = nextQ;
+      quizMulti.answered = false;
+
+      if (quizMulti.isHost) {
+        // Host updated DB
+        try {
+          await sb.from('quiz_sessions')
+            .update({ current_question: nextQ })
+            .eq('id', quizMulti.sessionId);
+        } catch(e) { console.warn('Quiz next Q:', e); }
+      }
+      // ALLE laden die nächste Frage direkt (kein Warten auf Realtime)
+      loadCurrentQuestion(nextQ);
+    }
+  }, 1200);
 }
 
 async function showInterRanking(currentQIndex, isFinal) {
@@ -4642,14 +4628,16 @@ async function showInterRanking(currentQIndex, isFinal) {
   if (titleEl) titleEl.textContent = isFinal ? '🏁 Letzte Frage!' : 'Nach Frage ' + (currentQIndex + 1) + ' / ' + QUIZ_QUESTIONS_PER_GAME;
   if (nextEl) nextEl.style.display = isFinal ? 'none' : 'block';
 
-  // Countdown 4→1
-  let ct = 4;
-  if (countdownEl) countdownEl.textContent = ct;
-  const ctInterval = setInterval(() => {
-    ct--;
+  // Countdown 4→1 als echtes Promise (wartet wirklich 4 Sekunden)
+  await new Promise(resolve => {
+    let ct = 4;
     if (countdownEl) countdownEl.textContent = ct;
-    if (ct <= 0) clearInterval(ctInterval);
-  }, 1000);
+    const ctInterval = setInterval(() => {
+      ct--;
+      if (countdownEl) countdownEl.textContent = ct;
+      if (ct <= 0) { clearInterval(ctInterval); resolve(); }
+    }, 1000);
+  });
 
   if (!listEl) return;
   listEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-sec);font-size:13px">Lade Zwischenstand...</div>';
