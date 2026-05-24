@@ -4398,13 +4398,10 @@ function subscribeQuizRealtime() {
       }
 
       if (session.status === 'active' && quizMulti.status === 'active') {
-        // Nur für Latecomers: wenn DB weiter ist als lokaler Stand
-        // (normale Teilnehmer laden selbst via scheduleNextQuestion)
-        if (session.current_question > quizMulti.currentQ) {
-          const newQ = session.current_question;
-          quizMulti.currentQ = newQ;
+        if (session.current_question !== quizMulti.currentQ) {
+          quizMulti.currentQ = session.current_question;
           quizMulti.answered = false;
-          loadCurrentQuestion(newQ);
+          loadCurrentQuestion(session.current_question);
         }
       }
 
@@ -4530,34 +4527,24 @@ async function submitAnswer(chosen, correct, total) {
 
   showAnswerResult(isCorrect, points, correct);
 
-  // In DB speichern - prüfen ob bereits geantwortet
+  // Antwort in DB speichern
   try {
-    const { data: alreadyAnswered } = await sb.from('quiz_answers')
-      .select('id')
-      .eq('session_id', quizMulti.sessionId)
-      .eq('user_name', state.currentUser.name)
-      .eq('question_index', quizMulti.currentQ)
-      .limit(1);
-
-    if (!alreadyAnswered || alreadyAnswered.length === 0) {
-      await sb.from('quiz_answers').insert({
-        session_id: quizMulti.sessionId,
-        room_id: ROOM_ID,
-        user_name: state.currentUser.name,
-        user_emoji: state.currentUser.emoji,
-        question_index: quizMulti.currentQ,
-        answer_index: chosen,
-        is_correct: isCorrect,
-        response_ms: responseMs,
-        points,
-      });
-    }
+    await sb.from('quiz_answers').insert({
+      session_id: quizMulti.sessionId,
+      room_id: ROOM_ID,
+      user_name: state.currentUser.name,
+      user_emoji: state.currentUser.emoji,
+      question_index: quizMulti.currentQ,
+      answer_index: chosen,
+      is_correct: isCorrect,
+      response_ms: responseMs,
+      points,
+    });
   } catch(e) { console.warn('Answer save:', e); }
 
-  // Wenn Admin: nächste Frage einleiten
-  if (state.currentUser?.isAdmin) {
-    scheduleNextQuestion();
-  }
+  // Alle starten ihren eigenen Zwischen-Ranking-Flow
+  // Host updated danach die DB (via scheduleNextQuestion)
+  scheduleNextQuestion();
 }
 
 function showAnswerResult(isCorrect, points, correctIndex) {
@@ -4583,182 +4570,91 @@ function showAnswerResult(isCorrect, points, correctIndex) {
 // NÄCHSTE FRAGE
 // ============================================================
 function scheduleNextQuestion() {
-  const snapQ = quizMulti.currentQ;
-  const nextQ = snapQ + 1;
-  const isLast = nextQ >= QUIZ_QUESTIONS_PER_GAME;
+  // Kurze Pause damit Feedback sichtbar ist, dann Zwischen-Ranking
+  setTimeout(() => {
+    const snapQ = quizMulti.currentQ;
+    const isLast = (snapQ + 1) >= QUIZ_QUESTIONS_PER_GAME;
+    showInterRanking(snapQ, isLast);
 
-  // Kurze Pause damit Antwort-Feedback sichtbar ist
-  setTimeout(async () => {
-    // Zwischen-Ranking anzeigen - wartet wirklich 4 Sekunden
-    await showInterRanking(snapQ, isLast);
-
-    // Jetzt (nach echten 4s) weitermachen
-    if (isLast) {
-      if (!quizMulti.sessionFinished) {
-        quizMulti.sessionFinished = true;
-        // Alle beenden gleichzeitig - wer zuerst kommt macht DB-Update
-        await finishQuizSession();
-      }
-    } else {
-      quizMulti.currentQ = nextQ;
-      quizMulti.answered = false;
-
-      if (quizMulti.isHost) {
-        // Host updated DB
-        try {
+    // Nur HOST steuert den Ablauf via DB
+    if (quizMulti.isHost) {
+      setTimeout(async () => {
+        if (isLast) {
+          if (!quizMulti.sessionFinished) {
+            quizMulti.sessionFinished = true;
+            await sb.from('quiz_sessions')
+              .update({ status: 'finished' })
+              .eq('id', quizMulti.sessionId);
+          }
+        } else {
           await sb.from('quiz_sessions')
-            .update({ current_question: nextQ })
+            .update({ current_question: snapQ + 1 })
             .eq('id', quizMulti.sessionId);
-        } catch(e) { console.warn('Quiz next Q:', e); }
-      }
-      // ALLE laden die nächste Frage direkt (kein Warten auf Realtime)
-      loadCurrentQuestion(nextQ);
+        }
+      }, 5000); // 5s Zwischen-Ranking Zeit
     }
-  }, 1200);
+  }, 1500);
 }
 
-async function showInterRanking(currentQIndex, isFinal) {
+
+function showInterRanking(currentQIndex, isFinal) {
   showQuizScreen('interranking');
 
   const titleEl = document.getElementById('quiz-interrank-title');
-  const nextEl = document.getElementById('quiz-interrank-next');
-  const listEl = document.getElementById('quiz-interranking-list');
-  const countdownEl = document.getElementById('quiz-next-countdown');
+  const nextEl  = document.getElementById('quiz-interrank-next');
+  const listEl  = document.getElementById('quiz-interranking-list');
+  const ctEl    = document.getElementById('quiz-next-countdown');
 
-  if (titleEl) titleEl.textContent = isFinal ? '🏁 Letzte Frage!' : 'Nach Frage ' + (currentQIndex + 1) + ' / ' + QUIZ_QUESTIONS_PER_GAME;
+  if (titleEl) titleEl.textContent = isFinal
+    ? '🏁 Finale!'
+    : 'Nach Frage ' + (currentQIndex + 1) + ' / ' + QUIZ_QUESTIONS_PER_GAME;
   if (nextEl) nextEl.style.display = isFinal ? 'none' : 'block';
 
-  // Countdown 4→1 als echtes Promise (wartet wirklich 4 Sekunden)
-  await new Promise(resolve => {
-    let ct = 4;
-    if (countdownEl) countdownEl.textContent = ct;
-    const ctInterval = setInterval(() => {
-      ct--;
-      if (countdownEl) countdownEl.textContent = ct;
-      if (ct <= 0) { clearInterval(ctInterval); resolve(); }
-    }, 1000);
-  });
+  // Countdown 5→1
+  let ct = 5;
+  if (ctEl) ctEl.textContent = ct;
+  const iv = setInterval(() => {
+    ct--;
+    if (ctEl) ctEl.textContent = ct;
+    if (ct <= 0) clearInterval(iv);
+  }, 1000);
 
+  // Ranking aus DB laden
   if (!listEl) return;
-  listEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-sec);font-size:13px">Lade Zwischenstand...</div>';
+  listEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-sec);font-size:13px">⏳ Lade...</div>';
 
-  try {
-    // Alle Antworten bis jetzt laden
-    const { data } = await sb.from('quiz_answers')
-      .select('user_name,user_emoji,points,is_correct,response_ms')
-      .eq('session_id', quizMulti.sessionId)
-      .neq('question_index', -1)
-      .lte('question_index', currentQIndex);
-
-    // Punkte aggregieren
-    const scores = {};
-    (data || []).forEach(ans => {
-      if (!scores[ans.user_name]) {
-        scores[ans.user_name] = { name: ans.user_name, emoji: ans.user_emoji, pts: 0, correct: 0 };
-      }
-      scores[ans.user_name].pts += ans.points;
-      if (ans.is_correct) scores[ans.user_name].correct++;
+  sb.from('quiz_answers')
+    .select('user_name,user_emoji,points,is_correct')
+    .eq('session_id', quizMulti.sessionId)
+    .neq('question_index', -1)
+    .lte('question_index', currentQIndex)
+    .then(({ data }) => {
+      const scores = {};
+      (data || []).forEach(a => {
+        if (!scores[a.user_name]) scores[a.user_name] = { name: a.user_name, emoji: a.user_emoji, pts: 0, correct: 0 };
+        scores[a.user_name].pts += a.points;
+        if (a.is_correct) scores[a.user_name].correct++;
+      });
+      const sorted = Object.values(scores).sort((a,b) => b.pts - a.pts);
+      const medals = ['🥇','🥈','🥉'];
+      listEl.innerHTML = '';
+      sorted.forEach((e, i) => {
+        const isMe = state.currentUser && e.name === state.currentUser.name;
+        const row = document.createElement('div');
+        row.className = 'quiz-rank-row' + (isMe ? ' me' : '');
+        row.style.animation = 'slideIn 0.3s ease-out ' + (i*0.07) + 's both';
+        row.innerHTML = '<div class="quiz-rank-medal">' + (i < 3 ? medals[i] : i+1) + '</div>'
+          + '<div style="font-size:24px">' + e.emoji + '</div>'
+          + '<div class="quiz-rank-info"><div class="quiz-rank-name">' + escHtml(e.name) + (isMe ? ' 👈' : '') + '</div>'
+          + '<div class="quiz-rank-detail">✅ ' + e.correct + ' richtig</div></div>'
+          + '<div class="quiz-rank-score">' + e.pts + '</div>';
+        listEl.appendChild(row);
+      });
+    }).catch(() => {
+      listEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-sec)">–</div>';
     });
-
-    const sorted = Object.values(scores).sort((a,b) => b.pts - a.pts);
-    const medals = ['🥇','🥈','🥉'];
-
-    listEl.innerHTML = '';
-    sorted.forEach((entry, i) => {
-      const isMe = state.currentUser && entry.name === state.currentUser.name;
-      const row = document.createElement('div');
-      row.className = 'quiz-rank-row' + (isMe ? ' me' : '');
-      row.style.animation = 'slideIn 0.3s ease-out ' + (i * 0.08) + 's both';
-      row.innerHTML = '<div class="quiz-rank-medal">' + (i < 3 ? medals[i] : (i+1)) + '</div>'
-        + '<div style="font-size:26px">' + entry.emoji + '</div>'
-        + '<div class="quiz-rank-info">'
-        + '<div class="quiz-rank-name">' + escHtml(entry.name) + (isMe ? ' 👈' : '') + '</div>'
-        + '<div class="quiz-rank-detail">✅ ' + entry.correct + ' richtig</div>'
-        + '</div>'
-        + '<div class="quiz-rank-score">' + entry.pts + '</div>';
-      listEl.appendChild(row);
-    });
-  } catch(e) {
-    listEl.innerHTML = '<div style="color:var(--neon-pink);padding:12px">' + e.message + '</div>';
-  }
 }
 
-// ============================================================
-// QUIZ BEENDEN
-// ============================================================
-async function finishQuizSession() {
-  clearInterval(quizMulti.questionTimer);
-  clearInterval(quizMulti.joinCountdown);
-  await sb.from('quiz_sessions').update({ status: 'finished' }).eq('id', quizMulti.sessionId);
-  quizMulti.status = 'finished';
-  showQuizRanking();
-}
-
-// ============================================================
-// RANKING ANZEIGEN
-// ============================================================
-async function showQuizRanking() {
-  showQuizScreen('ranking');
-
-  const rankingList = document.getElementById('quiz-ranking-list');
-  if (!rankingList) return;
-  rankingList.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-sec)">Lade Ergebnisse...</div>';
-
-  try {
-    // Alle Antworten laden (außer Join-Marker)
-    const { data } = await sb.from('quiz_answers')
-      .select('*')
-      .eq('session_id', quizMulti.sessionId)
-      .neq('question_index', -1);
-
-    // Punkte pro Spieler summieren
-    const scores = {};
-    (data || []).forEach(ans => {
-      if (!scores[ans.user_name]) {
-        scores[ans.user_name] = {
-          name: ans.user_name,
-          emoji: ans.user_emoji,
-          pts: 0,
-          correct: 0,
-          totalMs: 0,
-          count: 0,
-        };
-      }
-      scores[ans.user_name].pts += ans.points;
-      if (ans.is_correct) scores[ans.user_name].correct++;
-      scores[ans.user_name].totalMs += ans.response_ms;
-      scores[ans.user_name].count++;
-    });
-
-    const sorted = Object.values(scores).sort((a, b) => b.pts - a.pts || a.totalMs - b.totalMs);
-    const medals = ['🥇','🥈','🥉'];
-
-    rankingList.innerHTML = '';
-    sorted.forEach((entry, i) => {
-      const isMe = state.currentUser && entry.name === state.currentUser.name;
-      const avgMs = entry.count > 0 ? Math.round(entry.totalMs / entry.count / 100) / 10 : 0;
-      const row = document.createElement('div');
-      row.className = 'quiz-rank-row' + (isMe ? ' me' : '');
-      row.innerHTML = '<div class="quiz-rank-medal">' + (i < 3 ? medals[i] : (i+1)) + '</div>'
-        + '<div style="font-size:28px">' + entry.emoji + '</div>'
-        + '<div class="quiz-rank-info">'
-        + '<div class="quiz-rank-name">' + escHtml(entry.name) + (isMe ? ' 👈' : '') + '</div>'
-        + '<div class="quiz-rank-detail">✅ ' + entry.correct + '/' + QUIZ_QUESTIONS_PER_GAME + ' richtig · ⚡ ' + avgMs + 's Ø</div>'
-        + '</div>'
-        + '<div class="quiz-rank-score">' + entry.pts + '</div>';
-      rankingList.appendChild(row);
-    });
-
-    // In Chat posten
-    if (sorted.length > 0 && state.currentUser?.isAdmin) {
-      const winner = sorted[0];
-      sendSpecialMessage('🏆 Quiz-Ergebnis: ' + winner.emoji + ' ' + winner.name
-        + ' gewinnt mit ' + winner.pts + ' Punkten! (' + winner.correct + '/' + QUIZ_QUESTIONS_PER_GAME + ' richtig)');
-    }
-  } catch(e) {
-    rankingList.innerHTML = '<div style="color:var(--neon-pink);padding:20px">Fehler: ' + e.message + '</div>';
-  }
-}
 
 // ============================================================
 // SCREEN WECHSEL
