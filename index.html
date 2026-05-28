@@ -4355,7 +4355,7 @@ function revealAnswers(chosen, correct) {
 }
 
 // ─── HOST: WEITER ZUR NÄCHSTEN FRAGE ───
-function hostAdvanceAfterDelay() {
+async function hostAdvanceAfterDelay() {
   // Warte 3s damit alle das Ergebnis sehen, dann DB updaten
   setTimeout(async () => {
     if(!quiz.isHost || !quiz.sessionId) return;
