@@ -4909,29 +4909,37 @@ const PLACES_CONFIG = [
 let googlePOIMarkers = []; // {marker, filterKey, rating}
 let placesLoaded = false;
 
-// Google Places: SDK dynamisch laden + POIs abrufen
+// Google Places: Neuer Bootstrap Loader (einzige Methode die importLibrary unterstützt)
+const GMAPS_KEY = 'AIzaSyAFNph1TgIAvq-acZFrQXOu-i__VUda2pI';
+let gmapsBootstrapped = false;
+
+function bootstrapGoogleMaps() {
+  if (gmapsBootstrapped) return;
+  gmapsBootstrapped = true;
+  // Offizieller Google Maps Bootstrap Loader
+  (g=>{
+    var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;
+    b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,
+    u=()=>h||(h=new Promise(async(f,n)=>{await(a=m.createElement("script"));
+    e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);
+    e.set("key",g.key??"");e.set("callback",c+".maps."+q);a.src="https://maps."+c+"apis.com/maps/api/js?"+e;
+    d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));
+    a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));
+    d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n));
+  })({key: GMAPS_KEY, v: "weekly"});
+}
+
 function loadGooglePlaces(lat, lng, map) {
   if (!map) return;
-
-  // SDK bereits geladen?
-  if (window.google && window.google.maps && window.google.maps.places) {
-    _doGooglePlacesSearch(lat, lng, map);
-    return;
-  }
-
-  // SDK dynamisch laden mit async
-  const script = document.createElement('script');
-  script.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyAFNph1TgIAvq-acZFrQXOu-i__VUda2pI&v=beta&libraries=places&loading=async';
-  script.async = true;
-  script.defer = true;
-  script.onload = () => _doGooglePlacesSearch(lat, lng, map);
-  script.onerror = () => console.warn('Google Places SDK konnte nicht geladen werden');
-  document.head.appendChild(script);
+  bootstrapGoogleMaps();
+  _doGooglePlacesSearch(lat, lng, map);
 }
 
 async function _doGooglePlacesSearch(lat, lng, map) {
+  console.log('🗺️ Google Places: Starte Suche bei', lat, lng);
   try {
     const { Place, SearchNearbyRankPreference } = await window.google.maps.importLibrary('places');
+    console.log('✅ Places Library geladen');
 
     for (const cfg of PLACES_CONFIG) {
       try {
@@ -5001,17 +5009,22 @@ async function _doGooglePlacesSearch(lat, lng, map) {
         });
 
       } catch(e) {
-        console.warn('Places search error for', cfg.type, e.message);
+        console.warn('❌ Places Fehler für', cfg.type + ':', e.message, e);
       }
     }
 
     placesLoaded = true;
+    console.log('📍 Google Places fertig:', googlePOIMarkers.length, 'Orte');
     if (googlePOIMarkers.length > 0) {
       showToast('📍 ' + googlePOIMarkers.length + ' Orte mit Google gefunden');
+    } else {
+      console.warn('⚠️ Keine Google Places Ergebnisse – API aktiviert?');
+      showToast('⚠️ Google Places: Keine Ergebnisse – API prüfen');
     }
 
   } catch(e) {
-    console.warn('Google Places (New) Fehler:', e.message);
+    console.error('❌ Google Places (New) Fehler:', e.message, e);
+    showToast('❌ Google Places Fehler: ' + e.message);
   }
 }
 
