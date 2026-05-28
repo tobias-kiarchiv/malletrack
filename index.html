@@ -3047,48 +3047,7 @@ function flyToHomeBase() {
 // ============================================================
 // QUIZ
 // ============================================================
-const QUIZ_DATA = {
-  "Mallorca 🌴": [
-    {q:"Wie heißt die bekannteste Partymeile?",a:["Schinkenstraße","Ballermann","Playa de Muro","Magaluf"],correct:1},
-    {q:"Was ist die Hauptstadt von Mallorca?",a:["Alcúdia","Manacor","Palma","Inca"],correct:2},
-    {q:"Was ist typisch mallorquinisch?",a:["Paella","Ensaimada","Churros","Gazpacho"],correct:1},
-    {q:"Welcher Club ist riesig auf der Schinkenstraße?",a:["BCM","Pacha","Megapark","Amnesia"],correct:2},
-    {q:"Was kostet ein Bier am Ballermann ca.?",a:["1€","3-5€","8€","12€"],correct:1},
-    {q:"Welche Insel gehört NICHT zu den Balearen?",a:["Ibiza","Menorca","Formentera","Korsika"],correct:3},
-    {q:"Wie nennt man die Badeabschnitte am Ballermann?",a:["Zonas","Playas","Balnearios","Sectores"],correct:2},
-    {q:"In welcher Stadt liegt der Ballermann?",a:["Alcúdia","Palma","Magaluf","Sóller"],correct:1},
-  ],
-  "Fußball ⚽": [
-    {q:"Welcher Verein heißt die Roten?",a:["BVB","FC Bayern","1. FC Köln","Leverkusen"],correct:1},
-    {q:"Wie viele Spieler stehen auf dem Platz?",a:["18","20","22","24"],correct:2},
-    {q:"Wer hat die meisten WM-Titel?",a:["Deutschland","Argentinien","Brasilien","Italien"],correct:2},
-    {q:"Was ist ein Hattrick?",a:["3 Tore in einem Spiel","3 Karten","3 Ecken","3 Elfmeter"],correct:0},
-    {q:"WM 2006 in Deutschland – welche Stadt war Gastgeber-Finale?",a:["Hamburg","München","Berlin","Dortmund"],correct:2},
-    {q:"Tier im Wappen Eintracht Frankfurt?",a:["Löwe","Adler","Bär","Wolf"],correct:1},
-    {q:"Was bedeutet VAR?",a:["Video Assistant Referee","Virtual Area Review","Video Area Replay","Vorder-Außen-Regel"],correct:0},
-    {q:"Wie lang dauert eine Halbzeit?",a:["40 Min","45 Min","50 Min","60 Min"],correct:1},
-  ],
-  "Allgemeinwissen 🌍": [
-    {q:"Hauptstadt von Australien?",a:["Sydney","Melbourne","Canberra","Brisbane"],correct:2},
-    {q:"Wie viele Saiten hat eine Gitarre?",a:["4","5","6","7"],correct:2},
-    {q:"Element mit Kürzel Au?",a:["Silber","Gold","Aluminium","Kupfer"],correct:1},
-    {q:"Wie viele Nullen hat eine Million?",a:["5","6","7","8"],correct:1},
-    {q:"Schnellstes Landtier?",a:["Löwe","Gepard","Antilope","Pferd"],correct:1},
-    {q:"Wie viele Planeten hat unser Sonnensystem?",a:["7","8","9","10"],correct:1},
-    {q:"In welchem Land steht der Eiffelturm?",a:["Belgien","Schweiz","Deutschland","Frankreich"],correct:3},
-    {q:"Wie viele Kontinente hat die Erde?",a:["5","6","7","8"],correct:2},
-  ],
-  "Trinken 🍺": [
-    {q:"Was ist ein Radler?",a:["Bier+Cola","Bier+Limo","Wein+Wasser","Sekt+OJ"],correct:1},
-    {q:"Aus welchem Land kommt Tequila?",a:["Spanien","Kolumbien","Mexiko","Brasilien"],correct:2},
-    {q:"Woraus wird Rum hergestellt?",a:["Kartoffeln","Zuckerrohr","Getreide","Trauben"],correct:1},
-    {q:"Was bedeutet on the rocks?",a:["Ohne Eis","Mit Eis","Mit Sahne","Pur"],correct:1},
-    {q:"Aus welcher Frucht wird Wein gemacht?",a:["Äpfeln","Birnen","Trauben","Pflaumen"],correct:2},
-    {q:"Was ist ein Shandy?",a:["Bier+Limette","Bier+Limo","Gin+Tonic","Rum+Cola"],correct:1},
-    {q:"Wie viel Prozent hat normales Bier?",a:["0.5%","2%","5%","8%"],correct:2},
-    {q:"Whisky vs Whiskey – Unterschied?",a:["Nur Schreibweise","Schottisch vs Irisch","Alter","Farbe"],correct:1},
-  ],
-};
+// QUIZ_DATA defined below
 let quizState={category:"Mallorca 🌴",currentQ:0,score:0,answered:false,questions:[],finished:false};
 
 function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -3119,10 +3078,10 @@ function answerQuiz(chosen,correct){
   document.querySelectorAll(".quiz-answer").forEach((b,i)=>{b.disabled=true;if(i===correct)b.classList.add("correct");else if(i===chosen)b.classList.add("wrong");else b.classList.add("reveal");});
   if(chosen===correct){quizState.score++;showToast("✅ Richtig! +1 Punkt");}else{showToast("❌ Falsch! Richtig: "+document.querySelectorAll(".quiz-answer")[correct].textContent);}
   const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+(quizState.currentQ+1);
-  setTimeout(()=>{quizState.currentQ++;if(quizState.currentQ>=quizState.questions.length)quizState.finished=true;// renderQuiz removed},1800);
+  setTimeout(()=>{quizState.currentQ++;if(quizState.currentQ>=quizState.questions.length)quizState.finished=true;},1800);
 }
 
-function restartQuiz(){quizState.currentQ=0;quizState.score=0;quizState.finished=false;quizState.questions=shuffleArray(QUIZ_DATA[quizState.category]);// renderQuiz removed}
+function restartQuiz(){quizState.currentQ=0;quizState.score=0;quizState.finished=false;quizState.questions=shuffleArray(QUIZ_DATA[quizState.category]);}
 
 // ============================================================
 // PUSH NOTIFICATIONS
@@ -4515,9 +4474,7 @@ function resetQuiz() {
 }
 
 // ─── AUTO-CHECK für aktive Sessions beim Tab-Öffnen ───
-async function // checkActiveQuizSession removed {
-  // nicht mehr nötig – Session wird explizit erstellt/gejoint
-}
+// checkActiveQuizSession entfernt - nicht mehr nötig
 
 
 // ============================================================
