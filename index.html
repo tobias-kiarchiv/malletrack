@@ -4341,7 +4341,7 @@ function updateTimer(t) {
 // ─── ANTWORT ABGEBEN ───
 async function submitAnswer(chosen) {
   if(quiz.answered) return;
-  quiz.answered = true;
+  quiz.answered = true; // sofort setzen – verhindert jeden Doppel-Aufruf
   clearInterval(quiz.timerInterval);
 
   const q = quiz.questions[quiz.currentQ];
@@ -4354,7 +4354,7 @@ async function submitAnswer(chosen) {
 
   // In DB speichern
   try {
-    await sb.from('quiz_answers').insert({
+    await sb.from('quiz_answers').upsert({
       session_id: quiz.sessionId,
       room_id: ROOM_ID,
       user_name: state.currentUser.name,
@@ -4363,8 +4363,14 @@ async function submitAnswer(chosen) {
       answer_index: chosen,
       is_correct: isCorrect,
       points: points,
-    });
-  } catch(e) { console.warn('Answer save:', e); }
+    }, { onConflict: 'session_id,user_name,question_index', ignoreDuplicates: true });
+  } catch(e) {
+    if(e.code === '23505' || (e.message && e.message.includes('conflict'))) {
+      console.log('Antwort bereits gespeichert (OK)');
+    } else {
+      console.warn('Answer save:', e);
+    }
+  }
 
   // Host: nach kurzer Pause prüfen ob alle geantwortet haben
   if(quiz.isHost) hostAdvanceAfterDelay();
