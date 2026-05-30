@@ -4086,6 +4086,9 @@ async function createQuizSession(category) {
   const questions = buildQuestions(category, seed);
 
   try {
+    // 4-stelliger Code (1000-9999)
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+
     const { data, error } = await sb.from('quiz_sessions').insert({
       room_id: ROOM_ID,
       status: 'waiting',
@@ -4093,6 +4096,7 @@ async function createQuizSession(category) {
       created_by: state.currentUser.name,
       category: category,
       seed: seed,
+      code: code,
       players: JSON.stringify([{name: state.currentUser.name, emoji: state.currentUser.emoji, score: 0}]),
     }).select().single();
 
@@ -4123,8 +4127,8 @@ async function joinQuizSession() {
 
   try {
     const { data, error } = await sb.from('quiz_sessions')
-      .select('*').eq('id', sessionId).eq('room_id', ROOM_ID).single();
-    if(error || !data) { showToast('❌ Session nicht gefunden'); return; }
+      .select('*').eq('code', sessionId).eq('room_id', ROOM_ID).eq('status', 'waiting').single();
+    if(error || !data) { showToast('❌ Code nicht gefunden'); return; }
     if(data.status !== 'waiting') { showToast('⚠️ Session läuft bereits'); return; }
 
     // Spieler hinzufügen
@@ -4165,7 +4169,7 @@ function buildQuestions(category, seed) {
 function showWaitingRoom(sessionData) {
   showQuizScreen('waiting');
   const codeEl = document.getElementById('quiz-session-code');
-  if(codeEl) codeEl.textContent = sessionData.id;
+  if(codeEl) codeEl.textContent = sessionData.code || sessionData.id;
 
   const catEl = document.getElementById('quiz-waiting-cat');
   if(catEl) catEl.textContent = sessionData.category || 'Mallorca 🌴';
