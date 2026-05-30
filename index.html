@@ -949,6 +949,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <div class="section-title" style="margin-bottom:14px">🧠 MALLE-QUIZ</div>
           <div id="quiz-main-area">
             <!-- Lobby / Start Screen -->
+            <div id="quiz-cats-screen" style="display:none">
+              <div style="font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:2px;color:var(--text-pri);margin-bottom:14px">Kategorie wählen</div>
+              <div id="quiz-cats-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+              <button onclick="showQuizScreen('lobby')" style="margin-top:12px;background:transparent;border:1px solid var(--border);border-radius:12px;padding:10px;color:var(--text-sec);width:100%;cursor:pointer">↩ Zurück</button>
+            </div>
             <div id="quiz-lobby-screen">
               <div class="quiz-lobby">
                 <div style="font-size:48px;margin-bottom:8px">🧠</div>
@@ -1025,7 +1030,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
                 <div class="quiz-lobby-title">Ergebnis</div>
               </div>
               <div class="quiz-ranking" id="quiz-ranking-list"></div>
-              <button class="quiz-start-btn" style="margin-top:16px;background:linear-gradient(135deg,var(--neon-pink),#cc0055)" onclick="resetMultiplayerQuiz()">
+              <button class="quiz-start-btn" style="margin-top:16px;background:linear-gradient(135deg,var(--neon-pink),#cc0055)" onclick="resetQuiz()">
                 🔄 Neues Quiz starten
               </button>
             </div>
@@ -4084,9 +4089,15 @@ function initQuiz() {
 }
 
 function showQuizScreen(name) {
+  // Neue Screens (quiz-X-screen)
   ['lobby','cats','waiting','question','interranking','ranking'].forEach(s => {
     const el = document.getElementById('quiz-' + s + '-screen');
     if(el) el.style.display = s===name ? '' : 'none';
+  });
+  // Alte Screen-IDs (Fallback)
+  ['lobby-idle','lobby-join','question','ranking','interranking'].forEach(s => {
+    const el = document.getElementById('quiz-' + s + '-screen');
+    if(el) el.style.display = 'none'; // immer ausblenden
   });
 }
 
