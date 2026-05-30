@@ -955,30 +955,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
               <button onclick="showQuizScreen('lobby')" style="margin-top:12px;background:transparent;border:1px solid var(--border);border-radius:12px;padding:10px;color:var(--text-sec);width:100%;cursor:pointer">↩ Zurück</button>
             </div>
             <div id="quiz-lobby-screen">
-              <div class="quiz-lobby">
-                <div style="font-size:48px;margin-bottom:8px">🧠</div>
-                <div class="quiz-lobby-title">Multiplayer Quiz</div>
-                <div style="font-size:13px;color:var(--text-sec);margin-bottom:16px;line-height:1.6">
-                  Alle Teilnehmer haben <b style="color:white">30 Sekunden</b> um beizutreten.<br>
-                  5 Fragen · Punkte nach Richtigkeit + Geschwindigkeit
-                </div>
-                <div class="quiz-cat-scroll" id="quiz-cats" style="margin-bottom:16px"></div>
-                <div id="quiz-players-preview" class="quiz-players-joined"></div>
+              <div style="text-align:center;padding:16px 0 12px">
+                <div style="font-size:44px;margin-bottom:8px">&#x1F9E0;</div>
+                <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:var(--text-pri)">Multiplayer Quiz</div>
+                <div style="font-size:12px;color:var(--text-sec);margin-top:4px">Live gegen die Crew antreten</div>
               </div>
-              <div id="quiz-start-area">
-                <button class="quiz-start-btn" id="quiz-start-btn" onclick="startQuiz()">
-                  🚀 Quiz starten & alle einladen
-                </button>
-              </div>
-              <div id="quiz-join-area" style="display:none">
-                <button class="quiz-join-btn" id="quiz-join-btn" onclick="joinQuizSession()">
-                  ✋ Jetzt beitreten!
-                </button>
-                <div id="quiz-join-countdown" style="text-align:center;margin-bottom:10px"></div>
+              <button class="primary-btn" style="margin-bottom:10px;width:100%" onclick="showQuizCats()">&#x1F3AF; Session erstellen</button>
+              <div style="text-align:center;font-size:11px;color:var(--text-sec);margin:8px 0">&#x2014; oder beitreten &#x2014;</div>
+              <div style="display:flex;gap:8px">
+                <input class="login-input" id="quiz-join-input" placeholder="Session-Code" style="margin-bottom:0;flex:1;font-size:14px">
+                <button class="primary-btn" style="white-space:nowrap;padding:0 16px" onclick="joinQuizSession()">Joinen</button>
               </div>
             </div>
 
-            <!-- Countdown Screen (30 Sek beitreten) -->
             <div id="quiz-waiting-screen" style="display:none">
               <div class="quiz-lobby" style="margin-bottom:14px">
                 <div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Quiz startet in</div>
@@ -3060,22 +3049,8 @@ function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const 
 // initQuiz replaced by multiplayer version
 
 
-function initQuiz(){
-  const area=document.getElementById("quiz-area");if(!area)return;
-  const qs=quizState.questions;const total=qs.length;
-  if(quizState.finished||quizState.currentQ>=total){
-    const pct=Math.round((quizState.score/total)*100);
-    let emoji="😅",title="Nicht schlecht!";
-    if(pct>=80){emoji="🏆";title="Malle-Experte!";}else if(pct>=60){emoji="😎";title="Gut gemacht!";}else if(pct<40){emoji="🍺";title="Mehr üben!";}
-    area.innerHTML="<div class='quiz-result-card'><div class='quiz-result-emoji'>"+emoji+"</div><div class='quiz-result-title'>"+title+"</div><div class='quiz-result-sub'>"+quizState.score+" von "+total+" richtig ("+pct+"%)</div></div><button class='btn-primary' onclick='restartQuiz()'>🔄 Nochmal</button>";
-    if(state.currentUser)sendSpecialMessage("🧠 Quiz: "+state.currentUser.emoji+" "+state.currentUser.name+" – "+quizState.score+"/"+total+" "+emoji);
-    return;
-  }
-  const q=qs[quizState.currentQ];quizState.answered=false;
-  const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+quizState.currentQ;
-  area.innerHTML="<div class='quiz-card'><div class='quiz-question-area'><div class='quiz-q-num'>Frage "+(quizState.currentQ+1)+" von "+total+"</div><div class='quiz-q-text'>"+escHtml(q.q)+"</div></div><div class='quiz-answers' id='qai'></div><div class='quiz-footer'><span style='font-size:12px;color:var(--text-sec)'>Tippe auf deine Antwort</span><span style='font-size:12px;color:var(--neon-gold)'>"+quizState.category+"</span></div></div>";
-  const ai=document.getElementById("qai");
-  q.a.forEach((ans,i)=>{const btn=document.createElement("button");btn.className="quiz-answer";btn.textContent=ans;btn.onclick=()=>answerQuiz(i,q.correct);ai.appendChild(btn);});
+function initQuiz() {
+  showQuizScreen('lobby');
 }
 
 function answerQuiz(chosen,correct){
