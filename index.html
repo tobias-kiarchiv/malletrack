@@ -969,32 +969,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
             </div>
 
             <div id="quiz-waiting-screen" style="display:none">
-              <div class="quiz-lobby" style="margin-bottom:14px">
-                <div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Quiz startet in</div>
-                <div class="quiz-countdown-ring">
-                  <svg width="80" height="80" viewBox="0 0 80 80">
-                    <circle class="ring-bg" cx="40" cy="40" r="34"/>
-                    <circle class="ring-fg" id="quiz-ring" cx="40" cy="40" r="34"
-                      stroke-dasharray="213.6" stroke-dashoffset="0"/>
-                  </svg>
-                  <div class="quiz-countdown-num" id="quiz-countdown-num">30</div>
-                </div>
-                <div style="font-size:13px;color:var(--text-sec);margin-top:8px">Warte auf Mitspieler...</div>
+              <div style="text-align:center;margin-bottom:16px">
+                <div style="font-size:11px;color:var(--text-sec);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Session-Code</div>
+                <div id="quiz-session-code" style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;color:var(--neon-cyan);background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;word-break:break-all;margin-bottom:8px">&#x2013;</div>
+                <div style="font-size:10px;color:var(--text-sec)">Kategorie: <span id="quiz-waiting-cat" style="color:var(--text-pri)">&#x2013;</span></div>
               </div>
-              <div class="members-title">Beigetreten</div>
-              <div id="quiz-joined-players" class="quiz-players-joined"></div>
+              <div id="quiz-player-count" style="font-size:12px;color:var(--text-sec);margin-bottom:10px;text-align:center">0 Spieler</div>
+              <div id="quiz-waiting-players" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;justify-content:center"></div>
+              <button id="quiz-start-btn" class="primary-btn" style="display:none;margin-bottom:8px" onclick="startQuiz()">&#x1F680; Quiz starten</button>
+              <div style="font-size:11px;color:var(--text-sec);text-align:center;margin-bottom:10px">Warte bis Host das Quiz startet...</div>
+              <button onclick="resetQuiz()" style="background:transparent;border:1px solid var(--border);border-radius:12px;padding:8px;color:var(--text-sec);width:100%;cursor:pointer;font-size:12px">&#x2715; Verlassen</button>
             </div>
 
-            <!-- Zwischen-Ranking Screen -->
-            <div id="quiz-interranking-screen" style="display:none">
-              <div style="text-align:center;margin-bottom:14px">
-                <div id="quiz-interrank-title" style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:1px;color:var(--neon-gold)">Nach Frage 1</div>
-                <div id="quiz-interrank-next" style="font-size:13px;color:var(--text-sec);margin-top:4px">Nächste Frage in <span id="quiz-next-countdown" style="color:var(--neon-cyan);font-weight:700">3</span>s</div>
-              </div>
-              <div id="quiz-interranking-list" class="quiz-ranking"></div>
-            </div>
-
-            <!-- Frage Screen -->
             <div id="quiz-question-screen" style="display:none">
               <div class="quiz-live-header">
                 <div>
