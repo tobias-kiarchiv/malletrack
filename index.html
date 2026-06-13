@@ -1696,7 +1696,7 @@ function subscribeRealtime() {
 // KARTE – Carto Voyager + Hotel Eden Home Base + Overpass POIs
 // ============================================================
 // Hotel Eden Palma Playa – feste Home Base
-const HOME_BASE = { lat: 39.5323, lng: 2.7285, name: 'Hotel Eden', emoji: '🏠' };
+const HOME_BASE = { lat: 39.5462, lng: 2.7196, name: 'Hotel Eden Palma Playa', emoji: '🏠' };
 
 function initMap() {
   const map = L.map('map',{center:[HOME_BASE.lat, HOME_BASE.lng],zoom:15,zoomControl:false,attributionControl:false});
@@ -3028,7 +3028,7 @@ function flyToHomeBase() {
 // QUIZ
 // ============================================================
 // QUIZ_DATA defined below
-let quizState={category:"Mallorca 🌴",currentQ:0,score:0,answered:false,questions:[],finished:false};
+// quizState (solo quiz) entfernt;
 
 function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -3039,15 +3039,9 @@ function initQuiz() {
   showQuizScreen('lobby');
 }
 
-function answerQuiz(chosen,correct){
-  if(quizState.answered)return;quizState.answered=true;
-  document.querySelectorAll(".quiz-answer").forEach((b,i)=>{b.disabled=true;if(i===correct)b.classList.add("correct");else if(i===chosen)b.classList.add("wrong");else b.classList.add("reveal");});
-  if(chosen===correct){quizState.score++;showToast("✅ Richtig! +1 Punkt");}else{showToast("❌ Falsch! Richtig: "+document.querySelectorAll(".quiz-answer")[correct].textContent);}
-  const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+(quizState.currentQ+1);
-  setTimeout(()=>{quizState.currentQ++;if(quizState.currentQ>=quizState.questions.length)quizState.finished=true;},1800);
-}
+// answerQuiz (solo) entfernt
 
-function restartQuiz(){quizState.currentQ=0;quizState.score=0;quizState.finished=false;quizState.questions=shuffleArray(QUIZ_DATA[quizState.category]);}
+// restartQuiz (solo) entfernt
 
 // ============================================================
 // PUSH NOTIFICATIONS
