@@ -4106,9 +4106,10 @@ async function createQuizSession(category) {
 
     subscribeQuiz();
     showWaitingRoom(data);
+    showToast('✅ Session erstellt! Code: ' + code);
   } catch(e) {
     console.error('Quiz create error:', e);
-    showToast('❌ Fehler beim Erstellen');
+    showToast('❌ Fehler beim Erstellen: ' + e.message);
   }
 }
 
@@ -4116,36 +4117,44 @@ async function createQuizSession(category) {
 async function joinQuizSession() {
   if(!state.currentUser) return;
   const input = document.getElementById('quiz-join-input');
-  const sessionId = input ? input.value.trim() : '';
-  if(!sessionId) { showToast('⚠️ Bitte Session-Code eingeben'); return; }
+  const codeInput = input ? input.value.trim() : '';
+  if(!codeInput) { showToast('⚠️ Bitte Session-Code eingeben'); return; }
 
   try {
+    // Session per 4-stelligem Code suchen
     const { data, error } = await sb.from('quiz_sessions')
-      .select('*').eq('code', sessionId).eq('room_id', ROOM_ID).eq('status', 'waiting').single();
+      .select('*').eq('code', codeInput).eq('room_id', ROOM_ID).eq('status', 'waiting').single();
     if(error || !data) { showToast('❌ Code nicht gefunden'); return; }
-    if(data.status !== 'waiting') { showToast('⚠️ Session läuft bereits'); return; }
+
+    const sessionUUID = data.id; // echte UUID für alle weiteren Operationen
 
     // Spieler hinzufügen
     const players = JSON.parse(data.players || '[]');
-    if(players.find(p => p.name === state.currentUser.name)) {
-      showToast('⚠️ Du bist bereits in der Session');
-    } else {
+    const alreadyIn = players.find(p => p.name === state.currentUser.name);
+    if(!alreadyIn) {
       players.push({name: state.currentUser.name, emoji: state.currentUser.emoji, score: 0});
-      await sb.from('quiz_sessions').update({players: JSON.stringify(players)}).eq('id', sessionId);
+      // FIX: .eq('id', sessionUUID) statt .eq('id', codeInput)
+      const { error: updateErr } = await sb.from('quiz_sessions')
+        .update({players: JSON.stringify(players)})
+        .eq('id', sessionUUID);
+      if(updateErr) console.error('Join update error:', updateErr);
     }
 
-    const seed = data.seed;
-    const category = data.category;
-    quiz.sessionId = data.id;
+    quiz.sessionId = sessionUUID;
     quiz.isHost = false;
     quiz.status = 'waiting';
-    quiz.questions = buildQuestions(category, seed);
+    quiz.questions = buildQuestions(data.category, data.seed);
     quiz.myScore = 0;
     quiz.currentQ = -1;
     quiz.answered = false;
 
     subscribeQuiz();
-    showWaitingRoom(data);
+
+    // FIX: Aktuelle Session-Daten mit aktualisierter Spielerliste laden
+    const { data: freshData } = await sb.from('quiz_sessions')
+      .select('*').eq('id', sessionUUID).single();
+    showWaitingRoom(freshData || data);
+    showToast('✅ Session beigetreten!');
   } catch(e) {
     console.error('Quiz join error:', e);
     showToast('❌ Fehler beim Joinen');
@@ -4186,16 +4195,21 @@ function renderWaitingPlayers(players) {
 
 // ─── QUIZ STARTEN (nur Host) ───
 async function startQuiz() {
-  if(!quiz.isHost || !quiz.sessionId) return;
+  if(!quiz.isHost || !quiz.sessionId) {
+    showToast('⚠️ Nur Host kann starten');
+    return;
+  }
+  showToast('⏳ Starte Quiz...');
   try {
-    await sb.from('quiz_sessions').update({
+    const { error } = await sb.from('quiz_sessions').update({
       status: 'active',
       current_question: 0,
     }).eq('id', quiz.sessionId);
-    // Realtime UPDATE triggert bei allen loadQuestion(0)
+    if(error) throw error;
+    console.log('✅ Quiz gestartet – warte auf Realtime');
   } catch(e) {
     console.error('Start error:', e);
-    showToast('❌ Fehler beim Starten');
+    showToast('❌ Fehler beim Starten: ' + e.message);
   }
 }
 
