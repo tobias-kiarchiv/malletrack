@@ -1758,9 +1758,17 @@ async function loadOverpassPOIs(map) {
 // Hardcoded Mallorca POIs als Fallback wenn Overpass nicht erreichbar
 function loadHardcodedPOIs(map) {
   const MALLORCA_POIS = [
-    // Verifizierte Koordinaten aus Google Maps (Ballermann/Schinkenstraße)
-    { lat:39.5169977, lng:2.7465743, name:'Bierkönig',  emoji:'🍺', type:'nightclub', color:'#ff2d78' },
-    { lat:39.5155,    lng:2.7480,    name:'Megapark',   emoji:'🎪', type:'nightclub', color:'#ff2d78' },
+    // Verifizierte Kult-Locations Schinkenstraße / Ballermann (Google Maps)
+    { lat:39.5169977, lng:2.7465743, name:'Bierkönig',      emoji:'🍺', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5152,    lng:2.7488,    name:'Megapark',       emoji:'🎪', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5148,    lng:2.7492,    name:'Oberbayern',     emoji:'🍻', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5166,    lng:2.7470,    name:'Bamboleo',       emoji:'🎵', type:'bar',       color:'#ff6b35' },
+    { lat:39.5171,    lng:2.7461,    name:'Bierstraße',     emoji:'🌴', type:'bar',       color:'#ff6b35' },
+    { lat:39.5163,    lng:2.7475,    name:'Mega-Arena',     emoji:'🎤', type:'nightclub', color:'#ff2d78' },
+    { lat:39.5158,    lng:2.7483,    name:'Ballermann 6',   emoji:'🏖️', type:'bar',       color:'#ff6b35' },
+    { lat:39.5173,    lng:2.7458,    name:'Krümels Stadl',  emoji:'🎶', type:'bar',       color:'#ff6b35' },
+    { lat:39.5175,    lng:2.7455,    name:'Why Not Bar',    emoji:'🍹', type:'bar',       color:'#ff6b35' },
+    { lat:39.5160,    lng:2.7478,    name:'Deutsches Eck',  emoji:'🍺', type:'bar',       color:'#ff6b35' },
   ];
 
   MALLORCA_POIS.forEach(poi => {
@@ -2673,15 +2681,15 @@ async function loadLeaderboard() {
   const lbEl = document.getElementById('leaderboard-list');
   if (!lbEl) return;
 
-  // LEADERBOARD-START: nur Snaps/Punkte ab diesem Zeitpunkt zählen (Reset 14.06.2026)
-  const LEADERBOARD_START = '2026-06-14T12:00:00Z';
+  // LEADERBOARD-START: nur Snaps/Punkte ab Anreisetag zählen (02.07.2026)
+  const LEADERBOARD_START = '2026-07-02T00:00:00Z';
 
   // localStorage-Quellen einmalig leeren
-  if (localStorage.getItem('malletrack_lb_reset_v3') !== 'done') {
+  if (localStorage.getItem('malletrack_lb_reset_v4') !== 'done') {
     localStorage.removeItem('malletrack_tasks_done');
     localStorage.removeItem('malletrack_lb_adjustments');
     lbManualAdjustments = {};
-    localStorage.setItem('malletrack_lb_reset_v3', 'done');
+    localStorage.setItem('malletrack_lb_reset_v4', 'done');
   }
 
   // Punkte: nur Snaps NACH dem Leaderboard-Start
@@ -4610,7 +4618,7 @@ async function _doGooglePlacesSearch(lat, lng, map) {
             radius: 3000,
           },
           includedPrimaryTypes: [cfg.type],
-          maxResultCount: 6,
+          maxResultCount: 5,
           rankPreference: SearchNearbyRankPreference.POPULARITY,
         };
 
@@ -4620,7 +4628,7 @@ async function _doGooglePlacesSearch(lat, lng, map) {
         const filtered = (places || [])
           .filter(p => p.location && (cfg.minRating === 0 || (p.rating || 0) >= cfg.minRating))
           .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-          .slice(0, 6);
+          .slice(0, 5);
 
         filtered.forEach(place => {
           const rating = place.rating || 0;
