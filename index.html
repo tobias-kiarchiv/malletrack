@@ -956,46 +956,59 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
             </div>
             <div id="quiz-lobby-screen">
               <div style="text-align:center;padding:16px 0 12px">
-                <div style="font-size:44px;margin-bottom:8px">&#x1F9E0;</div>
-                <div style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:2px;color:var(--text-pri)">Multiplayer Quiz</div>
+                <div style="font-size:44px;margin-bottom:8px">🧠</div>
+                <div class="quiz-lobby-title">Multiplayer Quiz</div>
                 <div style="font-size:12px;color:var(--text-sec);margin-top:4px">Live gegen die Crew antreten</div>
               </div>
-              <button class="primary-btn" style="margin-bottom:10px;width:100%" onclick="showQuizCats()">&#x1F3AF; Session erstellen</button>
-              <div style="text-align:center;font-size:11px;color:var(--text-sec);margin:8px 0">&#x2014; oder beitreten &#x2014;</div>
+              <button class="quiz-start-btn" style="margin-bottom:10px" onclick="showQuizCats()">🎯 Session erstellen</button>
+              <div style="text-align:center;font-size:11px;color:var(--text-sec);margin:8px 0">— oder beitreten —</div>
               <div style="display:flex;gap:8px">
-                <input class="login-input" id="quiz-join-input" placeholder="Session-Code" style="margin-bottom:0;flex:1;font-size:14px">
-                <button class="primary-btn" style="white-space:nowrap;padding:0 16px" onclick="joinQuizSession()">Joinen</button>
+                <input class="login-input" id="quiz-join-input" placeholder="Session-Code" style="margin-bottom:0;flex:1;font-size:14px" inputmode="numeric" maxlength="4">
+                <button class="quiz-start-btn" style="white-space:nowrap;padding:0 16px;width:auto" onclick="joinQuizSession()">Joinen</button>
               </div>
             </div>
 
+            <!-- Countdown Screen (30 Sek beitreten) -->
             <div id="quiz-waiting-screen" style="display:none">
               <div style="text-align:center;margin-bottom:16px">
                 <div style="font-size:11px;color:var(--text-sec);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Session-Code</div>
-                <div id="quiz-session-code" style="font-family:'Bebas Neue',cursive;font-size:18px;letter-spacing:2px;color:var(--neon-cyan);background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:10px 14px;word-break:break-all;margin-bottom:8px">&#x2013;</div>
-                <div style="font-size:10px;color:var(--text-sec)">Kategorie: <span id="quiz-waiting-cat" style="color:var(--text-pri)">&#x2013;</span></div>
+                <div id="quiz-session-code" style="font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:6px;color:var(--neon-cyan);background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px">–</div>
+                <div style="font-size:10px;color:var(--text-sec)">Kategorie: <span id="quiz-waiting-cat" style="color:var(--text-pri)">–</span></div>
               </div>
               <div id="quiz-player-count" style="font-size:12px;color:var(--text-sec);margin-bottom:10px;text-align:center">0 Spieler</div>
               <div id="quiz-waiting-players" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;justify-content:center"></div>
-              <button id="quiz-start-btn" class="primary-btn" style="display:none;margin-bottom:8px" onclick="startQuiz()">&#x1F680; Quiz starten</button>
+              <button id="quiz-start-btn" class="quiz-start-btn" style="display:none;margin-bottom:8px" onclick="startQuiz()">🚀 Quiz starten</button>
               <div style="font-size:11px;color:var(--text-sec);text-align:center;margin-bottom:10px">Warte bis Host das Quiz startet...</div>
-              <button onclick="resetQuiz()" style="background:transparent;border:1px solid var(--border);border-radius:12px;padding:8px;color:var(--text-sec);width:100%;cursor:pointer;font-size:12px">&#x2715; Verlassen</button>
+              <button onclick="resetQuiz()" style="background:transparent;border:1px solid var(--border);border-radius:12px;padding:8px;color:var(--text-sec);width:100%;cursor:pointer;font-size:12px">✕ Verlassen</button>
             </div>
 
+            <!-- Zwischen-Ranking Screen -->
+            <div id="quiz-interranking-screen" style="display:none">
+              <div style="text-align:center;margin-bottom:14px">
+                <div id="quiz-interrank-title" style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:1px;color:var(--neon-gold)">Nach Frage 1</div>
+                <div id="quiz-interrank-next" style="font-size:13px;color:var(--text-sec);margin-top:4px">Nächste Frage in <span id="quiz-next-countdown" style="color:var(--neon-cyan);font-weight:700">3</span>s</div>
+              </div>
+              <div id="quiz-interranking-list" class="quiz-ranking"></div>
+            </div>
+
+            <!-- Frage Screen -->
             <div id="quiz-question-screen" style="display:none">
-              <div class="quiz-live-header">
+              <div class="quiz-live-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
                 <div>
-                  <div style="font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px">Frage</div>
-                  <div style="font-family:'Bebas Neue',cursive;font-size:22px" id="quiz-q-counter">1 / 5</div>
+                  <div id="quiz-q-number" style="font-size:11px;color:var(--text-sec);letter-spacing:1px">Frage 1 / 5</div>
+                  <div id="quiz-q-cat" style="font-size:10px;color:var(--neon-cyan);margin-top:2px"></div>
                 </div>
-                <div id="quiz-q-timer" class="quiz-q-timer">15</div>
-                <div style="text-align:right">
-                  <div style="font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px">Punkte</div>
-                  <div style="font-family:'Bebas Neue',cursive;font-size:22px;color:var(--neon-gold)" id="quiz-live-score">0</div>
+                <div style="position:relative;display:flex;align-items:center;justify-content:center">
+                  <svg width="44" height="44" style="transform:rotate(-90deg)">
+                    <circle cx="22" cy="22" r="17" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3"/>
+                    <circle id="quiz-timer-ring" cx="22" cy="22" r="17" fill="none" stroke="var(--neon-cyan)" stroke-width="3" stroke-dasharray="106.8" stroke-dashoffset="0" style="transition:stroke-dashoffset 0.9s linear"/>
+                  </svg>
+                  <div id="quiz-timer" style="position:absolute;font-family:'Bebas Neue',cursive;font-size:18px;color:#fff">15</div>
                 </div>
               </div>
-              <div id="quiz-q-text" style="font-size:17px;font-weight:700;line-height:1.4;margin-bottom:16px;padding:16px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border)"></div>
-              <div id="quiz-answers-area"></div>
-              <div id="quiz-answer-result" style="display:none;text-align:center;padding:16px;border-radius:14px;margin-top:8px;font-size:15px;font-weight:700"></div>
+              <div id="quiz-question-text" style="font-size:17px;font-weight:700;line-height:1.4;margin:14px 0 16px;padding:16px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border);min-height:60px"></div>
+              <div id="quiz-answers-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"></div>
+              <div id="quiz-feedback" style="display:none;text-align:center;padding:10px;border-radius:10px;font-size:14px;font-weight:600"></div>
             </div>
 
             <!-- Ranking Screen -->
@@ -3028,20 +3041,13 @@ function flyToHomeBase() {
 // QUIZ
 // ============================================================
 // QUIZ_DATA defined below
-// quizState (solo quiz) entfernt;
 
 function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 // initQuiz replaced by multiplayer version
 
 
-function initQuiz() {
-  showQuizScreen('lobby');
-}
-
-// answerQuiz (solo) entfernt
-
-// restartQuiz (solo) entfernt
+// alte Solo-Quiz-Funktionen entfernt
 
 // ============================================================
 // PUSH NOTIFICATIONS
@@ -4078,11 +4084,9 @@ async function createQuizSession(category) {
 
   const seed = Math.floor(Date.now() / 1000);
   const questions = buildQuestions(category, seed);
+  const code = String(Math.floor(1000 + Math.random() * 9000)); // 4-stelliger Code
 
   try {
-    // 4-stelliger Code (1000-9999)
-    const code = String(Math.floor(1000 + Math.random() * 9000));
-
     const { data, error } = await sb.from('quiz_sessions').insert({
       room_id: ROOM_ID,
       status: 'waiting',
@@ -4106,10 +4110,10 @@ async function createQuizSession(category) {
 
     subscribeQuiz();
     showWaitingRoom(data);
-    showToast('✅ Session erstellt! Code: ' + code);
+    showToast('✅ Code: ' + code);
   } catch(e) {
     console.error('Quiz create error:', e);
-    showToast('❌ Fehler beim Erstellen: ' + e.message);
+    showToast('❌ Fehler: ' + e.message);
   }
 }
 
@@ -4126,18 +4130,16 @@ async function joinQuizSession() {
       .select('*').eq('code', codeInput).eq('room_id', ROOM_ID).eq('status', 'waiting').single();
     if(error || !data) { showToast('❌ Code nicht gefunden'); return; }
 
-    const sessionUUID = data.id; // echte UUID für alle weiteren Operationen
+    const sessionUUID = data.id; // echte UUID für alle DB-Operationen
 
     // Spieler hinzufügen
     const players = JSON.parse(data.players || '[]');
-    const alreadyIn = players.find(p => p.name === state.currentUser.name);
-    if(!alreadyIn) {
+    if(!players.find(p => p.name === state.currentUser.name)) {
       players.push({name: state.currentUser.name, emoji: state.currentUser.emoji, score: 0});
-      // FIX: .eq('id', sessionUUID) statt .eq('id', codeInput)
-      const { error: updateErr } = await sb.from('quiz_sessions')
+      const { error: updErr } = await sb.from('quiz_sessions')
         .update({players: JSON.stringify(players)})
         .eq('id', sessionUUID);
-      if(updateErr) console.error('Join update error:', updateErr);
+      if(updErr) console.error('Join update error:', updErr);
     }
 
     quiz.sessionId = sessionUUID;
@@ -4150,10 +4152,9 @@ async function joinQuizSession() {
 
     subscribeQuiz();
 
-    // FIX: Aktuelle Session-Daten mit aktualisierter Spielerliste laden
-    const { data: freshData } = await sb.from('quiz_sessions')
-      .select('*').eq('id', sessionUUID).single();
-    showWaitingRoom(freshData || data);
+    // Frische Daten mit aktualisierter Spielerliste laden
+    const { data: fresh } = await sb.from('quiz_sessions').select('*').eq('id', sessionUUID).single();
+    showWaitingRoom(fresh || data);
     showToast('✅ Session beigetreten!');
   } catch(e) {
     console.error('Quiz join error:', e);
@@ -4195,21 +4196,16 @@ function renderWaitingPlayers(players) {
 
 // ─── QUIZ STARTEN (nur Host) ───
 async function startQuiz() {
-  if(!quiz.isHost || !quiz.sessionId) {
-    showToast('⚠️ Nur Host kann starten');
-    return;
-  }
-  showToast('⏳ Starte Quiz...');
+  if(!quiz.isHost || !quiz.sessionId) return;
   try {
-    const { error } = await sb.from('quiz_sessions').update({
+    await sb.from('quiz_sessions').update({
       status: 'active',
       current_question: 0,
     }).eq('id', quiz.sessionId);
-    if(error) throw error;
-    console.log('✅ Quiz gestartet – warte auf Realtime');
+    // Realtime UPDATE triggert bei allen loadQuestion(0)
   } catch(e) {
     console.error('Start error:', e);
-    showToast('❌ Fehler beim Starten: ' + e.message);
+    showToast('❌ Fehler beim Starten');
   }
 }
 
