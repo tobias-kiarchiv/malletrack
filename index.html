@@ -955,31 +955,45 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
               <button onclick="showQuizScreen('lobby')" style="margin-top:12px;background:transparent;border:1px solid var(--border);border-radius:12px;padding:10px;color:var(--text-sec);width:100%;cursor:pointer">↩ Zurück</button>
             </div>
             <div id="quiz-lobby-screen">
-              <div style="text-align:center;padding:16px 0 12px">
-                <div style="font-size:44px;margin-bottom:8px">🧠</div>
+              <div class="quiz-lobby">
+                <div style="font-size:48px;margin-bottom:8px">🧠</div>
                 <div class="quiz-lobby-title">Multiplayer Quiz</div>
-                <div style="font-size:12px;color:var(--text-sec);margin-top:4px">Live gegen die Crew antreten</div>
+                <div style="font-size:13px;color:var(--text-sec);margin-bottom:16px;line-height:1.6">
+                  Alle Teilnehmer haben <b style="color:white">30 Sekunden</b> um beizutreten.<br>
+                  5 Fragen · Punkte nach Richtigkeit + Geschwindigkeit
+                </div>
+                <div class="quiz-cat-scroll" id="quiz-cats" style="margin-bottom:16px"></div>
+                <div id="quiz-players-preview" class="quiz-players-joined"></div>
               </div>
-              <button class="quiz-start-btn" style="margin-bottom:10px" onclick="showQuizCats()">🎯 Session erstellen</button>
-              <div style="text-align:center;font-size:11px;color:var(--text-sec);margin:8px 0">— oder beitreten —</div>
-              <div style="display:flex;gap:8px">
-                <input class="login-input" id="quiz-join-input" placeholder="Session-Code" style="margin-bottom:0;flex:1;font-size:14px" inputmode="numeric" maxlength="4">
-                <button class="quiz-start-btn" style="white-space:nowrap;padding:0 16px;width:auto" onclick="joinQuizSession()">Joinen</button>
+              <div id="quiz-start-area">
+                <button class="quiz-start-btn" id="quiz-start-btn" onclick="startQuiz()">
+                  🚀 Quiz starten & alle einladen
+                </button>
+              </div>
+              <div id="quiz-join-area" style="display:none">
+                <button class="quiz-join-btn" id="quiz-join-btn" onclick="joinQuizSession()">
+                  ✋ Jetzt beitreten!
+                </button>
+                <div id="quiz-join-countdown" style="text-align:center;margin-bottom:10px"></div>
               </div>
             </div>
 
             <!-- Countdown Screen (30 Sek beitreten) -->
             <div id="quiz-waiting-screen" style="display:none">
-              <div style="text-align:center;margin-bottom:16px">
-                <div style="font-size:11px;color:var(--text-sec);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Session-Code</div>
-                <div id="quiz-session-code" style="font-family:'Bebas Neue',cursive;font-size:32px;letter-spacing:6px;color:var(--neon-cyan);background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:8px">–</div>
-                <div style="font-size:10px;color:var(--text-sec)">Kategorie: <span id="quiz-waiting-cat" style="color:var(--text-pri)">–</span></div>
+              <div class="quiz-lobby" style="margin-bottom:14px">
+                <div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Quiz startet in</div>
+                <div class="quiz-countdown-ring">
+                  <svg width="80" height="80" viewBox="0 0 80 80">
+                    <circle class="ring-bg" cx="40" cy="40" r="34"/>
+                    <circle class="ring-fg" id="quiz-ring" cx="40" cy="40" r="34"
+                      stroke-dasharray="213.6" stroke-dashoffset="0"/>
+                  </svg>
+                  <div class="quiz-countdown-num" id="quiz-countdown-num">30</div>
+                </div>
+                <div style="font-size:13px;color:var(--text-sec);margin-top:8px">Warte auf Mitspieler...</div>
               </div>
-              <div id="quiz-player-count" style="font-size:12px;color:var(--text-sec);margin-bottom:10px;text-align:center">0 Spieler</div>
-              <div id="quiz-waiting-players" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;justify-content:center"></div>
-              <button id="quiz-start-btn" class="quiz-start-btn" style="display:none;margin-bottom:8px" onclick="startQuiz()">🚀 Quiz starten</button>
-              <div style="font-size:11px;color:var(--text-sec);text-align:center;margin-bottom:10px">Warte bis Host das Quiz startet...</div>
-              <button onclick="resetQuiz()" style="background:transparent;border:1px solid var(--border);border-radius:12px;padding:8px;color:var(--text-sec);width:100%;cursor:pointer;font-size:12px">✕ Verlassen</button>
+              <div class="members-title">Beigetreten</div>
+              <div id="quiz-joined-players" class="quiz-players-joined"></div>
             </div>
 
             <!-- Zwischen-Ranking Screen -->
@@ -993,22 +1007,20 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
             <!-- Frage Screen -->
             <div id="quiz-question-screen" style="display:none">
-              <div class="quiz-live-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div class="quiz-live-header">
                 <div>
-                  <div id="quiz-q-number" style="font-size:11px;color:var(--text-sec);letter-spacing:1px">Frage 1 / 5</div>
-                  <div id="quiz-q-cat" style="font-size:10px;color:var(--neon-cyan);margin-top:2px"></div>
+                  <div style="font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px">Frage</div>
+                  <div style="font-family:'Bebas Neue',cursive;font-size:22px" id="quiz-q-counter">1 / 5</div>
                 </div>
-                <div style="position:relative;display:flex;align-items:center;justify-content:center">
-                  <svg width="44" height="44" style="transform:rotate(-90deg)">
-                    <circle cx="22" cy="22" r="17" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="3"/>
-                    <circle id="quiz-timer-ring" cx="22" cy="22" r="17" fill="none" stroke="var(--neon-cyan)" stroke-width="3" stroke-dasharray="106.8" stroke-dashoffset="0" style="transition:stroke-dashoffset 0.9s linear"/>
-                  </svg>
-                  <div id="quiz-timer" style="position:absolute;font-family:'Bebas Neue',cursive;font-size:18px;color:#fff">15</div>
+                <div id="quiz-q-timer" class="quiz-q-timer">15</div>
+                <div style="text-align:right">
+                  <div style="font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px">Punkte</div>
+                  <div style="font-family:'Bebas Neue',cursive;font-size:22px;color:var(--neon-gold)" id="quiz-live-score">0</div>
                 </div>
               </div>
-              <div id="quiz-question-text" style="font-size:17px;font-weight:700;line-height:1.4;margin:14px 0 16px;padding:16px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border);min-height:60px"></div>
-              <div id="quiz-answers-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px"></div>
-              <div id="quiz-feedback" style="display:none;text-align:center;padding:10px;border-radius:10px;font-size:14px;font-weight:600"></div>
+              <div id="quiz-q-text" style="font-size:17px;font-weight:700;line-height:1.4;margin-bottom:16px;padding:16px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border)"></div>
+              <div id="quiz-answers-area"></div>
+              <div id="quiz-answer-result" style="display:none;text-align:center;padding:16px;border-radius:14px;margin-top:8px;font-size:15px;font-weight:700"></div>
             </div>
 
             <!-- Ranking Screen -->
@@ -1245,7 +1257,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="tab-btn" onclick="switchTab('tab-gruppe',this)"><span class="tab-icon">👥</span><span class="tab-label">Crew</span></button>
     <button class="tab-btn" id="chat-tab-btn" onclick="switchTab('tab-chat',this)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
     <button class="tab-btn" onclick="switchTab('tab-snaps',this)"><span class="tab-icon">📷</span><span class="tab-label">Snaps</span></button>
-    <button class="tab-btn" onclick="switchTab('tab-funquiz',this)"><span class="tab-icon">🎰</span><span class="tab-label">Fun</span></button>
+
     <button class="tab-btn" onclick="switchTab('tab-insta',this)"><span class="tab-icon">📸</span><span class="tab-label">Insta</span></button>
     <button class="tab-btn" onclick="switchTab('tab-spotify',this)"><span class="tab-icon">🎵</span><span class="tab-label">Musik</span></button>
     <button class="tab-btn" onclick="switchTab('tab-admin',this)"><span class="tab-icon">⚙️</span><span class="tab-label">Ich</span></button>
@@ -1709,7 +1721,7 @@ function subscribeRealtime() {
 // KARTE – Carto Voyager + Hotel Eden Home Base + Overpass POIs
 // ============================================================
 // Hotel Eden Palma Playa – feste Home Base
-const HOME_BASE = { lat: 39.5330, lng: 2.7255, name: 'Hotel Eden Palma Playa', emoji: '🏠' };
+const HOME_BASE = { lat: 39.5323, lng: 2.7285, name: 'Hotel Eden', emoji: '🏠' };
 
 function initMap() {
   const map = L.map('map',{center:[HOME_BASE.lat, HOME_BASE.lng],zoom:15,zoomControl:false,attributionControl:false});
@@ -1851,7 +1863,7 @@ function loadHardcodedPOIs(map) {
     { lat:39.5268, lng:2.7288, name:'BCM Club',        emoji:'🎭', type:'nightclub', color:'#ff2d78' },
     { lat:39.5290, lng:2.7340, name:'Riu Palace',      emoji:'🎉', type:'nightclub', color:'#ff2d78' },
     // Hotels
-    { lat:39.5330, lng:2.7255, name:'Hotel Eden Palma Playa', emoji:'🏠', type:'hotel', color:'#ffd600' },
+    { lat:39.5323, lng:2.7285, name:'Hotel Eden',      emoji:'🏠', type:'hotel',     color:'#ffd600' },
     { lat:39.5310, lng:2.7270, name:'Playa Park',      emoji:'🏨', type:'hotel',     color:'#00e5ff' },
     { lat:39.5295, lng:2.7350, name:'Hotel Saroya',    emoji:'🏨', type:'hotel',     color:'#00e5ff' },
     // Restaurants & Cafés
@@ -3041,13 +3053,40 @@ function flyToHomeBase() {
 // QUIZ
 // ============================================================
 // QUIZ_DATA defined below
+let quizState={category:"Mallorca 🌴",currentQ:0,score:0,answered:false,questions:[],finished:false};
 
 function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 // initQuiz replaced by multiplayer version
 
 
-// alte Solo-Quiz-Funktionen entfernt
+function initQuiz(){
+  const area=document.getElementById("quiz-area");if(!area)return;
+  const qs=quizState.questions;const total=qs.length;
+  if(quizState.finished||quizState.currentQ>=total){
+    const pct=Math.round((quizState.score/total)*100);
+    let emoji="😅",title="Nicht schlecht!";
+    if(pct>=80){emoji="🏆";title="Malle-Experte!";}else if(pct>=60){emoji="😎";title="Gut gemacht!";}else if(pct<40){emoji="🍺";title="Mehr üben!";}
+    area.innerHTML="<div class='quiz-result-card'><div class='quiz-result-emoji'>"+emoji+"</div><div class='quiz-result-title'>"+title+"</div><div class='quiz-result-sub'>"+quizState.score+" von "+total+" richtig ("+pct+"%)</div></div><button class='btn-primary' onclick='restartQuiz()'>🔄 Nochmal</button>";
+    if(state.currentUser)sendSpecialMessage("🧠 Quiz: "+state.currentUser.emoji+" "+state.currentUser.name+" – "+quizState.score+"/"+total+" "+emoji);
+    return;
+  }
+  const q=qs[quizState.currentQ];quizState.answered=false;
+  const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+quizState.currentQ;
+  area.innerHTML="<div class='quiz-card'><div class='quiz-question-area'><div class='quiz-q-num'>Frage "+(quizState.currentQ+1)+" von "+total+"</div><div class='quiz-q-text'>"+escHtml(q.q)+"</div></div><div class='quiz-answers' id='qai'></div><div class='quiz-footer'><span style='font-size:12px;color:var(--text-sec)'>Tippe auf deine Antwort</span><span style='font-size:12px;color:var(--neon-gold)'>"+quizState.category+"</span></div></div>";
+  const ai=document.getElementById("qai");
+  q.a.forEach((ans,i)=>{const btn=document.createElement("button");btn.className="quiz-answer";btn.textContent=ans;btn.onclick=()=>answerQuiz(i,q.correct);ai.appendChild(btn);});
+}
+
+function answerQuiz(chosen,correct){
+  if(quizState.answered)return;quizState.answered=true;
+  document.querySelectorAll(".quiz-answer").forEach((b,i)=>{b.disabled=true;if(i===correct)b.classList.add("correct");else if(i===chosen)b.classList.add("wrong");else b.classList.add("reveal");});
+  if(chosen===correct){quizState.score++;showToast("✅ Richtig! +1 Punkt");}else{showToast("❌ Falsch! Richtig: "+document.querySelectorAll(".quiz-answer")[correct].textContent);}
+  const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+(quizState.currentQ+1);
+  setTimeout(()=>{quizState.currentQ++;if(quizState.currentQ>=quizState.questions.length)quizState.finished=true;},1800);
+}
+
+function restartQuiz(){quizState.currentQ=0;quizState.score=0;quizState.finished=false;quizState.questions=shuffleArray(QUIZ_DATA[quizState.category]);}
 
 // ============================================================
 // PUSH NOTIFICATIONS
@@ -4084,7 +4123,6 @@ async function createQuizSession(category) {
 
   const seed = Math.floor(Date.now() / 1000);
   const questions = buildQuestions(category, seed);
-  const code = String(Math.floor(1000 + Math.random() * 9000)); // 4-stelliger Code
 
   try {
     const { data, error } = await sb.from('quiz_sessions').insert({
@@ -4094,7 +4132,6 @@ async function createQuizSession(category) {
       created_by: state.currentUser.name,
       category: category,
       seed: seed,
-      code: code,
       players: JSON.stringify([{name: state.currentUser.name, emoji: state.currentUser.emoji, score: 0}]),
     }).select().single();
 
@@ -4110,10 +4147,9 @@ async function createQuizSession(category) {
 
     subscribeQuiz();
     showWaitingRoom(data);
-    showToast('✅ Code: ' + code);
   } catch(e) {
     console.error('Quiz create error:', e);
-    showToast('❌ Fehler: ' + e.message);
+    showToast('❌ Fehler beim Erstellen');
   }
 }
 
@@ -4121,41 +4157,36 @@ async function createQuizSession(category) {
 async function joinQuizSession() {
   if(!state.currentUser) return;
   const input = document.getElementById('quiz-join-input');
-  const codeInput = input ? input.value.trim() : '';
-  if(!codeInput) { showToast('⚠️ Bitte Session-Code eingeben'); return; }
+  const sessionId = input ? input.value.trim() : '';
+  if(!sessionId) { showToast('⚠️ Bitte Session-Code eingeben'); return; }
 
   try {
-    // Session per 4-stelligem Code suchen
     const { data, error } = await sb.from('quiz_sessions')
-      .select('*').eq('code', codeInput).eq('room_id', ROOM_ID).eq('status', 'waiting').single();
-    if(error || !data) { showToast('❌ Code nicht gefunden'); return; }
-
-    const sessionUUID = data.id; // echte UUID für alle DB-Operationen
+      .select('*').eq('id', sessionId).eq('room_id', ROOM_ID).single();
+    if(error || !data) { showToast('❌ Session nicht gefunden'); return; }
+    if(data.status !== 'waiting') { showToast('⚠️ Session läuft bereits'); return; }
 
     // Spieler hinzufügen
     const players = JSON.parse(data.players || '[]');
-    if(!players.find(p => p.name === state.currentUser.name)) {
+    if(players.find(p => p.name === state.currentUser.name)) {
+      showToast('⚠️ Du bist bereits in der Session');
+    } else {
       players.push({name: state.currentUser.name, emoji: state.currentUser.emoji, score: 0});
-      const { error: updErr } = await sb.from('quiz_sessions')
-        .update({players: JSON.stringify(players)})
-        .eq('id', sessionUUID);
-      if(updErr) console.error('Join update error:', updErr);
+      await sb.from('quiz_sessions').update({players: JSON.stringify(players)}).eq('id', sessionId);
     }
 
-    quiz.sessionId = sessionUUID;
+    const seed = data.seed;
+    const category = data.category;
+    quiz.sessionId = data.id;
     quiz.isHost = false;
     quiz.status = 'waiting';
-    quiz.questions = buildQuestions(data.category, data.seed);
+    quiz.questions = buildQuestions(category, seed);
     quiz.myScore = 0;
     quiz.currentQ = -1;
     quiz.answered = false;
 
     subscribeQuiz();
-
-    // Frische Daten mit aktualisierter Spielerliste laden
-    const { data: fresh } = await sb.from('quiz_sessions').select('*').eq('id', sessionUUID).single();
-    showWaitingRoom(fresh || data);
-    showToast('✅ Session beigetreten!');
+    showWaitingRoom(data);
   } catch(e) {
     console.error('Quiz join error:', e);
     showToast('❌ Fehler beim Joinen');
@@ -4173,7 +4204,7 @@ function buildQuestions(category, seed) {
 function showWaitingRoom(sessionData) {
   showQuizScreen('waiting');
   const codeEl = document.getElementById('quiz-session-code');
-  if(codeEl) codeEl.textContent = sessionData.code || sessionData.id;
+  if(codeEl) codeEl.textContent = sessionData.id;
 
   const catEl = document.getElementById('quiz-waiting-cat');
   if(catEl) catEl.textContent = sessionData.category || 'Mallorca 🌴';
