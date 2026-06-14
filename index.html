@@ -1626,7 +1626,7 @@ function subscribeRealtime() {
 // KARTE – Carto Voyager + Hotel Eden Home Base + Overpass POIs
 // ============================================================
 // Hotel Eden Palma Playa – feste Home Base
-const HOME_BASE = { lat: 39.5323, lng: 2.7285, name: 'Hotel Eden', emoji: '🏠' };
+const HOME_BASE = { lat: 39.5331809, lng: 2.7242599, name: 'Hotel Eden Palma Playa', emoji: '🏠' };
 
 function initMap() {
   const map = L.map('map',{center:[HOME_BASE.lat, HOME_BASE.lng],zoom:15,zoomControl:false,attributionControl:false});
@@ -1758,38 +1758,15 @@ async function loadOverpassPOIs(map) {
 // Hardcoded Mallorca POIs als Fallback wenn Overpass nicht erreichbar
 function loadHardcodedPOIs(map) {
   const MALLORCA_POIS = [
-    // Ballermann & Schinkenstraße
+    // Kultige Diskos & Party-Locations am Ballermann
     { lat:39.5283, lng:2.7317, name:'Bierkönig',       emoji:'🍺', type:'nightclub', color:'#ff2d78' },
     { lat:39.5279, lng:2.7309, name:'Megapark',        emoji:'🎪', type:'nightclub', color:'#ff2d78' },
     { lat:39.5275, lng:2.7305, name:'Mamma Mia',       emoji:'🥂', type:'nightclub', color:'#ff2d78' },
     { lat:39.5281, lng:2.7321, name:'Bierpalast',      emoji:'🎵', type:'nightclub', color:'#ff2d78' },
-    { lat:39.5270, lng:2.7295, name:'Schinkenstraße',  emoji:'🌴', type:'bar',       color:'#ff6b35' },
     { lat:39.5285, lng:2.7330, name:'Ballermann 6',    emoji:'🏖️', type:'bar',       color:'#ff6b35' },
     { lat:39.5268, lng:2.7288, name:'BCM Club',        emoji:'🎭', type:'nightclub', color:'#ff2d78' },
     { lat:39.5290, lng:2.7340, name:'Riu Palace',      emoji:'🎉', type:'nightclub', color:'#ff2d78' },
-    // Hotels
-    { lat:39.5323, lng:2.7285, name:'Hotel Eden',      emoji:'🏠', type:'hotel',     color:'#ffd600' },
-    { lat:39.5310, lng:2.7270, name:'Playa Park',      emoji:'🏨', type:'hotel',     color:'#00e5ff' },
-    { lat:39.5295, lng:2.7350, name:'Hotel Saroya',    emoji:'🏨', type:'hotel',     color:'#00e5ff' },
-    // Restaurants & Cafés
-    { lat:39.5305, lng:2.7295, name:'La Palma Rest.',  emoji:'🍕', type:'restaurant',color:'#ffd600' },
-    { lat:39.5315, lng:2.7310, name:'Café del Mar',    emoji:'☕', type:'cafe',      color:'#a0522d' },
-    { lat:39.5278, lng:2.7325, name:'Burger King',     emoji:'🌭', type:'fast_food', color:'#ffd600' },
-    // Supermärkte & Apotheken
-    { lat:39.5320, lng:2.7300, name:'Mercadona',       emoji:'🛒', type:'supermarket',color:'#00e5ff' },
-    { lat:39.5308, lng:2.7280, name:'Supermercado',    emoji:'🛒', type:'supermarket',color:'#00e5ff' },
-    { lat:39.5312, lng:2.7305, name:'Farmacia',        emoji:'💊', type:'pharmacy',  color:'#39ff14' },
-    // ATMs
-    { lat:39.5300, lng:2.7315, name:'Cajero ATM',      emoji:'💰', type:'atm',       color:'#39ff14' },
-    { lat:39.5288, lng:2.7345, name:'CaixaBank ATM',   emoji:'💰', type:'atm',       color:'#39ff14' },
-    // Strand & Transport
-    { lat:39.5260, lng:2.7350, name:'Playa de Palma',  emoji:'🏖️', type:'beach',     color:'#00e5ff' },
-    { lat:39.5330, lng:2.7260, name:'Bus Parada',      emoji:'🚌', type:'bus',       color:'#888'    },
-    { lat:39.5255, lng:2.7380, name:'Taxi Stand',      emoji:'🚕', type:'taxi',      color:'#ffd600' },
-    // Altstadt Palma
-    { lat:39.5696, lng:2.6502, name:'Altstadt Palma',  emoji:'🗺️', type:'tourism',   color:'#00e5ff' },
-    { lat:39.5698, lng:2.6495, name:'Catedral Palma',  emoji:'⛪', type:'tourism',   color:'#00e5ff' },
-    { lat:39.5690, lng:2.6510, name:'Parc de la Mar',  emoji:'🌳', type:'park',      color:'#39ff14' },
+    { lat:39.5270, lng:2.7295, name:'Schinkenstraße',  emoji:'🌴', type:'bar',       color:'#ff6b35' },
   ];
 
   MALLORCA_POIS.forEach(poi => {
@@ -2701,6 +2678,14 @@ function spinWheel() {
 async function loadLeaderboard() {
   const lbEl = document.getElementById('leaderboard-list');
   if (!lbEl) return;
+
+  // EINMALIGER KOMPLETT-RESET (Stand 14.06.2026)
+  if (localStorage.getItem('malletrack_lb_reset_v2') !== 'done') {
+    localStorage.removeItem('malletrack_tasks_done');
+    localStorage.removeItem('malletrack_lb_adjustments');
+    lbManualAdjustments = {};
+    localStorage.setItem('malletrack_lb_reset_v2', 'done');
+  }
 
   // Punkte: Snaps (10 Pkt), Reaktionen erhalten (2 Pkt), Aufgaben (varies)
   const { data: snaps } = await sb.from('snaps').select('author_name,author_emoji,reactions').eq('room_id', ROOM_ID);
@@ -4577,9 +4562,6 @@ const GOOGLE_PLACES_KEY = "AIzaSyAFNph1TgIAvq-acZFrQXOu-i__VUda2pI";
 
 // Typen die geladen werden + Mindest-Rating
 const PLACES_CONFIG = [
-  { type: 'supermarket',  label: '🛒', color: '#00e5ff',  minRating: 0,   filterKey: 'supermarket' },
-  { type: 'atm',          label: '💰', color: '#39ff14',  minRating: 0,   filterKey: 'atm'         },
-  { type: 'restaurant',   label: '🍕', color: '#ffd600',  minRating: 4.5, filterKey: 'restaurant'  },
   { type: 'bar',          label: '🍺', color: '#ff8c00',  minRating: 4.5, filterKey: 'bar'         },
   { type: 'night_club',   label: '🎉', color: '#ff2d78',  minRating: 4.5, filterKey: 'nightclub'   },
 ];
@@ -4628,16 +4610,20 @@ async function _doGooglePlacesSearch(lat, lng, map) {
             radius: 1500,
           },
           includedPrimaryTypes: [cfg.type],
-          maxResultCount: 20,
+          maxResultCount: 6,
           rankPreference: SearchNearbyRankPreference.POPULARITY,
         };
 
         const { places } = await Place.searchNearby(request);
 
-        (places || []).forEach(place => {
+        // Nach Bewertung sortieren, nur Top-Spots mit min. Rating
+        const filtered = (places || [])
+          .filter(p => p.location && (cfg.minRating === 0 || (p.rating || 0) >= cfg.minRating))
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .slice(0, 6);
+
+        filtered.forEach(place => {
           const rating = place.rating || 0;
-          if (cfg.minRating > 0 && rating < cfg.minRating) return;
-          if (!place.location) return;
 
           const pLat = place.location.lat();
           const pLng = place.location.lng();
