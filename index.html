@@ -942,100 +942,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         </div>
         <div class="heatmap-stats" id="heatmap-stats"></div>
         <div id="heatmap-map" style="height:300px;border-radius:16px;overflow:hidden;border:1px solid var(--border)"></div>
-
-
-        <!-- MULTIPLAYER QUIZ -->
-        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
-          <div class="section-title" style="margin-bottom:14px">🧠 MALLE-QUIZ</div>
-          <div id="quiz-main-area">
-            <!-- Lobby / Start Screen -->
-            <div id="quiz-cats-screen" style="display:none">
-              <div style="font-family:'Bebas Neue',cursive;font-size:22px;letter-spacing:2px;color:var(--text-pri);margin-bottom:14px">Kategorie wählen</div>
-              <div id="quiz-cats-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
-              <button onclick="showQuizScreen('lobby')" style="margin-top:12px;background:transparent;border:1px solid var(--border);border-radius:12px;padding:10px;color:var(--text-sec);width:100%;cursor:pointer">↩ Zurück</button>
-            </div>
-            <div id="quiz-lobby-screen">
-              <div class="quiz-lobby">
-                <div style="font-size:48px;margin-bottom:8px">🧠</div>
-                <div class="quiz-lobby-title">Multiplayer Quiz</div>
-                <div style="font-size:13px;color:var(--text-sec);margin-bottom:16px;line-height:1.6">
-                  Alle Teilnehmer haben <b style="color:white">30 Sekunden</b> um beizutreten.<br>
-                  5 Fragen · Punkte nach Richtigkeit + Geschwindigkeit
-                </div>
-                <div class="quiz-cat-scroll" id="quiz-cats" style="margin-bottom:16px"></div>
-                <div id="quiz-players-preview" class="quiz-players-joined"></div>
-              </div>
-              <div id="quiz-start-area">
-                <button class="quiz-start-btn" id="quiz-start-btn" onclick="startQuiz()">
-                  🚀 Quiz starten & alle einladen
-                </button>
-              </div>
-              <div id="quiz-join-area" style="display:none">
-                <button class="quiz-join-btn" id="quiz-join-btn" onclick="joinQuizSession()">
-                  ✋ Jetzt beitreten!
-                </button>
-                <div id="quiz-join-countdown" style="text-align:center;margin-bottom:10px"></div>
-              </div>
-            </div>
-
-            <!-- Countdown Screen (30 Sek beitreten) -->
-            <div id="quiz-waiting-screen" style="display:none">
-              <div class="quiz-lobby" style="margin-bottom:14px">
-                <div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">Quiz startet in</div>
-                <div class="quiz-countdown-ring">
-                  <svg width="80" height="80" viewBox="0 0 80 80">
-                    <circle class="ring-bg" cx="40" cy="40" r="34"/>
-                    <circle class="ring-fg" id="quiz-ring" cx="40" cy="40" r="34"
-                      stroke-dasharray="213.6" stroke-dashoffset="0"/>
-                  </svg>
-                  <div class="quiz-countdown-num" id="quiz-countdown-num">30</div>
-                </div>
-                <div style="font-size:13px;color:var(--text-sec);margin-top:8px">Warte auf Mitspieler...</div>
-              </div>
-              <div class="members-title">Beigetreten</div>
-              <div id="quiz-joined-players" class="quiz-players-joined"></div>
-            </div>
-
-            <!-- Zwischen-Ranking Screen -->
-            <div id="quiz-interranking-screen" style="display:none">
-              <div style="text-align:center;margin-bottom:14px">
-                <div id="quiz-interrank-title" style="font-family:'Bebas Neue',cursive;font-size:26px;letter-spacing:1px;color:var(--neon-gold)">Nach Frage 1</div>
-                <div id="quiz-interrank-next" style="font-size:13px;color:var(--text-sec);margin-top:4px">Nächste Frage in <span id="quiz-next-countdown" style="color:var(--neon-cyan);font-weight:700">3</span>s</div>
-              </div>
-              <div id="quiz-interranking-list" class="quiz-ranking"></div>
-            </div>
-
-            <!-- Frage Screen -->
-            <div id="quiz-question-screen" style="display:none">
-              <div class="quiz-live-header">
-                <div>
-                  <div style="font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px">Frage</div>
-                  <div style="font-family:'Bebas Neue',cursive;font-size:22px" id="quiz-q-counter">1 / 5</div>
-                </div>
-                <div id="quiz-q-timer" class="quiz-q-timer">15</div>
-                <div style="text-align:right">
-                  <div style="font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px">Punkte</div>
-                  <div style="font-family:'Bebas Neue',cursive;font-size:22px;color:var(--neon-gold)" id="quiz-live-score">0</div>
-                </div>
-              </div>
-              <div id="quiz-q-text" style="font-size:17px;font-weight:700;line-height:1.4;margin-bottom:16px;padding:16px;background:var(--bg-card);border-radius:14px;border:1px solid var(--border)"></div>
-              <div id="quiz-answers-area"></div>
-              <div id="quiz-answer-result" style="display:none;text-align:center;padding:16px;border-radius:14px;margin-top:8px;font-size:15px;font-weight:700"></div>
-            </div>
-
-            <!-- Ranking Screen -->
-            <div id="quiz-ranking-screen" style="display:none">
-              <div style="text-align:center;margin-bottom:20px">
-                <div style="font-size:48px;margin-bottom:8px">🏆</div>
-                <div class="quiz-lobby-title">Ergebnis</div>
-              </div>
-              <div class="quiz-ranking" id="quiz-ranking-list"></div>
-              <button class="quiz-start-btn" style="margin-top:16px;background:linear-gradient(135deg,var(--neon-pink),#cc0055)" onclick="resetQuiz()">
-                🔄 Neues Quiz starten
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -1257,7 +1163,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <button class="tab-btn" onclick="switchTab('tab-gruppe',this)"><span class="tab-icon">👥</span><span class="tab-label">Crew</span></button>
     <button class="tab-btn" id="chat-tab-btn" onclick="switchTab('tab-chat',this)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
     <button class="tab-btn" onclick="switchTab('tab-snaps',this)"><span class="tab-icon">📷</span><span class="tab-label">Snaps</span></button>
-
+    <button class="tab-btn" onclick="switchTab('tab-funquiz',this)"><span class="tab-icon">🎰</span><span class="tab-label">Fun</span></button>
     <button class="tab-btn" onclick="switchTab('tab-insta',this)"><span class="tab-icon">📸</span><span class="tab-label">Insta</span></button>
     <button class="tab-btn" onclick="switchTab('tab-spotify',this)"><span class="tab-icon">🎵</span><span class="tab-label">Musik</span></button>
     <button class="tab-btn" onclick="switchTab('tab-admin',this)"><span class="tab-icon">⚙️</span><span class="tab-label">Ich</span></button>
@@ -1635,7 +1541,6 @@ async function init() {
   // Alerts immer abhören
   setTimeout(() => {
     try { listenForAlerts(); } catch(e) { console.warn('Alert listener:', e); }
-    try { subscribeQuizRealtime(); } catch(e) { console.warn('Quiz listener:', e); }
   }, 1000);
 
   // Profil wird jetzt über Login-Screen gesetzt
@@ -2509,7 +2414,7 @@ function switchTab(tabId, btn) {
       setTimeout(() => { const c = document.getElementById('chat-messages'); if(c) c.scrollTop = c.scrollHeight; }, 100);
     }
     if (tabId === 'tab-funquiz') {
-      try { loadLeaderboard(); loadTasks(); initRoulette(); initQuiz(); } catch(e){ console.error('funquiz:',e); }
+      try { loadLeaderboard(); loadTasks(); initRoulette(); } catch(e){ console.error('funquiz:',e); }
       setTimeout(() => { try { initHeatmap(); } catch(e){} }, 300);
     }
     if (tabId === 'tab-insta') {
