@@ -651,6 +651,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .drink-day-row{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--border);font-size:14px;color:var(--text-pri)}
 .drink-day-row.today{border-color:var(--neon-gold);background:rgba(255,214,0,0.08)}
 .drink-day-row b{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--neon-gold)}
+.drink-my-sub{position:absolute;top:64%;left:0;right:0;text-align:center;font-size:11px;color:var(--text-sec);letter-spacing:1px;pointer-events:none}
+.drink-testbanner{display:none;text-align:center;font-size:12px;color:var(--neon-cyan);background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:11px;padding:8px 10px;margin-bottom:12px}
+.drink-over-note{display:none;text-align:center;font-size:12px;color:#ff7a7a;background:rgba(255,59,59,0.08);border:1px solid rgba(255,59,59,0.22);border-radius:11px;padding:8px 10px;margin-bottom:12px}
 </style>
 </head>
 <body>
@@ -846,6 +849,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <!-- DRINK-TRACKER -->
         <div class="section-title" style="margin-bottom:12px">🍻 TRINK-GLAS</div>
         <div class="drink-card">
+          <div class="drink-testbanner" id="drink-testbanner">🧪 Test-Modus – zählt noch nicht. Echte Wertung ab <b>02.07.</b></div>
           <div class="drink-glass-wrap" id="drink-glass-wrap">
             <svg viewBox="0 0 100 140" class="drink-glass-svg">
               <defs><clipPath id="glassClip"><path d="M26 20 L74 20 L68 124 L32 124 Z"/></clipPath></defs>
@@ -855,8 +859,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
               <line x1="20" y1="129" x2="80" y2="129" stroke="rgba(255,255,255,0.55)" stroke-width="3" stroke-linecap="round"/>
             </svg>
             <div class="drink-my-total" id="drink-my-total">0</div>
+            <div class="drink-my-sub">/ 100 Punkte</div>
           </div>
           <div class="drink-my-break" id="drink-my-break">🍺 0 · 🍹 0 · 🥃 0 · 💧 0</div>
+          <div class="drink-over-note" id="drink-over-note">Tagespensom erreicht – Wasser & Pause helfen 💧</div>
           <div class="drink-type-row">
             <button class="drink-type-btn active" data-type="bier" onclick="addDrink('bier')"><span>🍺</span>Bier</button>
             <button class="drink-type-btn" data-type="cocktail" onclick="addDrink('cocktail')"><span>🍹</span>Cocktail</button>
@@ -865,7 +871,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </div>
           <button class="drink-undo-btn" onclick="undoDrink()">↺ Rückgängig</button>
           <div class="drink-crew-summary">
-            <div class="drink-crew-box"><div class="dcb-num" id="drink-crew-total">0</div><div class="dcb-lbl">Crew heute · Drinks</div></div>
+            <div class="drink-crew-box"><div class="dcb-num" id="drink-crew-total">0</div><div class="dcb-lbl">Crew heute · Punkte</div></div>
             <div class="drink-crew-box water"><div class="dcb-num" id="drink-crew-water">0</div><div class="dcb-lbl">💧 Wasser heute</div></div>
           </div>
           <div class="drink-crew-list" id="drink-crew-list"></div>
@@ -1485,7 +1491,8 @@ let state = {
   chatMessages: [], unreadChat: 0, activeTab: 'tab-karte',
   spotifyPlaylists: [], openComments: new Set(),
   selectedMember: null,
-  drinks: {}, drinkUndo: [], selDrink: 'bier'
+  drinks: {}, drinkUndo: [], selDrink: 'bier',
+  testDay: { bier:0, cocktail:0, shot:0, wasser:0 }
 };
 
 
@@ -3847,8 +3854,15 @@ function isRecapAvailable() {
 // ============================================================
 const DRINK_COLORS = { bier:'#ffb300', cocktail:'#ff2d78', shot:'#00e5ff', wasser:'#4fc3f7' };
 const DRINK_LABELS = { bier:'Bier 🍺', cocktail:'Cocktail 🍹', shot:'Shot 🥃', wasser:'Wasser 💧' };
-const DRINK_FILL_TARGET = 10; // nur visuell: Drinks bis das Glas voll aussieht
+// Gewichtetes Punktesystem: Shot > Cocktail > Bier > Wasser. Ziel 100/Tag = vernünftiges Tagespensom pro Person (7er-Crew).
+const DRINK_POINTS = { wasser:2, bier:10, cocktail:15, shot:20 };
+const DRINK_DAILY_TARGET = 100;
+const TRIP_START_KEY = '2026-07-02'; // echte Wertung erst ab Reisebeginn
 let _drinkSaveTimer = null;
+
+function isPreTrip(){ return drinkTodayKey() < TRIP_START_KEY; }
+function dayScore(d){ d = d || {}; return (d.bier||0)*DRINK_POINTS.bier + (d.cocktail||0)*DRINK_POINTS.cocktail + (d.shot||0)*DRINK_POINTS.shot + (d.wasser||0)*DRINK_POINTS.wasser; }
+function setDrinkText(id, v){ const e = document.getElementById(id); if(e) e.textContent = v; }
 
 function drinkTodayKey(){
   const d = new Date();
@@ -3898,20 +3912,26 @@ async function saveDrinksToDB(){
 function addDrink(type){
   const me = state.currentUser;
   if(!me){ showToast('Wähle zuerst dein Profil 👤'); return; }
-  if(!DRINK_COLORS[type]) return;
-  const day = drinkTodayKey();
-  if(!state.drinks[me.id]) state.drinks[me.id] = { name: me.name, emoji: me.emoji, days: {} };
-  const u = state.drinks[me.id];
-  u.name = me.name; u.emoji = me.emoji;
-  if(!u.days[day]) u.days[day] = { bier:0, cocktail:0, shot:0, wasser:0 };
-  u.days[day][type] = (u.days[day][type]||0) + 1;
+  if(!DRINK_POINTS[type]) return;
   state.selDrink = type;
-  state.drinkUndo.push({ day, type });
+  if(isPreTrip()){
+    // Test-Modus: nur lokal & visuell, NICHT speichern, zählt nicht für die Crew
+    state.testDay[type] = (state.testDay[type]||0) + 1;
+    state.drinkUndo.push({ test:true, type });
+  } else {
+    const day = drinkTodayKey();
+    if(!state.drinks[me.id]) state.drinks[me.id] = { name: me.name, emoji: me.emoji, days: {} };
+    const u = state.drinks[me.id];
+    u.name = me.name; u.emoji = me.emoji;
+    if(!u.days[day]) u.days[day] = { bier:0, cocktail:0, shot:0, wasser:0 };
+    u.days[day][type] = (u.days[day][type]||0) + 1;
+    state.drinkUndo.push({ day, type });
+    saveDrinksDebounced();
+  }
   if(state.drinkUndo.length > 100) state.drinkUndo.shift();
   const g = document.getElementById('drink-glass-wrap');
   if(g){ g.classList.remove('splash'); void g.offsetWidth; g.classList.add('splash'); }
   renderDrinks();
-  saveDrinksDebounced();
   showToast('+1 '+DRINK_LABELS[type]);
 }
 
@@ -3919,10 +3939,14 @@ function undoDrink(){
   const me = state.currentUser; if(!me) return;
   const last = state.drinkUndo.pop();
   if(!last){ showToast('Nichts rückgängig zu machen'); return; }
-  const u = state.drinks[me.id];
-  if(u && u.days[last.day] && u.days[last.day][last.type] > 0){ u.days[last.day][last.type]--; }
+  if(last.test){
+    if(state.testDay[last.type] > 0) state.testDay[last.type]--;
+  } else {
+    const u = state.drinks[me.id];
+    if(u && u.days[last.day] && u.days[last.day][last.type] > 0){ u.days[last.day][last.type]--; }
+    saveDrinksDebounced();
+  }
   renderDrinks();
-  saveDrinksDebounced();
   showToast('Rückgängig ↺');
 }
 
@@ -3931,52 +3955,60 @@ function renderDrinks(){
   if(!liq) return; // Fun-Tab nicht gemountet
   const me = state.currentUser;
   const day = drinkTodayKey();
+  const pre = isPreTrip();
 
-  let crewAlc = 0, crewWater = 0;
-  const perUser = [];
-  Object.entries(state.drinks||{}).forEach(([uid, u]) => {
-    const dd = (u.days && u.days[day]) || {};
-    const alc = (dd.bier||0)+(dd.cocktail||0)+(dd.shot||0);
-    const wat = (dd.wasser||0);
-    crewAlc += alc; crewWater += wat;
-    if(alc>0 || wat>0) perUser.push({ name:u.name, emoji:u.emoji, alc, wat, isMe: me && uid===me.id });
-  });
+  const banner = document.getElementById('drink-testbanner'); if(banner) banner.style.display = pre ? 'block' : 'none';
 
-  let mine = { bier:0, cocktail:0, shot:0, wasser:0 };
-  if(me && state.drinks[me.id] && state.drinks[me.id].days[day]) mine = Object.assign(mine, state.drinks[me.id].days[day]);
-  const myAlc = mine.bier+mine.cocktail+mine.shot;
+  // "Meine" Tageswerte: im Test-Modus lokal, sonst aus den echten Daten
+  let mine = pre ? state.testDay : ((me && state.drinks[me.id] && state.drinks[me.id].days[day]) || {});
+  mine = Object.assign({ bier:0, cocktail:0, shot:0, wasser:0 }, mine);
+  const myScore = dayScore(mine);
+  const over = myScore > DRINK_DAILY_TARGET;
 
-  const pct = Math.min(myAlc/DRINK_FILL_TARGET, 1);
+  const pct = Math.min(myScore/DRINK_DAILY_TARGET, 1);
   const top = 124 - 104*pct;
   liq.setAttribute('y', top.toFixed(1));
   liq.setAttribute('height', (124-top).toFixed(1));
-  liq.setAttribute('fill', DRINK_COLORS[state.selDrink] || '#ffb300');
+  liq.setAttribute('fill', over ? '#ff3b3b' : (DRINK_COLORS[state.selDrink] || '#ffb300'));
 
-  const tot = document.getElementById('drink-my-total'); if(tot) tot.textContent = myAlc;
-  const brk = document.getElementById('drink-my-break'); if(brk) brk.textContent = '🍺 '+mine.bier+' · 🍹 '+mine.cocktail+' · 🥃 '+mine.shot+' · 💧 '+mine.wasser;
-  const ct = document.getElementById('drink-crew-total'); if(ct) ct.textContent = crewAlc;
-  const cw = document.getElementById('drink-crew-water'); if(cw) cw.textContent = crewWater;
+  setDrinkText('drink-my-total', myScore);
+  setDrinkText('drink-my-break', '🍺 '+mine.bier+' · 🍹 '+mine.cocktail+' · 🥃 '+mine.shot+' · 💧 '+mine.wasser);
+  const note = document.getElementById('drink-over-note'); if(note) note.style.display = (over && !pre) ? 'block' : 'none';
 
   document.querySelectorAll('.drink-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === state.selDrink));
 
+  // Crew & Historie nur aus echten Trip-Tagen (>= 02.07.)
+  let crewScore = 0, crewWater = 0;
+  const perUser = [];
+  Object.entries(state.drinks||{}).forEach(([uid, u]) => {
+    const dd = (u.days && u.days[day]) || {};
+    if(day >= TRIP_START_KEY){
+      const sc = dayScore(dd);
+      crewScore += sc; crewWater += (dd.wasser||0);
+      if(sc > 0) perUser.push({ name:u.name, emoji:u.emoji, score:sc, isMe: me && uid===me.id });
+    }
+  });
+  setDrinkText('drink-crew-total', crewScore);
+  setDrinkText('drink-crew-water', crewWater);
+
   const cl = document.getElementById('drink-crew-list');
   if(cl){
-    perUser.sort((a,b)=>b.alc-a.alc);
+    perUser.sort((a,b)=>b.score-a.score);
     cl.innerHTML = perUser.length
-      ? perUser.map(u=>'<div class="drink-chip'+(u.isMe?' me':'')+'">'+u.emoji+' '+escHtml(u.name)+' <b>'+u.alc+'</b>'+(u.wat?' <span class="dw">💧'+u.wat+'</span>':'')+'</div>').join('')
-      : '<div class="drink-empty">Heute noch nichts eingetragen.</div>';
+      ? perUser.map(u=>'<div class="drink-chip'+(u.isMe?' me':'')+'">'+u.emoji+' '+escHtml(u.name)+' <b>'+u.score+'</b></div>').join('')
+      : '<div class="drink-empty">'+(pre ? 'Echte Wertung startet am 02.07. 🌴' : 'Heute noch nichts eingetragen.')+'</div>';
   }
 
   const days = {};
   Object.values(state.drinks||{}).forEach(u => {
-    Object.entries(u.days||{}).forEach(([k,v]) => { days[k] = (days[k]||0) + ((v.bier||0)+(v.cocktail||0)+(v.shot||0)); });
+    Object.entries(u.days||{}).forEach(([k,v]) => { if(k >= TRIP_START_KEY) days[k] = (days[k]||0) + dayScore(v); });
   });
   const keys = Object.keys(days).sort();
   const dh = document.getElementById('drink-day-history');
   if(dh){
     dh.innerHTML = keys.length
       ? keys.map(k=>'<div class="drink-day-row'+(k===day?' today':'')+'"><span>'+drinkDayLabel(k)+'</span><b>'+days[k]+'</b></div>').join('')
-      : '<div class="drink-empty">Noch keine Tage erfasst.</div>';
+      : '<div class="drink-empty">Tagessummen erscheinen ab 02.07. 🌴</div>';
   }
 }
 
