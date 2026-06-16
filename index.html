@@ -282,30 +282,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .heatmap-stat .hs-val{font-family:'Bebas Neue',cursive;font-size:24px;color:var(--neon-cyan)}
 .heatmap-stat .hs-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px}
 
-/* QUIZ */
-.quiz-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:14px}
-.quiz-question-area{padding:20px;background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(255,45,120,0.08))}
-.quiz-q-num{font-size:10px;font-weight:700;color:var(--neon-cyan);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.quiz-q-text{font-size:16px;font-weight:700;line-height:1.4}
-.quiz-answers{padding:14px;display:flex;flex-direction:column;gap:8px}
-.quiz-answer{background:rgba(255,255,255,0.05);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;cursor:pointer;font-size:14px;font-weight:600;transition:all 0.2s;text-align:left}
-.quiz-answer:active{transform:scale(0.98)}
-.quiz-answer.correct{border-color:var(--neon-green);background:rgba(57,255,20,0.15);color:var(--neon-green)}
-.quiz-answer.wrong{border-color:var(--neon-pink);background:rgba(255,45,120,0.15);color:var(--neon-pink)}
-.quiz-answer.reveal{border-color:var(--neon-green);background:rgba(57,255,20,0.08)}
-.quiz-answer:disabled{cursor:default}
-.quiz-footer{padding:12px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.quiz-score-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-.quiz-score-label{font-size:12px;color:var(--text-sec)}
-.quiz-score-val{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--neon-gold)}
-.quiz-cat-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px}
-.quiz-cat-scroll::-webkit-scrollbar{display:none}
-.quiz-cat-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.2s}
-.quiz-cat-btn.active{border-color:var(--neon-cyan);background:rgba(0,229,255,0.15);color:var(--neon-cyan)}
-.quiz-result-card{background:linear-gradient(135deg,rgba(255,214,0,0.15),rgba(255,45,120,0.10));border:1px solid rgba(255,214,0,0.3);border-radius:18px;padding:24px;text-align:center;margin-bottom:14px}
-.quiz-result-emoji{font-size:52px;margin-bottom:8px}
-.quiz-result-title{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:1px;color:var(--neon-gold);margin-bottom:6px}
-.quiz-result-sub{font-size:14px;color:var(--text-sec)}
 /* ABMELDEN MODAL */
 .danger-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:14px;border:none;background:linear-gradient(135deg,#cc0000,#880000);color:white;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
 .danger-btn:active{transform:scale(0.97)}
@@ -642,76 +618,39 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .insta-remove-btn{background:rgba(255,45,120,0.15);border:1px solid rgba(255,45,120,0.3);border-radius:8px;padding:4px 10px;color:var(--neon-pink);font-size:12px;cursor:pointer}
 .insta-load-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border-radius:12px;border:1px solid rgba(214,41,118,0.4);background:rgba(214,41,118,0.1);color:#e1306c;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px}
 
-/* MULTIPLAYER QUIZ */
-.quiz-lobby{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:20px;text-align:center;margin-bottom:14px}
-.quiz-lobby-title{font-family:'Bebas Neue',cursive;font-size:28px;letter-spacing:1px;margin-bottom:8px}
-.quiz-start-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,var(--neon-cyan),#0099bb);color:#000;font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:800;cursor:pointer;box-shadow:0 0 24px rgba(0,229,255,0.4);margin-bottom:10px;letter-spacing:0.3px}
-.quiz-start-btn:active{transform:scale(0.97)}
-.quiz-start-btn:disabled{opacity:0.5;cursor:not-allowed}
-.quiz-join-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;border:2px solid var(--neon-green);background:rgba(57,255,20,0.1);color:var(--neon-green);font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px}
-.quiz-join-btn:active{transform:scale(0.97)}
-.quiz-players-joined{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:12px 0}
-.quiz-player-chip{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;color:var(--neon-cyan);display:flex;align-items:center;gap:6px}
-.quiz-countdown-ring{width:80px;height:80px;margin:0 auto 16px;position:relative}
-.quiz-countdown-ring svg{transform:rotate(-90deg)}
-.quiz-countdown-ring .ring-bg{fill:none;stroke:rgba(255,255,255,0.1);stroke-width:6}
-.quiz-countdown-ring .ring-fg{fill:none;stroke:var(--neon-cyan);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
-.quiz-countdown-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:32px;color:var(--neon-cyan)}
-.quiz-live-header{background:linear-gradient(135deg,rgba(0,229,255,0.1),rgba(255,45,120,0.08));border:1px solid rgba(0,229,255,0.3);border-radius:14px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-.quiz-q-timer{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--neon-pink)}
-.quiz-q-timer.urgent{color:var(--neon-pink);animation:blink 0.5s ease-in-out infinite}
-.quiz-answer-btn{width:100%;padding:14px 16px;border-radius:14px;border:2px solid var(--border);background:rgba(255,255,255,0.05);color:var(--text-pri);font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s;text-align:left;margin-bottom:8px;display:flex;align-items:center;gap:10px}
-.quiz-answer-btn:active{transform:scale(0.98)}
-.quiz-answer-btn.selected{border-color:var(--neon-cyan);background:rgba(0,229,255,0.15)}
-.quiz-answer-btn.correct{border-color:var(--neon-green);background:rgba(57,255,20,0.15);color:var(--neon-green)}
-.quiz-answer-btn.wrong{border-color:var(--neon-pink);background:rgba(255,45,120,0.15);color:var(--neon-pink)}
-.quiz-answer-btn.reveal{border-color:var(--neon-green);background:rgba(57,255,20,0.05)}
-.quiz-answer-btn:disabled{cursor:default}
-.quiz-answer-letter{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
-.quiz-waiting-screen{text-align:center;padding:30px 20px}
-.quiz-ranking{display:flex;flex-direction:column;gap:10px}
-.quiz-rank-row{display:flex;align-items:center;gap:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:12px 16px;animation:slideIn 0.4s ease-out}
-.quiz-rank-row.me{border-color:rgba(0,229,255,0.4);background:rgba(0,229,255,0.06)}
-.quiz-rank-medal{font-family:'Bebas Neue',cursive;font-size:24px;width:32px;text-align:center}
-.quiz-rank-info{flex:1}
-.quiz-rank-name{font-weight:700;font-size:15px}
-.quiz-rank-detail{font-size:11px;color:var(--text-sec);margin-top:2px}
-.quiz-rank-score{font-family:'Bebas Neue',cursive;font-size:26px;color:var(--neon-gold)}
-
-/* HASHTAG */
-.hashtag-card{background:linear-gradient(135deg,rgba(0,229,255,0.08),rgba(255,45,120,0.06));border:1px solid rgba(0,229,255,0.25);border-radius:18px;padding:18px;margin-bottom:14px}
-.hashtag-row{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:10px 14px;margin-bottom:8px}
-.hashtag-chip{background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.3);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:700;color:var(--neon-cyan);cursor:pointer;transition:all 0.15s;flex:1;text-align:left}
-.hashtag-chip:active{transform:scale(0.97)}
-.hashtag-remove{background:rgba(255,45,120,0.15);border:1px solid rgba(255,45,120,0.3);border-radius:8px;padding:4px 10px;color:var(--neon-pink);font-size:12px;cursor:pointer}
-.hashtag-posts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:12px}
-.hashtag-post{aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;position:relative;background:linear-gradient(135deg,#1a0a1e,#0a1a2e);display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.06)}
-.hashtag-post:active{opacity:0.8}
-.hashtag-post-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px}
-.hashtag-post-icon{font-size:26px}
-.hashtag-post-tag{font-size:8px;color:var(--neon-cyan);font-weight:700;letter-spacing:0.5px;text-align:center;line-height:1.3}
-.hashtag-post-type{position:absolute;top:5px;right:6px;font-size:11px}
-.hashtag-empty{text-align:center;padding:20px;opacity:0.5;font-size:12px;color:var(--text-sec)}
-
-.quiz-cat-btn{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px 10px;color:var(--text-pri);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.15s;width:100%;text-align:center}
-.quiz-cat-btn:active{transform:scale(0.96);border-color:var(--neon-cyan)}
-.quiz-player-chip{display:flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px}
-.quiz-answer-btn{background:var(--bg-card);border:1.5px solid var(--border);border-radius:14px;padding:12px 10px;color:var(--text-pri);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;text-align:left;line-height:1.3}
-.quiz-answer-btn:active:not(:disabled){transform:scale(0.97)}
-.quiz-answer-btn.correct{background:rgba(57,255,20,0.15);border-color:#39ff14;color:#39ff14}
-.quiz-answer-btn.wrong{background:rgba(255,45,120,0.15);border-color:#ff2d78;color:#ff2d78}
-.quiz-answer-btn.dim{opacity:0.35}
-.quiz-answer-btn:disabled{cursor:default}
-.quiz-feedback.correct{background:rgba(57,255,20,0.12);color:#39ff14;border:1px solid rgba(57,255,20,0.3)}
-.quiz-feedback.wrong{background:rgba(255,45,120,0.12);color:#ff2d78;border:1px solid rgba(255,45,120,0.3)}
-.quiz-rank-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:14px;margin-bottom:8px}
-.quiz-rank-row.me{border-color:var(--neon-cyan);background:rgba(0,229,255,0.06)}
-.quiz-rank-medal{font-size:20px;width:28px;text-align:center;flex-shrink:0}
-.quiz-rank-info{flex:1}
-.quiz-rank-name{font-size:14px;font-weight:600;color:var(--text-pri)}
-.quiz-rank-detail{font-size:11px;color:var(--text-sec);margin-top:2px}
-.quiz-rank-score{font-family:'Bebas Neue',cursive;font-size:22px;color:var(--neon-cyan);flex-shrink:0}
-.quiz-live-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+/* DRINK TRACKER */
+.drink-card{background:var(--bg-card);border:1px solid var(--border);border-radius:18px;padding:18px 16px;margin-bottom:22px}
+.drink-glass-wrap{position:relative;width:120px;height:168px;margin:4px auto 10px}
+.drink-glass-wrap.splash{animation:drinkSplash 0.35s ease}
+@keyframes drinkSplash{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}
+.drink-glass-svg{width:100%;height:100%;display:block}
+#drink-glass-liquid{transition:y 0.45s cubic-bezier(.16,1,.3,1),height 0.45s cubic-bezier(.16,1,.3,1),fill 0.3s ease}
+.drink-my-total{position:absolute;top:52%;left:0;right:0;transform:translateY(-50%);text-align:center;font-family:'Bebas Neue',cursive;font-size:46px;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.8);pointer-events:none}
+.drink-my-break{text-align:center;font-size:13px;color:var(--text-sec);margin-bottom:14px;letter-spacing:0.5px}
+.drink-type-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.drink-type-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 4px;border-radius:13px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text-pri);font-size:11px;font-weight:600;cursor:pointer;transition:all 0.15s;user-select:none}
+.drink-type-btn span{font-size:24px;line-height:1}
+.drink-type-btn:active{transform:scale(0.93)}
+.drink-type-btn.active{border-color:var(--neon-gold);background:rgba(255,214,0,0.12);box-shadow:0 0 14px rgba(255,214,0,0.2)}
+.drink-type-btn.water.active{border-color:var(--neon-cyan);background:rgba(0,229,255,0.12);box-shadow:0 0 14px rgba(0,229,255,0.2)}
+.drink-undo-btn{width:100%;padding:9px;border-radius:11px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-size:12px;letter-spacing:1px;cursor:pointer;margin-bottom:16px}
+.drink-undo-btn:active{transform:scale(0.98)}
+.drink-crew-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.drink-crew-box{background:linear-gradient(135deg,rgba(255,214,0,0.1),rgba(255,45,120,0.06));border:1px solid rgba(255,214,0,0.18);border-radius:14px;padding:12px;text-align:center}
+.drink-crew-box.water{background:linear-gradient(135deg,rgba(0,229,255,0.1),rgba(79,195,247,0.06));border-color:rgba(0,229,255,0.18)}
+.dcb-num{font-family:'Bebas Neue',cursive;font-size:34px;color:#fff;line-height:1}
+.dcb-lbl{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px}
+.drink-crew-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px}
+.drink-chip{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--text-pri)}
+.drink-chip.me{border-color:var(--neon-gold);background:rgba(255,214,0,0.1)}
+.drink-chip b{color:var(--neon-gold);margin-left:3px}
+.drink-chip .dw{color:var(--neon-cyan);font-size:11px;margin-left:5px}
+.drink-empty{font-size:12px;color:var(--text-sec);opacity:0.7;padding:8px 2px}
+.drink-day-title{font-size:12px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.drink-day-history{display:flex;flex-direction:column;gap:6px}
+.drink-day-row{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--border);font-size:14px;color:var(--text-pri)}
+.drink-day-row.today{border-color:var(--neon-gold);background:rgba(255,214,0,0.08)}
+.drink-day-row b{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--neon-gold)}
 </style>
 </head>
 <body>
@@ -902,6 +841,36 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           <div class="cb-time" id="cd-time-2" style="font-family:'Bebas Neue',cursive;font-size:42px;letter-spacing:3px;background:linear-gradient(135deg,var(--neon-gold),var(--neon-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">--d --h --m</div>
           <div style="font-size:12px;color:var(--text-sec);margin-top:6px">02. Juli → 05. Juli 2026 · 23:00 Uhr</div>
           <div id="malle-active-msg" style="display:none;margin-top:10px;font-size:18px;font-weight:700;color:var(--neon-green)">🎉 WIR SIND AUF MALLE! 🎉</div>
+        </div>
+
+        <!-- DRINK-TRACKER -->
+        <div class="section-title" style="margin-bottom:12px">🍻 TRINK-GLAS</div>
+        <div class="drink-card">
+          <div class="drink-glass-wrap" id="drink-glass-wrap">
+            <svg viewBox="0 0 100 140" class="drink-glass-svg">
+              <defs><clipPath id="glassClip"><path d="M26 20 L74 20 L68 124 L32 124 Z"/></clipPath></defs>
+              <rect id="drink-glass-liquid" x="18" y="124" width="64" height="0" fill="#ffb300" clip-path="url(#glassClip)" opacity="0.92"/>
+              <path d="M26 20 L74 20 L68 124 L32 124 Z" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" stroke-linejoin="round"/>
+              <ellipse cx="50" cy="20" rx="24" ry="4" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2.5"/>
+              <line x1="20" y1="129" x2="80" y2="129" stroke="rgba(255,255,255,0.55)" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+            <div class="drink-my-total" id="drink-my-total">0</div>
+          </div>
+          <div class="drink-my-break" id="drink-my-break">🍺 0 · 🍹 0 · 🥃 0 · 💧 0</div>
+          <div class="drink-type-row">
+            <button class="drink-type-btn active" data-type="bier" onclick="addDrink('bier')"><span>🍺</span>Bier</button>
+            <button class="drink-type-btn" data-type="cocktail" onclick="addDrink('cocktail')"><span>🍹</span>Cocktail</button>
+            <button class="drink-type-btn" data-type="shot" onclick="addDrink('shot')"><span>🥃</span>Shot</button>
+            <button class="drink-type-btn water" data-type="wasser" onclick="addDrink('wasser')"><span>💧</span>Wasser</button>
+          </div>
+          <button class="drink-undo-btn" onclick="undoDrink()">↺ Rückgängig</button>
+          <div class="drink-crew-summary">
+            <div class="drink-crew-box"><div class="dcb-num" id="drink-crew-total">0</div><div class="dcb-lbl">Crew heute · Drinks</div></div>
+            <div class="drink-crew-box water"><div class="dcb-num" id="drink-crew-water">0</div><div class="dcb-lbl">💧 Wasser heute</div></div>
+          </div>
+          <div class="drink-crew-list" id="drink-crew-list"></div>
+          <div class="drink-day-title">📅 Tagessummen · Crew</div>
+          <div class="drink-day-history" id="drink-day-history"></div>
         </div>
 
         <!-- ROULETTE -->
@@ -1515,7 +1484,8 @@ let state = {
   crewStatuses: {}, crewLocations: {},
   chatMessages: [], unreadChat: 0, activeTab: 'tab-karte',
   spotifyPlaylists: [], openComments: new Set(),
-  selectedMember: null
+  selectedMember: null,
+  drinks: {}, drinkUndo: [], selDrink: 'bier'
 };
 
 
@@ -1620,6 +1590,10 @@ function subscribeRealtime() {
       await loadChatMessages();
       if(state.activeTab!=='tab-chat'){state.unreadChat++;updateChatBadge();}
     }).subscribe();
+
+  sb.channel('drk').on('postgres_changes',{event:'*',schema:'public',table:'statuses',filter:'room_id=eq.'+ROOM_ID},
+    (p) => { const uid = p.new && p.new.user_id; if(uid && uid.indexOf('__drinks__')===0){ const id=uid.slice(10); let days={}; try{days=JSON.parse(p.new.status||'{}')||{};}catch(e){} state.drinks[id]={name:p.new.user_name||'?',emoji:p.new.user_emoji||'🍺',days}; renderDrinks(); } }).subscribe();
+  loadDrinksFromDB();
 }
 
 // ============================================================
@@ -2247,7 +2221,7 @@ function renderCrew() {
   const list=document.getElementById('member-list'); list.innerHTML='';
   const allUsers=new Map();
   Object.values(state.crewLocations).forEach(loc=>allUsers.set(loc.user_id,{id:loc.user_id,name:loc.user_name,emoji:loc.user_emoji,sharing:true}));
-  Object.values(state.crewStatuses).forEach(s=>{if(!allUsers.has(s.user_id))allUsers.set(s.user_id,{id:s.user_id,name:s.user_name,emoji:s.user_emoji,sharing:false});});
+  Object.values(state.crewStatuses).forEach(s=>{if(String(s.user_id).indexOf('__')===0)return;if(!allUsers.has(s.user_id))allUsers.set(s.user_id,{id:s.user_id,name:s.user_name,emoji:s.user_emoji,sharing:false});});
   if(state.currentUser&&!allUsers.has(state.currentUser.id))allUsers.set(state.currentUser.id,{...state.currentUser,sharing:state.locationSharing});
 
   if(allUsers.size===0){list.innerHTML='<div class="empty-feed" style="opacity:0.5;padding:30px"><div class="empty-icon">👀</div><div class="empty-text">Noch niemand aktiv.<br>Teile den Link!</div></div>';return;}
@@ -2393,7 +2367,7 @@ function switchTab(tabId, btn) {
       setTimeout(() => { const c = document.getElementById('chat-messages'); if(c) c.scrollTop = c.scrollHeight; }, 100);
     }
     if (tabId === 'tab-funquiz') {
-      try { loadLeaderboard(); loadTasks(); initRoulette(); } catch(e){ console.error('funquiz:',e); }
+      try { loadLeaderboard(); loadTasks(); initRoulette(); renderDrinks(); } catch(e){ console.error('funquiz:',e); }
       setTimeout(() => { try { initHeatmap(); } catch(e){} }, 300);
     }
     if (tabId === 'tab-insta') {
@@ -2946,45 +2920,6 @@ function flyToHomeBase() {
   state.mapInstance.flyTo([HOME_BASE.lat, HOME_BASE.lng], 17, { duration: 1.5 });
   showToast('🏠 Hotel Eden Palma Playa');
 }
-
-// ============================================================
-// QUIZ
-// ============================================================
-// QUIZ_DATA defined below
-let quizState={category:"Mallorca 🌴",currentQ:0,score:0,answered:false,questions:[],finished:false};
-
-function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-
-// initQuiz replaced by multiplayer version
-
-
-function initQuiz(){
-  const area=document.getElementById("quiz-area");if(!area)return;
-  const qs=quizState.questions;const total=qs.length;
-  if(quizState.finished||quizState.currentQ>=total){
-    const pct=Math.round((quizState.score/total)*100);
-    let emoji="😅",title="Nicht schlecht!";
-    if(pct>=80){emoji="🏆";title="Malle-Experte!";}else if(pct>=60){emoji="😎";title="Gut gemacht!";}else if(pct<40){emoji="🍺";title="Mehr üben!";}
-    area.innerHTML="<div class='quiz-result-card'><div class='quiz-result-emoji'>"+emoji+"</div><div class='quiz-result-title'>"+title+"</div><div class='quiz-result-sub'>"+quizState.score+" von "+total+" richtig ("+pct+"%)</div></div><button class='btn-primary' onclick='restartQuiz()'>🔄 Nochmal</button>";
-    if(state.currentUser)sendSpecialMessage("🧠 Quiz: "+state.currentUser.emoji+" "+state.currentUser.name+" – "+quizState.score+"/"+total+" "+emoji);
-    return;
-  }
-  const q=qs[quizState.currentQ];quizState.answered=false;
-  const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+quizState.currentQ;
-  area.innerHTML="<div class='quiz-card'><div class='quiz-question-area'><div class='quiz-q-num'>Frage "+(quizState.currentQ+1)+" von "+total+"</div><div class='quiz-q-text'>"+escHtml(q.q)+"</div></div><div class='quiz-answers' id='qai'></div><div class='quiz-footer'><span style='font-size:12px;color:var(--text-sec)'>Tippe auf deine Antwort</span><span style='font-size:12px;color:var(--neon-gold)'>"+quizState.category+"</span></div></div>";
-  const ai=document.getElementById("qai");
-  q.a.forEach((ans,i)=>{const btn=document.createElement("button");btn.className="quiz-answer";btn.textContent=ans;btn.onclick=()=>answerQuiz(i,q.correct);ai.appendChild(btn);});
-}
-
-function answerQuiz(chosen,correct){
-  if(quizState.answered)return;quizState.answered=true;
-  document.querySelectorAll(".quiz-answer").forEach((b,i)=>{b.disabled=true;if(i===correct)b.classList.add("correct");else if(i===chosen)b.classList.add("wrong");else b.classList.add("reveal");});
-  if(chosen===correct){quizState.score++;showToast("✅ Richtig! +1 Punkt");}else{showToast("❌ Falsch! Richtig: "+document.querySelectorAll(".quiz-answer")[correct].textContent);}
-  const scoreEl=document.getElementById("quiz-score-display");if(scoreEl)scoreEl.textContent=quizState.score+" / "+(quizState.currentQ+1);
-  setTimeout(()=>{quizState.currentQ++;if(quizState.currentQ>=quizState.questions.length)quizState.finished=true;},1800);
-}
-
-function restartQuiz(){quizState.currentQ=0;quizState.score=0;quizState.finished=false;quizState.questions=shuffleArray(QUIZ_DATA[quizState.category]);}
 
 // ============================================================
 // PUSH NOTIFICATIONS
@@ -3908,483 +3843,142 @@ function isRecapAvailable() {
 
 
 // ============================================================
-// MULTIPLAYER QUIZ – NEU (DB-first, kein lokales Timing)
+// DRINK TRACKER (Trink-Glas) – pro Person in 'statuses' (__drinks__<id>)
 // ============================================================
+const DRINK_COLORS = { bier:'#ffb300', cocktail:'#ff2d78', shot:'#00e5ff', wasser:'#4fc3f7' };
+const DRINK_LABELS = { bier:'Bier 🍺', cocktail:'Cocktail 🍹', shot:'Shot 🥃', wasser:'Wasser 💧' };
+const DRINK_FILL_TARGET = 10; // nur visuell: Drinks bis das Glas voll aussieht
+let _drinkSaveTimer = null;
 
-const QUIZ_DATA = {
-  "Mallorca 🌴": [
-    {q:"Wie heißt die bekannteste Partymeile?",a:["Schinkenstraße","Ballermann","Playa de Muro","Magaluf"],correct:1},
-    {q:"Was ist die Hauptstadt von Mallorca?",a:["Alcúdia","Manacor","Palma","Inca"],correct:2},
-    {q:"Was ist typisch mallorquinisch?",a:["Paella","Ensaimada","Churros","Gazpacho"],correct:1},
-    {q:"Welcher Club ist riesig auf der Schinkenstraße?",a:["BCM","Pacha","Megapark","Amnesia"],correct:2},
-    {q:"Was kostet ein Bier am Ballermann ca.?",a:["1€","3-5€","8€","12€"],correct:1},
-    {q:"Welche Insel gehört NICHT zu den Balearen?",a:["Ibiza","Menorca","Formentera","Korsika"],correct:3},
-    {q:"Wie nennt man die Badeabschnitte am Ballermann?",a:["Zonas","Playas","Balnearios","Sectores"],correct:2},
-    {q:"In welcher Stadt liegt der Ballermann?",a:["Alcúdia","Palma","Magaluf","Sóller"],correct:1},
-  ],
-  "Fußball ⚽": [
-    {q:"Welcher Verein heißt die Roten?",a:["BVB","FC Bayern","1. FC Köln","Leverkusen"],correct:1},
-    {q:"Wie viele Spieler stehen auf dem Platz?",a:["18","20","22","24"],correct:2},
-    {q:"Wer hat die meisten WM-Titel?",a:["Deutschland","Argentinien","Brasilien","Italien"],correct:2},
-    {q:"Was ist ein Hattrick?",a:["3 Tore in einem Spiel","3 Karten","3 Ecken","3 Elfmeter"],correct:0},
-    {q:"WM 2006 in Deutschland – welche Stadt war Gastgeber-Finale?",a:["Hamburg","München","Berlin","Dortmund"],correct:2},
-    {q:"Tier im Wappen Eintracht Frankfurt?",a:["Löwe","Adler","Bär","Wolf"],correct:1},
-    {q:"Was bedeutet VAR?",a:["Video Assistant Referee","Virtual Area Review","Video Area Replay","Vorder-Außen-Regel"],correct:0},
-    {q:"Wie lang dauert eine Halbzeit?",a:["40 Min","45 Min","50 Min","60 Min"],correct:1},
-  ],
-  "Allgemeinwissen 🌍": [
-    {q:"Hauptstadt von Australien?",a:["Sydney","Melbourne","Canberra","Brisbane"],correct:2},
-    {q:"Wie viele Saiten hat eine Gitarre?",a:["4","5","6","7"],correct:2},
-    {q:"Element mit Kürzel Au?",a:["Silber","Gold","Aluminium","Kupfer"],correct:1},
-    {q:"Wie viele Nullen hat eine Million?",a:["5","6","7","8"],correct:1},
-    {q:"Schnellstes Landtier?",a:["Löwe","Gepard","Antilope","Pferd"],correct:1},
-    {q:"Wie viele Planeten hat unser Sonnensystem?",a:["7","8","9","10"],correct:1},
-    {q:"In welchem Land steht der Eiffelturm?",a:["Belgien","Schweiz","Deutschland","Frankreich"],correct:3},
-    {q:"Wie viele Kontinente hat die Erde?",a:["5","6","7","8"],correct:2},
-  ],
-  "Trinken 🍺": [
-    {q:"Was ist ein Radler?",a:["Bier+Cola","Bier+Limo","Wein+Wasser","Sekt+OJ"],correct:1},
-    {q:"Aus welchem Land kommt Tequila?",a:["Spanien","Kolumbien","Mexiko","Brasilien"],correct:2},
-    {q:"Woraus wird Rum hergestellt?",a:["Kartoffeln","Zuckerrohr","Getreide","Trauben"],correct:1},
-    {q:"Was bedeutet on the rocks?",a:["Ohne Eis","Mit Eis","Mit Sahne","Pur"],correct:1},
-    {q:"Aus welcher Frucht wird Wein gemacht?",a:["Äpfeln","Birnen","Trauben","Pflaumen"],correct:2},
-    {q:"Was ist ein Shandy?",a:["Bier+Limette","Bier+Limo","Gin+Tonic","Rum+Cola"],correct:1},
-    {q:"Wie viel Prozent hat normales Bier?",a:["0.5%","2%","5%","8%"],correct:2},
-    {q:"Whisky vs Whiskey – Unterschied?",a:["Nur Schreibweise","Schottisch vs Irisch","Alter","Farbe"],correct:1},
-  ],
+function drinkTodayKey(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function drinkDayLabel(k){
+  const wd = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const dt = new Date(k+'T12:00:00');
+  if(isNaN(dt)) return k;
+  return wd[dt.getDay()]+' '+dt.getDate()+'.'+(dt.getMonth()+1)+'.';
 }
 
-const QUIZ_QUESTIONS_PER_GAME = 5;
-const QUIZ_JOIN_SECONDS = 30;
-const QUIZ_ANSWER_SECONDS = 15;
-const QUIZ_MAX_POINTS = 1000;
-
-function seededShuffle(arr, seed) {
-  const a = [...arr];
-  let s = seed;
-  const rand = () => { s=(s*1664525+1013904223)&0xffffffff; return(s>>>0)/0xffffffff; };
-  for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
-  return a;
-}
-
-// ─── STATE ───
-let quiz = {
-  sessionId: null,
-  isHost: false,
-  status: 'idle',       // idle | waiting | active | finished
-  currentQ: -1,         // aktuelle Frage (-1 = noch keine)
-  questions: [],        // generierte Fragen (deterministisch per seed)
-  answered: false,
-  myScore: 0,
-  timerInterval: null,
-  sub: null,            // Realtime subscription
-  hostPollInterval: null, // Host: pollt ob alle geantwortet haben
-};
-
-// ─── INIT ───
-function initQuiz() {
-  showQuizScreen('lobby');
-}
-
-function showQuizScreen(name) {
-  // Neue Screens (quiz-X-screen)
-  ['lobby','cats','waiting','question','interranking','ranking'].forEach(s => {
-    const el = document.getElementById('quiz-' + s + '-screen');
-    if(el) el.style.display = s===name ? '' : 'none';
-  });
-  // Alte Screen-IDs (Fallback)
-  ['lobby-idle','lobby-join','question','ranking','interranking'].forEach(s => {
-    const el = document.getElementById('quiz-' + s + '-screen');
-    if(el) el.style.display = 'none'; // immer ausblenden
-  });
-}
-
-// ─── KATEGORIEN ───
-function showQuizCats() {
-  showQuizScreen('cats');
-  const grid = document.getElementById('quiz-cats-grid');
-  if(!grid) return;
-  grid.innerHTML = '';
-  Object.keys(QUIZ_DATA).forEach(cat => {
-    const btn = document.createElement('button');
-    btn.className = 'quiz-cat-btn';
-    btn.textContent = cat;
-    btn.onclick = () => createQuizSession(cat);
-    grid.appendChild(btn);
-  });
-}
-
-// ─── SESSION ERSTELLEN (Host) ───
-async function createQuizSession(category) {
-  if(!state.currentUser) return;
-  showToast('⏳ Erstelle Session...');
-
-  const seed = Math.floor(Date.now() / 1000);
-  const questions = buildQuestions(category, seed);
-
+async function loadDrinksFromDB(){
   try {
-    const { data, error } = await sb.from('quiz_sessions').insert({
+    const { data } = await sb.from('statuses').select('user_id,user_name,user_emoji,status').eq('room_id', ROOM_ID);
+    const map = {};
+    (data||[]).forEach(r => {
+      if(!r.user_id || r.user_id.indexOf('__drinks__') !== 0) return;
+      const uid = r.user_id.slice(10);
+      let days = {}; try { days = JSON.parse(r.status||'{}') || {}; } catch(e){}
+      map[uid] = { name: r.user_name||'?', emoji: r.user_emoji||'🍺', days };
+    });
+    state.drinks = map;
+    renderDrinks();
+  } catch(e){ console.warn('Drink load:', e); }
+}
+
+function saveDrinksDebounced(){
+  clearTimeout(_drinkSaveTimer);
+  _drinkSaveTimer = setTimeout(saveDrinksToDB, 500);
+}
+async function saveDrinksToDB(){
+  const me = state.currentUser;
+  if(!me || !state.drinks[me.id]) return;
+  try {
+    await sb.from('statuses').upsert({
       room_id: ROOM_ID,
-      status: 'waiting',
-      current_question: -1,
-      created_by: state.currentUser.name,
-      category: category,
-      seed: seed,
-      players: JSON.stringify([{name: state.currentUser.name, emoji: state.currentUser.emoji, score: 0}]),
-    }).select().single();
-
-    if(error) throw error;
-
-    quiz.sessionId = data.id;
-    quiz.isHost = true;
-    quiz.status = 'waiting';
-    quiz.questions = questions;
-    quiz.myScore = 0;
-    quiz.currentQ = -1;
-    quiz.answered = false;
-
-    subscribeQuiz();
-    showWaitingRoom(data);
-  } catch(e) {
-    console.error('Quiz create error:', e);
-    showToast('❌ Fehler beim Erstellen');
-  }
+      user_id: '__drinks__'+me.id,
+      user_name: me.name,
+      user_emoji: me.emoji,
+      status: JSON.stringify(state.drinks[me.id].days),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'room_id,user_id' });
+  } catch(e){ console.warn('Drink save:', e); }
 }
 
-// ─── SESSION JOINEN ───
-async function joinQuizSession() {
-  if(!state.currentUser) return;
-  const input = document.getElementById('quiz-join-input');
-  const sessionId = input ? input.value.trim() : '';
-  if(!sessionId) { showToast('⚠️ Bitte Session-Code eingeben'); return; }
-
-  try {
-    const { data, error } = await sb.from('quiz_sessions')
-      .select('*').eq('id', sessionId).eq('room_id', ROOM_ID).single();
-    if(error || !data) { showToast('❌ Session nicht gefunden'); return; }
-    if(data.status !== 'waiting') { showToast('⚠️ Session läuft bereits'); return; }
-
-    // Spieler hinzufügen
-    const players = JSON.parse(data.players || '[]');
-    if(players.find(p => p.name === state.currentUser.name)) {
-      showToast('⚠️ Du bist bereits in der Session');
-    } else {
-      players.push({name: state.currentUser.name, emoji: state.currentUser.emoji, score: 0});
-      await sb.from('quiz_sessions').update({players: JSON.stringify(players)}).eq('id', sessionId);
-    }
-
-    const seed = data.seed;
-    const category = data.category;
-    quiz.sessionId = data.id;
-    quiz.isHost = false;
-    quiz.status = 'waiting';
-    quiz.questions = buildQuestions(category, seed);
-    quiz.myScore = 0;
-    quiz.currentQ = -1;
-    quiz.answered = false;
-
-    subscribeQuiz();
-    showWaitingRoom(data);
-  } catch(e) {
-    console.error('Quiz join error:', e);
-    showToast('❌ Fehler beim Joinen');
-  }
+function addDrink(type){
+  const me = state.currentUser;
+  if(!me){ showToast('Wähle zuerst dein Profil 👤'); return; }
+  if(!DRINK_COLORS[type]) return;
+  const day = drinkTodayKey();
+  if(!state.drinks[me.id]) state.drinks[me.id] = { name: me.name, emoji: me.emoji, days: {} };
+  const u = state.drinks[me.id];
+  u.name = me.name; u.emoji = me.emoji;
+  if(!u.days[day]) u.days[day] = { bier:0, cocktail:0, shot:0, wasser:0 };
+  u.days[day][type] = (u.days[day][type]||0) + 1;
+  state.selDrink = type;
+  state.drinkUndo.push({ day, type });
+  if(state.drinkUndo.length > 100) state.drinkUndo.shift();
+  const g = document.getElementById('drink-glass-wrap');
+  if(g){ g.classList.remove('splash'); void g.offsetWidth; g.classList.add('splash'); }
+  renderDrinks();
+  saveDrinksDebounced();
+  showToast('+1 '+DRINK_LABELS[type]);
 }
 
-// ─── FRAGEN BAUEN ───
-function buildQuestions(category, seed) {
-  const pool = QUIZ_DATA[category] || QUIZ_DATA['Mallorca 🌴'];
-  const shuffled = seededShuffle(pool, seed);
-  return shuffled.slice(0, QUIZ_QUESTIONS_PER_GAME);
+function undoDrink(){
+  const me = state.currentUser; if(!me) return;
+  const last = state.drinkUndo.pop();
+  if(!last){ showToast('Nichts rückgängig zu machen'); return; }
+  const u = state.drinks[me.id];
+  if(u && u.days[last.day] && u.days[last.day][last.type] > 0){ u.days[last.day][last.type]--; }
+  renderDrinks();
+  saveDrinksDebounced();
+  showToast('Rückgängig ↺');
 }
 
-// ─── WARTERAUM ───
-function showWaitingRoom(sessionData) {
-  showQuizScreen('waiting');
-  const codeEl = document.getElementById('quiz-session-code');
-  if(codeEl) codeEl.textContent = sessionData.id;
+function renderDrinks(){
+  const liq = document.getElementById('drink-glass-liquid');
+  if(!liq) return; // Fun-Tab nicht gemountet
+  const me = state.currentUser;
+  const day = drinkTodayKey();
 
-  const catEl = document.getElementById('quiz-waiting-cat');
-  if(catEl) catEl.textContent = sessionData.category || 'Mallorca 🌴';
-
-  const startBtn = document.getElementById('quiz-start-btn');
-  if(startBtn) startBtn.style.display = quiz.isHost ? 'block' : 'none';
-
-  renderWaitingPlayers(JSON.parse(sessionData.players || '[]'));
-}
-
-function renderWaitingPlayers(players) {
-  const el = document.getElementById('quiz-waiting-players');
-  if(!el) return;
-  el.innerHTML = players.map(p =>
-    '<div class="quiz-player-chip"><span>' + escHtml(p.emoji) + '</span><span>' + escHtml(p.name) + '</span></div>'
-  ).join('');
-  const countEl = document.getElementById('quiz-player-count');
-  if(countEl) countEl.textContent = players.length + ' Spieler';
-}
-
-// ─── QUIZ STARTEN (nur Host) ───
-async function startQuiz() {
-  if(!quiz.isHost || !quiz.sessionId) return;
-  try {
-    await sb.from('quiz_sessions').update({
-      status: 'active',
-      current_question: 0,
-    }).eq('id', quiz.sessionId);
-    // Realtime UPDATE triggert bei allen loadQuestion(0)
-  } catch(e) {
-    console.error('Start error:', e);
-    showToast('❌ Fehler beim Starten');
-  }
-}
-
-// ─── FRAGE LADEN ───
-function loadQuestion(qIndex) {
-  if(!quiz.questions || qIndex >= quiz.questions.length) return;
-  quiz.currentQ = qIndex;
-  quiz.answered = false;
-  clearInterval(quiz.timerInterval);
-
-  const q = quiz.questions[qIndex];
-  showQuizScreen('question');
-
-  // Header
-  const qNum = document.getElementById('quiz-q-number');
-  if(qNum) qNum.textContent = 'Frage ' + (qIndex+1) + ' / ' + QUIZ_QUESTIONS_PER_GAME;
-
-  const catEl = document.getElementById('quiz-q-cat');
-  // find category
-  const cat = Object.keys(QUIZ_DATA).find(c => QUIZ_DATA[c].includes(q)) || '';
-  if(catEl) catEl.textContent = cat;
-
-  // Question text
-  const qText = document.getElementById('quiz-question-text');
-  if(qText) qText.textContent = q.q;
-
-  // Answers
-  const grid = document.getElementById('quiz-answers-grid');
-  if(grid) {
-    grid.innerHTML = '';
-    q.a.forEach((ans, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'quiz-answer-btn';
-      btn.textContent = ans;
-      btn.onclick = () => submitAnswer(i);
-      grid.appendChild(btn);
-    });
-  }
-
-  // Timer
-  let timeLeft = QUIZ_ANSWER_SECONDS;
-  updateTimer(timeLeft);
-  quiz.timerInterval = setInterval(() => {
-    timeLeft--;
-    updateTimer(timeLeft);
-    if(timeLeft <= 0) {
-      clearInterval(quiz.timerInterval);
-      if(!quiz.answered) {
-        quiz.answered = true;
-        revealAnswers(-1, q.correct); // -1 = Zeit abgelaufen
-        if(quiz.isHost) hostAdvanceAfterDelay();
-      }
-    }
-  }, 1000);
-}
-
-function updateTimer(t) {
-  const el = document.getElementById('quiz-timer');
-  if(el) {
-    el.textContent = t;
-    el.style.color = t <= 5 ? '#ff2d78' : t <= 10 ? '#e8b400' : '#fff';
-  }
-  // SVG ring
-  const ring = document.getElementById('quiz-timer-ring');
-  if(ring) {
-    const circ = 2 * Math.PI * 34;
-    const pct = t / QUIZ_ANSWER_SECONDS;
-    ring.style.strokeDashoffset = circ * (1 - pct);
-  }
-}
-
-// ─── ANTWORT ABGEBEN ───
-async function submitAnswer(chosen) {
-  if(quiz.answered) return;
-  quiz.answered = true; // sofort setzen – verhindert jeden Doppel-Aufruf
-  clearInterval(quiz.timerInterval);
-
-  const q = quiz.questions[quiz.currentQ];
-  const isCorrect = chosen === q.correct;
-  const elapsed = QUIZ_ANSWER_SECONDS - (parseInt(document.getElementById('quiz-timer')?.textContent || '0'));
-  const points = isCorrect ? Math.max(100, Math.round(QUIZ_MAX_POINTS * (1 - elapsed / QUIZ_ANSWER_SECONDS))) : 0;
-  quiz.myScore += points;
-
-  revealAnswers(chosen, q.correct);
-
-  // In DB speichern
-  try {
-    await sb.from('quiz_answers').upsert({
-      session_id: quiz.sessionId,
-      room_id: ROOM_ID,
-      user_name: state.currentUser.name,
-      user_emoji: state.currentUser.emoji,
-      question_index: quiz.currentQ,
-      answer_index: chosen,
-      is_correct: isCorrect,
-      points: points,
-    }, { onConflict: 'session_id,user_name,question_index', ignoreDuplicates: true });
-  } catch(e) {
-    if(e.code === '23505' || (e.message && e.message.includes('conflict'))) {
-      console.log('Antwort bereits gespeichert (OK)');
-    } else {
-      console.warn('Answer save:', e);
-    }
-  }
-
-  // Host: nach kurzer Pause prüfen ob alle geantwortet haben
-  if(quiz.isHost) hostAdvanceAfterDelay();
-}
-
-function revealAnswers(chosen, correct) {
-  const btns = document.querySelectorAll('.quiz-answer-btn');
-  btns.forEach((btn, i) => {
-    btn.disabled = true;
-    if(i === correct) btn.classList.add('correct');
-    else if(i === chosen && chosen !== correct) btn.classList.add('wrong');
-    else btn.classList.add('dim');
+  let crewAlc = 0, crewWater = 0;
+  const perUser = [];
+  Object.entries(state.drinks||{}).forEach(([uid, u]) => {
+    const dd = (u.days && u.days[day]) || {};
+    const alc = (dd.bier||0)+(dd.cocktail||0)+(dd.shot||0);
+    const wat = (dd.wasser||0);
+    crewAlc += alc; crewWater += wat;
+    if(alc>0 || wat>0) perUser.push({ name:u.name, emoji:u.emoji, alc, wat, isMe: me && uid===me.id });
   });
 
-  // Feedback
-  const fb = document.getElementById('quiz-feedback');
-  if(fb) {
-    if(chosen === -1) { fb.textContent = '⏰ Zeit abgelaufen!'; fb.className = 'quiz-feedback wrong'; }
-    else if(chosen === correct) { fb.textContent = '✅ Richtig!'; fb.className = 'quiz-feedback correct'; }
-    else { fb.textContent = '❌ Falsch!'; fb.className = 'quiz-feedback wrong'; }
-    fb.style.display = 'block';
+  let mine = { bier:0, cocktail:0, shot:0, wasser:0 };
+  if(me && state.drinks[me.id] && state.drinks[me.id].days[day]) mine = Object.assign(mine, state.drinks[me.id].days[day]);
+  const myAlc = mine.bier+mine.cocktail+mine.shot;
+
+  const pct = Math.min(myAlc/DRINK_FILL_TARGET, 1);
+  const top = 124 - 104*pct;
+  liq.setAttribute('y', top.toFixed(1));
+  liq.setAttribute('height', (124-top).toFixed(1));
+  liq.setAttribute('fill', DRINK_COLORS[state.selDrink] || '#ffb300');
+
+  const tot = document.getElementById('drink-my-total'); if(tot) tot.textContent = myAlc;
+  const brk = document.getElementById('drink-my-break'); if(brk) brk.textContent = '🍺 '+mine.bier+' · 🍹 '+mine.cocktail+' · 🥃 '+mine.shot+' · 💧 '+mine.wasser;
+  const ct = document.getElementById('drink-crew-total'); if(ct) ct.textContent = crewAlc;
+  const cw = document.getElementById('drink-crew-water'); if(cw) cw.textContent = crewWater;
+
+  document.querySelectorAll('.drink-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === state.selDrink));
+
+  const cl = document.getElementById('drink-crew-list');
+  if(cl){
+    perUser.sort((a,b)=>b.alc-a.alc);
+    cl.innerHTML = perUser.length
+      ? perUser.map(u=>'<div class="drink-chip'+(u.isMe?' me':'')+'">'+u.emoji+' '+escHtml(u.name)+' <b>'+u.alc+'</b>'+(u.wat?' <span class="dw">💧'+u.wat+'</span>':'')+'</div>').join('')
+      : '<div class="drink-empty">Heute noch nichts eingetragen.</div>';
+  }
+
+  const days = {};
+  Object.values(state.drinks||{}).forEach(u => {
+    Object.entries(u.days||{}).forEach(([k,v]) => { days[k] = (days[k]||0) + ((v.bier||0)+(v.cocktail||0)+(v.shot||0)); });
+  });
+  const keys = Object.keys(days).sort();
+  const dh = document.getElementById('drink-day-history');
+  if(dh){
+    dh.innerHTML = keys.length
+      ? keys.map(k=>'<div class="drink-day-row'+(k===day?' today':'')+'"><span>'+drinkDayLabel(k)+'</span><b>'+days[k]+'</b></div>').join('')
+      : '<div class="drink-empty">Noch keine Tage erfasst.</div>';
   }
 }
-
-// ─── HOST: WEITER ZUR NÄCHSTEN FRAGE ───
-async function hostAdvanceAfterDelay() {
-  // Warte 3s damit alle das Ergebnis sehen, dann DB updaten
-  setTimeout(async () => {
-    if(!quiz.isHost || !quiz.sessionId) return;
-    const nextQ = quiz.currentQ + 1;
-    if(nextQ >= QUIZ_QUESTIONS_PER_GAME) {
-      // Letztes Frage → Quiz beenden
-      try {
-        await sb.from('quiz_sessions').update({
-          status: 'finished',
-          current_question: nextQ,
-        }).eq('id', quiz.sessionId);
-      } catch(e) { console.error('Finish error:', e); }
-    } else {
-      // Nächste Frage
-      try {
-        await sb.from('quiz_sessions').update({
-          current_question: nextQ,
-        }).eq('id', quiz.sessionId);
-      } catch(e) { console.error('Advance error:', e); }
-    }
-  }, 3000);
-}
-
-// ─── REALTIME SUBSCRIPTION ───
-function subscribeQuiz() {
-  if(quiz.sub) { quiz.sub.unsubscribe(); quiz.sub = null; }
-
-  quiz.sub = sb.channel('quiz-' + quiz.sessionId)
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'quiz_sessions',
-      filter: 'id=eq.' + quiz.sessionId,
-    }, (payload) => {
-      const row = payload.new;
-      if(!row) return;
-
-      console.log('📡 Quiz Realtime:', row.status, 'Q:', row.current_question);
-
-      // Spieler-Updates im Warteraum
-      if(row.status === 'waiting') {
-        renderWaitingPlayers(JSON.parse(row.players || '[]'));
-        return;
-      }
-
-      // Quiz gestartet oder nächste Frage
-      if(row.status === 'active') {
-        const newQ = row.current_question;
-        if(newQ !== quiz.currentQ || quiz.status !== 'active') {
-          quiz.status = 'active';
-          loadQuestion(newQ);
-        }
-        return;
-      }
-
-      // Quiz beendet
-      if(row.status === 'finished') {
-        clearInterval(quiz.timerInterval);
-        quiz.status = 'finished';
-        showFinalRanking();
-      }
-    })
-    .subscribe();
-}
-
-// ─── FINAL RANKING ───
-async function showFinalRanking() {
-  showQuizScreen('ranking');
-  clearInterval(quiz.timerInterval);
-
-  const listEl = document.getElementById('quiz-final-list');
-  if(!listEl) return;
-  listEl.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5">⏳ Lade...</div>';
-
-  try {
-    const { data } = await sb.from('quiz_answers')
-      .select('user_name,user_emoji,points,is_correct')
-      .eq('session_id', quiz.sessionId);
-
-    const scores = {};
-    (data||[]).forEach(a => {
-      if(!scores[a.user_name]) scores[a.user_name] = {name:a.user_name, emoji:a.user_emoji, pts:0, correct:0};
-      scores[a.user_name].pts += a.points;
-      if(a.is_correct) scores[a.user_name].correct++;
-    });
-    const sorted = Object.values(scores).sort((a,b) => b.pts - a.pts);
-    const medals = ['🥇','🥈','🥉'];
-
-    listEl.innerHTML = '';
-    sorted.forEach((e, i) => {
-      const isMe = state.currentUser && e.name === state.currentUser.name;
-      const row = document.createElement('div');
-      row.className = 'quiz-rank-row' + (isMe ? ' me' : '');
-      row.innerHTML = '<div class="quiz-rank-medal">' + (i<3?medals[i]:i+1) + '</div>'
-        + '<div style="font-size:22px">' + e.emoji + '</div>'
-        + '<div class="quiz-rank-info"><div class="quiz-rank-name">' + escHtml(e.name) + (isMe?' 👈':'') + '</div>'
-        + '<div class="quiz-rank-detail">✅ ' + e.correct + ' / ' + QUIZ_QUESTIONS_PER_GAME + '</div></div>'
-        + '<div class="quiz-rank-score">' + e.pts + '</div>';
-      listEl.appendChild(row);
-    });
-  } catch(e) {
-    listEl.innerHTML = '<div style="text-align:center;padding:20px;opacity:0.5">Fehler beim Laden</div>';
-  }
-}
-
-// ─── QUIZ ZURÜCKSETZEN ───
-function resetQuiz() {
-  clearInterval(quiz.timerInterval);
-  if(quiz.sub) { quiz.sub.unsubscribe(); quiz.sub = null; }
-  quiz = {
-    sessionId: null, isHost: false, status: 'idle',
-    currentQ: -1, questions: [], answered: false,
-    myScore: 0, timerInterval: null, sub: null,
-  };
-  showQuizScreen('lobby');
-}
-
-// ─── AUTO-CHECK für aktive Sessions beim Tab-Öffnen ───
-// checkActiveQuizSession entfernt - nicht mehr nötig
-
 
 // ============================================================
 // HASHTAG SYSTEM
