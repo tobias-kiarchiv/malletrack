@@ -656,6 +656,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .drink-over-note{display:none;text-align:center;font-size:12px;color:#ff7a7a;background:rgba(255,59,59,0.08);border:1px solid rgba(255,59,59,0.22);border-radius:11px;padding:8px 10px;margin-bottom:12px}
 #spectator-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,229,255,0.16);border-bottom:1px solid rgba(0,229,255,0.4);color:#bdf3ff;text-align:center;font-size:12px;font-weight:600;padding:7px 10px;backdrop-filter:blur(6px)}
 body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;pointer-events:none}
+.roulette-answer-btn{width:100%;margin-top:10px;padding:12px;border-radius:13px;border:1px solid rgba(255,214,0,0.3);background:rgba(255,214,0,0.06);color:var(--neon-gold);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;text-align:left}
+.roulette-answer-btn.open{background:rgba(255,214,0,0.14);border-color:var(--neon-gold)}
+.roulette-answer-btn:active{transform:scale(0.98)}
 </style>
 </head>
 <body>
@@ -890,6 +893,7 @@ body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;point
             <canvas id="wheel-canvas" width="220" height="220"></canvas>
           </div>
           <div class="wheel-result" id="wheel-result">Kategorie wählen & drehen!</div>
+          <button class="roulette-answer-btn" id="roulette-answer" style="display:none" onclick="this.classList.toggle('open');this.textContent=this.classList.contains('open')?'✅ '+this.dataset.answer:'💡 Antwort anzeigen'">💡 Antwort anzeigen</button>
           <button class="btn-roulette" onclick="spinWheel()">🎰 DREHEN!</button>
         </div>
 
@@ -2478,23 +2482,6 @@ setInterval(updateMainCountdown, 1000);
 // ROULETTE
 // ============================================================
 const ROULETTE_CATEGORIES = {
-  'Trinken 🍺': [
-    'Wer trinkt den nächsten Shot?',
-    'Alle trinken – prost!',
-    'Zwei Finger trinken',
-    'Gib deinen Drink weiter',
-    'Du zahlst die nächste Runde',
-    'Waterfall – alle trinken bis du aufhörst',
-    'Niemals habe ich... – wer lügt trinkt',
-    'Mixe einen Drink für jemanden',
-    'Trinke auf ex!',
-    'Wähle jemanden der trinken muss',
-    'Alle mit Bart trinken',
-    'Alle mit Sonnenbrille trinken',
-    'Letzte Person die trinkt zahlt',
-    'Stille Post – wer Fehler macht trinkt',
-    'Schere-Stein-Papier – Verlierer trinkt',
-  ],
   'Challenges 🎯': [
     'Mache 10 Liegestütze',
     'Tanze 30 Sek solo auf der Tanzfläche',
@@ -2512,23 +2499,6 @@ const ROULETTE_CATEGORIES = {
     'Gehe rückwärts zum nächsten Platz',
     '10 Kniebeugen vor allen anderen',
   ],
-  'Wer von uns...? 👀': [
-    'Wer ist zuerst eingeschlafen?',
-    'Wer hat am meisten Geld ausgegeben?',
-    'Wer hat am lautesten geschnarcht?',
-    'Wer würde als Erstes aufgeben?',
-    'Wer ist am besten angezogen?',
-    'Wer wäre der schlechteste Fahrer?',
-    'Wer ist das Gruppengewissen?',
-    'Wer hat die meisten Fotos gemacht?',
-    'Wer würde auf einer Insel zuletzt überleben?',
-    'Wer ist am wildesten in der Gruppe?',
-    'Wer schläft am längsten?',
-    'Wer ist am meisten verliebt?',
-    'Wer tanzt am besten?',
-    'Wer wäre der beste Bartender?',
-    'Wer würde sich am schnellsten verirren?',
-  ],
   'Malle-Spezial 🌴': [
     'Gruppen-Selfie sofort!',
     'Nächsten Club per Abstimmung wählen',
@@ -2545,23 +2515,6 @@ const ROULETTE_CATEGORIES = {
     'Jeder ruft einen Kontakt daheim an',
     'Nächste Runde geht auf den Jüngsten',
     'Gruppenregel für 30 Min wählen',
-  ],
-  'Wahrheit oder Pflicht 🔥': [
-    'Wahrheit: Was war dein peinlichster Moment?',
-    'Pflicht: Tanze 1 Min alleine in der Mitte',
-    'Wahrheit: In wen warst du zuletzt verliebt?',
-    'Pflicht: Schreibe jemandem eine romantische Nachricht',
-    'Wahrheit: Was ist dein größtes Geheimnis?',
-    'Pflicht: Mache 3 Komplimente an Fremde',
-    'Wahrheit: Was denkst du wirklich über X?',
-    'Pflicht: Singe die nächste Minute laut mit',
-    'Wahrheit: Dein schlimmster Date-Fail?',
-    'Pflicht: Tausche Schuhe mit jemandem für 10 Min',
-    'Wahrheit: Was würdest du anders machen?',
-    'Pflicht: Bitte einen Fremden um seinen besten Witz',
-    'Wahrheit: Dein größter Urlaubs-Fehler?',
-    'Pflicht: Tu so als wärst du ein Hund für 1 Min',
-    'Wahrheit: Wen hier findest du am lustigsten?',
   ],
   'Abstimmung 🗳️': [
     'Wer gewinnt in einem Sing-Off?',
@@ -2581,36 +2534,129 @@ const ROULETTE_CATEGORIES = {
     'Wer würde als Erstes Millionär?',
   ],
   'Fußball ⚽': [
-    'Nenne die 3 Spieler mit den meisten Länderspielen für Deutschland',
-    'Nenne die 3 besten Torschützen der DFB-Geschichte',
-    'In welchen Jahren wurde Deutschland Weltmeister? Nenne alle',
-    'Wer war Kapitän beim WM-Titel 2014?',
-    'Nenne 3 Spieler aus dem WM-Finale 2014',
-    'Wer schoss das Siegtor im WM-Finale 2014?',
-    'Nenne die 3 deutschen Rekordmeister... äh, nenne die 3 Bundesliga-Vereine mit den meisten Meistertiteln',
-    'Wer ist Bundesliga-Rekordtorschütze aller Zeiten?',
-    'Nenne 3 Jahre, in denen Bayern die Champions League gewann',
-    'Nenne die 3 Länder mit den meisten WM-Titeln',
-    'Nenne die 3 besten Torschützen der WM-Geschichte',
-    'Wer gewann den Ballon d\'Or am häufigsten? Top 2',
-    'Nenne die Sieger der letzten 3 Weltmeisterschaften',
-    'Nenne 5 Bundesliga-Vereine in 30 Sekunden – sonst Shot',
-    'Jeder nennt reihum einen Nationalspieler – wer stockt, trinkt',
-    'Nenne die 3 teuersten Transfers aller Zeiten',
-    'Nenne 3 Spieler mit den meisten Champions-League-Toren',
-    'Welcher Spieler gewann die meisten Champions-League-Titel? Schätzt die Zahl',
-    'Nenne 3 deutsche Europameister-Jahre',
-    'Diskutiert: Messi oder Ronaldo – wer die schwächere Begründung hat, trinkt',
-    'Nenne 3 aktuelle Bundesliga-Trainer',
-    'Nenne 3 Stadien der Bundesliga',
-    'Wer von euch ist der größte Fußball-Experte? Abstimmung – Letzter trinkt',
-    'Nenne 3 Welttorhüter der letzten 20 Jahre',
-    'Nenne die Startelf deines Lieblingsvereins – pro Lücke ein Schluck',
-    'Singe eine Vereinshymne – alle anderen entscheiden ob es zählt',
-    'Nenne 3 Spieler, die für Bayern UND Dortmund gespielt haben',
-    'Wer von euch wäre der schlechteste Schiedsrichter? Abstimmung',
-    'Nenne 3 WM-Gastgeberländer der letzten 30 Jahre',
-    'Errate das Trikot: jemand beschreibt einen Verein nur mit Farben, Rest rät',
+    'Nenne die 3 Spieler mit den meisten Länderspielen für Deutschland || Lothar Matthäus (150), Miroslav Klose (137), Lukas Podolski (130)',
+    'Nenne die 3 besten Torschützen der deutschen Nationalmannschaft || Miroslav Klose (71), Gerd Müller (68), Lukas Podolski (49)',
+    'In welchen Jahren wurde Deutschland Weltmeister? || 1954, 1974, 1990, 2014',
+    'In welchen Jahren wurde Deutschland Europameister? || 1972, 1980, 1996',
+    'Wer war Kapitän beim deutschen WM-Titel 2014? || Philipp Lahm',
+    'Wer schoss das Siegtor im WM-Finale 2014? || Mario Götze (113. Minute, Verlängerung)',
+    'Gegen welches Land spielte Deutschland im WM-Finale 2014? || Argentinien',
+    'Wie hieß der Bundestrainer beim WM-Titel 2014? || Joachim Löw',
+    'In welcher Stadt fand das WM-Finale 2014 statt? || Rio de Janeiro (Maracanã)',
+    'Wie endete das WM-Halbfinale Deutschland gegen Brasilien 2014? || 7:1 für Deutschland',
+    'Nenne 2 deutsche Torschützen aus dem 7:1 gegen Brasilien 2014 || Thomas Müller (3), Toni Kroos (2), Sami Khedira, Miroslav Klose, André Schürrle (2)',
+    'Wer war Torwart der deutschen Nationalmannschaft bei der WM 2014? || Manuel Neuer',
+    'Wer war Kapitän beim deutschen WM-Titel 1990? || Lothar Matthäus',
+    'Wer schoss das Siegtor im WM-Finale 1990? || Andreas Brehme (Elfmeter, 85. Minute)',
+    'Gegen welches Land spielte Deutschland im WM-Finale 1990? || Argentinien',
+    'Nenne 3 Spieler des deutschen WM-Kaders 1990 || Lothar Matthäus, Andreas Brehme, Jürgen Klinsmann, Rudi Völler, Thomas Häßler',
+    'Gegen wen gewann Deutschland das WM-Finale 1954? || Ungarn (3:2) – das Wunder von Bern',
+    'Wie hieß der Bundestrainer beim Wunder von Bern 1954? || Sepp Herberger',
+    'Wer war Welttorhüter bei der WM 2014? || Manuel Neuer (Goldener Handschuh)',
+    'Welcher Deutsche erzielte die meisten Tore bei einer einzigen WM? || Gerd Müller (10 Tore, 1970) – auch Thomas Müller mit 5 je WM',
+    'Nenne die 3 Länder mit den meisten WM-Titeln || Brasilien (5), Deutschland & Italien (je 4), Argentinien & Frankreich (je 3)',
+    'Wer hält den Rekord für die meisten WM-Tore insgesamt? || Miroslav Klose (16 Tore)',
+    'Welches Land gewann die WM 2022? || Argentinien',
+    'Welches Land gewann die WM 2018? || Frankreich',
+    'Welches Land gewann die WM 2010? || Spanien',
+    'Welches Land gewann die WM 2006? || Italien',
+    'In welchem Land fand die WM 2006 statt? || Deutschland',
+    'Wer wurde 2022 WM-Torschützenkönig? || Kylian Mbappé (8 Tore)',
+    'Wer wurde 2018 WM-Torschützenkönig? || Harry Kane (6 Tore)',
+    'Welches Land gewann die erste Fußball-WM 1930? || Uruguay',
+    'In welchen Ländern findet die WM 2026 statt? || USA, Kanada und Mexiko',
+    'Wer gewann die WM 1958 und 1970? || Brasilien',
+    'Nenne 3 Länder, die schon WM-Gastgeber waren || Deutschland (1974, 2006), Brasilien, Frankreich, Russland, Katar',
+    'Welches Land gewann die EM 2024? || Spanien',
+    'In welchem Land fand die EM 2024 statt? || Deutschland',
+    'Welches Land gewann die EM 2021? || Italien',
+    'Welches Land gewann die EM 2016? || Portugal',
+    'Welches Land gewann die EM 2012? || Spanien',
+    'Welches Land gewann die EM 2008? || Spanien',
+    'Nenne die 3 Länder mit den meisten EM-Titeln || Deutschland & Spanien (je 3), Frankreich & Italien (je 2)',
+    'Nenne 3 Vereine mit den meisten deutschen Meistertiteln || Bayern München (~34), Borussia Dortmund (8), Borussia Mönchengladbach (5)',
+    'Wer ist Bundesliga-Rekordtorschütze aller Zeiten? || Gerd Müller (365 Tore in 427 Spielen)',
+    'Welcher Verein hat die meisten Bundesliga-Titel? || FC Bayern München',
+    'Wer hält den Rekord für die meisten Tore in einer Bundesliga-Saison? || Robert Lewandowski (41 Tore, Saison 2020/21)',
+    'Nenne 3 Bundesliga-Stadien || Allianz Arena (München), Signal Iduna Park (Dortmund), Volksparkstadion (Hamburg)',
+    'Welcher Verein spielt im Signal Iduna Park? || Borussia Dortmund',
+    'Welcher Verein spielt in der Allianz Arena? || FC Bayern München',
+    'Welcher Verein spielt in der Veltins-Arena? || FC Schalke 04',
+    'Wie viele Zuschauer fasst der Signal Iduna Park ungefähr? || ca. 81.365 (größtes Stadion Deutschlands)',
+    'In welchem Jahr wurde die Bundesliga gegründet? || 1963',
+    'Wer wurde 1963/64 erster Bundesliga-Meister? || 1. FC Köln',
+    'Welcher Verein wird die Werkself genannt? || Bayer Leverkusen',
+    'Welcher Verein wird die Fohlen genannt? || Borussia Mönchengladbach',
+    'Wofür steht die Abkürzung BVB? || Ballspielverein Borussia 09 e.V. Dortmund',
+    'Nenne 3 Spieler, die für Bayern und für Dortmund gespielt haben || Robert Lewandowski, Mario Götze, Mats Hummels',
+    'Wer war Trainer beim Triple des FC Bayern 2013? || Jupp Heynckes',
+    'Nenne 3 Bundesliga-Vereine aus dem Ruhrgebiet || Borussia Dortmund, FC Schalke 04, VfL Bochum',
+    'Welcher Verein hat die meisten Champions-League-Titel? || Real Madrid (15, Stand 2024)',
+    'Nenne 3 Jahre, in denen der FC Bayern die Champions League gewann || 1974, 1975, 1976, 2001, 2013, 2020',
+    'Nenne 3 deutsche Vereine, die die Champions League gewannen || FC Bayern München, Borussia Dortmund, Hamburger SV (Europapokal der Landesmeister 1983)',
+    'Wer ist Rekordtorschütze der Champions League? || Cristiano Ronaldo (140+ Tore, Stand 2024)',
+    'In welchem Stadion fand das rein deutsche CL-Finale 2013 statt? || Wembley-Stadion, London',
+    'Welche zwei deutschen Vereine standen 2013 im Champions-League-Finale? || FC Bayern München und Borussia Dortmund',
+    'Welcher deutsche Verein gewann 1997 die Champions League? || Borussia Dortmund',
+    'Welcher Verein gewann 1956 den ersten Europapokal der Landesmeister? || Real Madrid',
+    'Wie viele Champions-League-Titel hat Real Madrid (Stand 2024)? || 15 Titel',
+    'Wer gewann am häufigsten den Ballon d\'Or? || Lionel Messi (8 Titel, Stand 2024)',
+    'Welcher Spieler gewann 2022 den Ballon d\'Or? || Karim Benzema',
+    'Welcher Spieler gewann 2023 den Ballon d\'Or? || Lionel Messi',
+    'Nenne die 3 teuersten Transfers der Fußballgeschichte || Neymar (222 Mio. € zu PSG, 2017), Kylian Mbappé, Joao Félix, Jack Grealish',
+    'Bei welchem Verein begann Lionel Messi seine Profikarriere? || FC Barcelona',
+    'Welcher Verein verkaufte Cristiano Ronaldo 2009 an Real Madrid? || Manchester United (für ~94 Mio. €, damals Rekord)',
+    'Nenne 3 Vereine, für die Cristiano Ronaldo spielte || Sporting Lissabon, Manchester United, Real Madrid, Juventus Turin, Al-Nassr',
+    'Für welchen italienischen Verein wurde Diego Maradona zur Legende? || SSC Neapel',
+    'Wie heißt das Stadion des FC Barcelona? || Spotify Camp Nou',
+    'Wie heißt das renovierte Stadion von Real Madrid? || Estadio Santiago Bernabéu',
+    'In welcher Liga spielt Juventus Turin? || Serie A (Italien)',
+    'In welcher Liga spielt Paris Saint-Germain? || Ligue 1 (Frankreich)',
+    'Nenne 3 Vereine aus der englischen Premier League || Manchester City, Arsenal, Liverpool, Chelsea, Tottenham',
+    'Nenne 3 Vereine aus der spanischen La Liga || Real Madrid, FC Barcelona, Atlético Madrid',
+    'Nenne 3 Vereine aus der italienischen Serie A || Juventus Turin, Inter Mailand, AC Mailand',
+    'Nenne 3 Vereine aus der französischen Ligue 1 || Paris Saint-Germain, Olympique Marseille, Olympique Lyon',
+    'Welcher englische Verein gewann 2005 die CL im Elfmeterschießen nach 3:3? || FC Liverpool (gegen AC Mailand) – das Wunder von Istanbul',
+    'Wer war Weltfußballer 2023 (FIFA Best)? || Lionel Messi',
+    'Nenne 3 Torhüter, die je zum Welttorhüter gewählt wurden || Manuel Neuer, Gianluigi Buffon, Oliver Kahn, Iker Casillas',
+    'Wie viele Spieler stehen pro Mannschaft auf dem Feld? || 11 Spieler',
+    'Wie lange dauert ein reguläres Fußballspiel? || 90 Minuten (2 × 45)',
+    'Wie viele Auswechslungen sind pro Team aktuell erlaubt? || 5 Auswechslungen',
+    'Was ist ein Hattrick? || 3 Tore eines Spielers in einem Spiel',
+    'Was ist ein Doppelpack? || 2 Tore eines Spielers in einem Spiel',
+    'Was bedeutet VAR? || Video Assistant Referee (Videoschiedsrichter)',
+    'Wie viele Punkte gibt es in der Liga für einen Sieg? || 3 Punkte',
+    'Wie viele Spiele hat eine Bundesliga-Saison pro Verein? || 34 Spiele',
+    'Wie viele Vereine spielen in der Bundesliga? || 18 Vereine',
+    'Welcher Spieler wird CR7 genannt? || Cristiano Ronaldo (Cristiano Ronaldo Nr. 7)',
+    'Welcher Spieler wird La Pulga (der Floh) genannt? || Lionel Messi',
+    'Welcher Spieler wird El Pibe de Oro (der goldene Junge) genannt? || Diego Maradona',
+    'Wer gewann 2014 den Ballon d\'Or? || Cristiano Ronaldo',
+    'In welcher Stadt steht das Wembley-Stadion? || London',
+    'Wer ist Rekordtorschütze der englischen Premier League? || Alan Shearer (260 Tore)',
+    'Wie heißt die südamerikanische Champions-League? || Copa Libertadores',
+    'Nenne 3 Spieler, die für ihre Nation über 100 Tore erzielten || Cristiano Ronaldo (130+), Lionel Messi (106+), Romelu Lukaku',
+    'Welcher Spieler erzielte die meisten Länderspieltore aller Zeiten? || Cristiano Ronaldo (130+, Stand 2024)',
+    'Was bedeutet die Abkürzung UEFA? || Union of European Football Associations',
+    'Was bedeutet die Abkürzung FIFA? || Fédération Internationale de Football Association',
+    'In welchem Land wurde Fußball erfunden? || England (Regeln von 1863)',
+    'Welcher deutsche Klub gewann 2022 die UEFA Europa League? || Eintracht Frankfurt',
+    'Welcher Spieler erzielte 1986 das Tor des Jahrhunderts? || Diego Maradona (vs. England, WM 1986)',
+    'Wie viele Tore schoss Gerd Müller bei der WM 1970? || 10 Tore (Torschützenkönig)',
+    'Welche Nation schied bei der WM 2018 als Titelverteidiger früh aus? || Deutschland (Gruppenphase, Platz 4)',
+    'Wer war Europas Torschützenkönig (Goldener Schuh) am häufigsten? || Cristiano Ronaldo und Lionel Messi (je 4 Mal)',
+    'Wie heißt der DFB-Pokal-Rekordsieger? || FC Bayern München',
+    'Wer trug bei der WM 2006 das Trikot Nr. 1 für Deutschland? || Jens Lehmann',
+    'Wer schoss beim Sommermärchen 2006 das Tor des Turniers gegen Costa Rica? || Philipp Lahm (1:0 im Eröffnungsspiel)',
+    'In welchem Jahr gewann Bayern München den Triple (Bundesliga, DFB-Pokal, CL)? || 2013 und 2020',
+    'Welcher Spieler hält den Rekord für die meisten Tore in Bundesliga-Spielen in einer Saison? || Robert Lewandowski (41, 2020/21)',
+    'Nenne 3 aktuelle oder ehemalige Nationalspieler mit über 100 Länderspielen für Deutschland || Lothar Matthäus (150), Miroslav Klose (137), Lukas Podolski (130), Bastian Schweinsteiger (121)',
+    'Was ist ein Freistoß? || Wenn eine Mannschaft ein Foul begeht, bekommt die andere Mannschaft einen ruhenden Ball an der Foulstelle',
+    'Was ist ein Elfmeter? || Freistoß aus 11 Metern, im 1-gegen-1 mit dem Torwart, nach Foul im Strafraum',
+    'Was ist der Unterschied zwischen direktem und indirektem Freistoß? || Direkt: Tor kann direkt erzielt werden. Indirekt: mindestens ein weiterer Spieler muss den Ball berühren',
+    'Nenne 3 Spieler, die bei einer WM die Torjägerkanone gewannen || Gerd Müller (1970), Ronaldo (2002), Thomas Müller (2010), Klose (2006), Mbappé (2022)',
+    'Welcher Verein gewann 2023 die Champions League? || Manchester City',
+    'Welcher Verein gewann 2024 die Champions League? || Real Madrid',
   ],
 };
 let rouletteCategory = 'Trinken 🍺';
@@ -2664,7 +2710,8 @@ function drawWheel() {
     ctx.font = 'bold 9px Space Grotesk, sans-serif';
     ctx.shadowColor = 'rgba(0,0,0,0.7)';
     ctx.shadowBlur = 3;
-    const short = item.length > 14 ? item.substring(0,13)+'…' : item;
+    const label = typeof item === 'string' && item.indexOf(' || ') !== -1 ? item.substring(0, item.indexOf(' || ')) : item;
+    const short = label.length > 14 ? label.substring(0,13)+'…' : label;
     ctx.fillText(short, 98, 3);
     ctx.restore();
   });
@@ -2704,10 +2751,18 @@ function spinWheel() {
     const normalizedAngle = ((360 - (wheelAngle % 360)) + 90) % 360;
     const winnerIdx = Math.floor(normalizedAngle / arc) % items.length;
     const result = items[winnerIdx];
-    document.getElementById('wheel-result').textContent = '👉 ' + result;
-    showToast('🎰 ' + result);
-    // Save to chat
-    if (state.currentUser) sendSpecialMessage('🎰 Roulette-Ergebnis: ' + result);
+    const isFootball = rouletteCategory === 'Fußball ⚽';
+    const sep = result.indexOf(' || ');
+    const question = isFootball && sep !== -1 ? result.substring(0, sep) : result;
+    const answer   = isFootball && sep !== -1 ? result.substring(sep + 4) : null;
+    document.getElementById('wheel-result').textContent = '👉 ' + question;
+    const ra = document.getElementById('roulette-answer');
+    if(ra){
+      if(answer){ ra.dataset.answer = answer; ra.textContent = '💡 Antwort anzeigen'; ra.classList.remove('open'); ra.style.display='block'; }
+      else { ra.style.display='none'; }
+    }
+    showToast('🎰 ' + question);
+    if (state.currentUser) sendSpecialMessage('🎰 Roulette-Ergebnis: ' + question);
   }
   requestAnimationFrame(animate);
 }
