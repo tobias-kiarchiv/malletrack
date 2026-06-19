@@ -1358,8 +1358,12 @@ function checkRoomCode() {
   loginState.isAdmin = isAdmin;
 
   setTimeout(() => {
+    loginState.spectatorMode = false;
     document.getElementById('login-step-1').style.display = 'none';
     document.getElementById('login-step-2').style.display = 'block';
+    document.getElementById('login-step2-btn').style.display = 'block';
+    document.getElementById('login-spectator-btn').style.display = 'none';
+    const t2 = document.querySelector('#login-step-2 .login-title'); if(t2) t2.textContent = '🎭 Dein Profil';
     initLoginEmojis();
     setTimeout(() => document.getElementById('login-name-input').focus(), 300);
   }, 600);
@@ -1368,10 +1372,13 @@ function checkRoomCode() {
 // STEP 2 → 3
 function enterSpectatorFlow() {
   // Zuschauer überspringt Code-Check – direkt zu Step 2
+  loginState.spectatorMode = true;
   if (!document.getElementById('login-emoji-grid').children.length) initLoginEmojis();
   document.getElementById('login-step-1').style.display = 'none';
   document.getElementById('login-step-2').style.display = 'block';
+  document.getElementById('login-step2-btn').style.display = 'none';   // kein normaler Weg im Zuschauer-Flow
   document.getElementById('login-spectator-btn').style.display = 'block';
+  document.querySelector('#login-step-2 .login-title').textContent = '👀 Zuschauer-Profil';
   // Step-Dots als Hinweis
   document.getElementById('sd1b').className = 'step-dot done';
   document.getElementById('sd2b').className = 'step-dot active';
@@ -1392,6 +1399,7 @@ async function completeSpectatorRegistration() {
 }
 
 function goToStep3() {
+  if (loginState.spectatorMode) { completeSpectatorRegistration(); return; }
   const nameInput = document.getElementById('login-name-input');
   const name = nameInput.value.trim();
 
@@ -2709,13 +2717,14 @@ const ROULETTE_CATEGORIES = {
     'Welcher Verein gewann 2024 die Champions League? || Real Madrid',
   ],
 };
-let rouletteCategory = 'Trinken 🍺';
+let rouletteCategory = Object.keys(ROULETTE_CATEGORIES)[0];
 let wheelSpinning = false;
 let wheelAngle = 0;
 
 function initRoulette() {
   const cats = document.getElementById('roulette-cats');
   if (!cats) return;
+  if (!ROULETTE_CATEGORIES[rouletteCategory]) rouletteCategory = Object.keys(ROULETTE_CATEGORIES)[0];
   cats.innerHTML = '';
   Object.keys(ROULETTE_CATEGORIES).forEach(cat => {
     const btn = document.createElement('div');
@@ -3318,6 +3327,8 @@ async function doLogout(){
   localStorage.removeItem('malletrack_profile');
   localStorage.removeItem(LOGIN_STORAGE_KEY);
   state.currentUser=null;state.locationSharing=false;
+  document.body.classList.remove('spectator');
+  { const _sb = document.getElementById('spectator-banner'); if(_sb) _sb.style.display='none'; }
   closeModal('logout-modal');
   document.getElementById('header-emoji').textContent='🦁';
   document.getElementById('header-name').textContent='Profil';
@@ -4555,7 +4566,18 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(updateMainCountdown, 1000);
 
   // Session prüfen - eingeloggt? direkt rein, sonst Login-Screen zeigen
-  const hasSession = checkExistingSession();
+  // Zuschauer-Session wiederherstellen (kein Code-Login, nur Profil)
+  let _specResumed = false;
+  try {
+    const prof = JSON.parse(localStorage.getItem('malletrack_profile') || 'null');
+    if (prof && prof.isSpectator) {
+      state.currentUser = prof;
+      hideLockScreen(); updateHeaderChip(); applySpectatorUI();
+      init().catch(e => { console.error('Init error:', e); hideLockScreen(); });
+      _specResumed = true;
+    }
+  } catch(e) {}
+  const hasSession = !_specResumed && checkExistingSession();
   if (hasSession) {
     init().catch(e => {
       console.error('Init error:', e);
