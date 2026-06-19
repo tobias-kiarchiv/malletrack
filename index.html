@@ -1481,6 +1481,29 @@ window.addEventListener('visibilitychange', () => { if (document.hidden) updateL
 const SUPABASE_URL = 'https://umoinjlvdzcgiacmrkpl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtb2luamx2ZHpjZ2lhY21ya3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzODcyOTYsImV4cCI6MjA5NDk2MzI5Nn0.InNrzf9FQIxhz1Ns03MRYI711VFWbgctJ9tKpj_7afo';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// ── Zentrale Zuschauer-Sperre: blockiert ALLE schreibenden DB-Operationen ──
+(function(){
+  const origFrom = sb.from.bind(sb);
+  let _specToastT = 0;
+  function blockedQuery(){
+    const now = Date.now();
+    if(now - _specToastT > 1200){ _specToastT = now; if(typeof spectatorBlock==='function') spectatorBlock(); }
+    const p = Promise.resolve({ data:null, error:{ message:'spectator-readonly' } });
+    const chain = {
+      select(){ return chain; }, single(){ return p; }, maybeSingle(){ return p; },
+      eq(){ return chain; }, neq(){ return chain; }, order(){ return chain; }, limit(){ return chain; },
+      match(){ return chain; }, then(res,rej){ return p.then(res,rej); }, catch(f){ return p.catch(f); }, finally(f){ return p.finally(f); },
+    };
+    return chain;
+  }
+  sb.from = function(table){
+    const q = origFrom(table);
+    if(typeof state !== 'undefined' && state.currentUser && state.currentUser.isSpectator){
+      ['insert','update','upsert','delete'].forEach(m => { q[m] = blockedQuery; });
+    }
+    return q;
+  };
+})();
 const ROOM_ID = 'MALLE26';
 const SNAP_EXPIRY_HOURS = 24;
 
