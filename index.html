@@ -654,6 +654,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .drink-my-sub{position:absolute;top:64%;left:0;right:0;text-align:center;font-size:11px;color:var(--text-sec);letter-spacing:1px;pointer-events:none}
 .drink-testbanner{display:none;text-align:center;font-size:12px;color:var(--neon-cyan);background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.2);border-radius:11px;padding:8px 10px;margin-bottom:12px}
 .drink-over-note{display:none;text-align:center;font-size:12px;color:#ff7a7a;background:rgba(255,59,59,0.08);border:1px solid rgba(255,59,59,0.22);border-radius:11px;padding:8px 10px;margin-bottom:12px}
+#spectator-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,229,255,0.16);border-bottom:1px solid rgba(0,229,255,0.4);color:#bdf3ff;text-align:center;font-size:12px;font-weight:600;padding:7px 10px;backdrop-filter:blur(6px)}
+body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;pointer-events:none}
 </style>
 </head>
 <body>
@@ -1146,6 +1148,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="spectator-banner">👀 Zuschauer-Modus · du beobachtest nur, kannst aber nichts beitragen</div>
 
 <!-- PROFIL MODAL -->
 <div class="modal-backdrop" id="profile-modal" onclick="closeOnBackdrop(event,'profile-modal')">
@@ -1155,6 +1158,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="emoji-grid" id="emoji-grid"></div>
     <input type="text" class="name-input" id="profile-name-input" placeholder="Dein Name" maxlength="20">
     <button class="btn-primary" onclick="saveProfile()">✅ Speichern & Loslegen</button>
+    <button onclick="saveSpectatorProfile()" style="width:100%;margin-top:10px;padding:13px;border-radius:13px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-weight:600;cursor:pointer">👀 Nur zuschauen (nicht auf Tour)</button>
   </div>
 </div>
 
@@ -1529,6 +1533,7 @@ async function init() {
         const p = JSON.parse(oldProfile);
         state.currentUser = p;
         updateHeaderChip();
+        if(p && p.isSpectator) applySpectatorUI();
       } catch(e) {}
     }
   }
@@ -1974,6 +1979,7 @@ function toggleLocationSharing() {
   state.locationSharing?stopLocationSharing():startLocationSharing();
 }
 function startLocationSharing() {
+  if(!canContribute()) return spectatorBlock();
   if(!navigator.geolocation){showToast('❌ Geolocation nicht verfügbar');return;}
   navigator.geolocation.getCurrentPosition(async(pos)=>{
     state.currentLat=pos.coords.latitude; state.currentLng=pos.coords.longitude;
@@ -2022,6 +2028,7 @@ function updateSharingButton(active) {
 function openPinModal(){document.querySelectorAll('.pin-option').forEach(el=>el.classList.remove('selected'));state.selectedPinOption=null;document.getElementById('pin-modal').classList.add('open');}
 function selectPinOption(i){state.selectedPinOption=i;document.querySelectorAll('.pin-option').forEach((el,j)=>el.classList.toggle('selected',i===j));}
 async function confirmPin(){
+  if(!canContribute()) return spectatorBlock();
   if(state.selectedPinOption===null){showToast("⚠️ Bitte Treffpunkt auswählen");return;}
   const opt=PIN_OPTIONS[state.selectedPinOption];
   const {lat,lng}=state.pendingPin;
@@ -2196,6 +2203,7 @@ function renderChat() {
 }
 
 async function sendChatMessage() {
+  if(!canContribute()) return spectatorBlock();
   if(!state.currentUser){showToast('⚠️ Profil auswählen!');return;}
   const input=document.getElementById('chat-input');
   const text=input.value.trim(); if(!text)return;
@@ -2259,6 +2267,7 @@ function renderCrew() {
 }
 
 async function updateStatus(newStatus) {
+  if(!canContribute()) return spectatorBlock();
   if(!state.currentUser)return;
   await sb.from('statuses').upsert({room_id:ROOM_ID,user_id:state.currentUser.id,user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,status:newStatus,updated_at:new Date().toISOString()},{onConflict:'room_id,user_id'});
   showToast(`✅ Status: "${newStatus}"`);
@@ -2341,6 +2350,21 @@ async function saveProfile(){
   updateHeaderChip(); closeModal('profile-modal');
   showToast(`👋 Willkommen, ${state.selectedEmoji} ${name}!`);
   await updateStatus('Gerade angekommen'); renderCrew();
+}
+function canContribute(){ return !(state.currentUser && state.currentUser.isSpectator); }
+function spectatorBlock(){ showToast('👀 Zuschauer-Modus – du beobachtest nur'); }
+function applySpectatorUI(){
+  document.body.classList.add('spectator');
+  const b = document.getElementById('spectator-banner'); if(b) b.style.display = 'block';
+}
+async function saveSpectatorProfile(){
+  let name = document.getElementById('profile-name-input').value.trim();
+  if(!name) name = 'Zuschauer';
+  state.currentUser = { id:'spec_'+name.toLowerCase().replace(/\s/g,'_'), name, emoji: state.selectedEmoji, isSpectator:true };
+  localStorage.setItem('malletrack_profile', JSON.stringify(state.currentUser));
+  updateHeaderChip(); closeModal('profile-modal'); applySpectatorUI();
+  showToast(`👀 Zuschauer-Modus: ${state.selectedEmoji} ${name}`);
+  renderCrew();
 }
 function updateHeaderChip(){if(!state.currentUser)return;document.getElementById('header-emoji').textContent=state.currentUser.emoji;document.getElementById('header-name').textContent=state.currentUser.name;}
 
@@ -2556,6 +2580,38 @@ const ROULETTE_CATEGORIES = {
     'Wer hat den lustigsten Lacher?',
     'Wer würde als Erstes Millionär?',
   ],
+  'Fußball ⚽': [
+    'Nenne die 3 Spieler mit den meisten Länderspielen für Deutschland',
+    'Nenne die 3 besten Torschützen der DFB-Geschichte',
+    'In welchen Jahren wurde Deutschland Weltmeister? Nenne alle',
+    'Wer war Kapitän beim WM-Titel 2014?',
+    'Nenne 3 Spieler aus dem WM-Finale 2014',
+    'Wer schoss das Siegtor im WM-Finale 2014?',
+    'Nenne die 3 deutschen Rekordmeister... äh, nenne die 3 Bundesliga-Vereine mit den meisten Meistertiteln',
+    'Wer ist Bundesliga-Rekordtorschütze aller Zeiten?',
+    'Nenne 3 Jahre, in denen Bayern die Champions League gewann',
+    'Nenne die 3 Länder mit den meisten WM-Titeln',
+    'Nenne die 3 besten Torschützen der WM-Geschichte',
+    'Wer gewann den Ballon d\'Or am häufigsten? Top 2',
+    'Nenne die Sieger der letzten 3 Weltmeisterschaften',
+    'Nenne 5 Bundesliga-Vereine in 30 Sekunden – sonst Shot',
+    'Jeder nennt reihum einen Nationalspieler – wer stockt, trinkt',
+    'Nenne die 3 teuersten Transfers aller Zeiten',
+    'Nenne 3 Spieler mit den meisten Champions-League-Toren',
+    'Welcher Spieler gewann die meisten Champions-League-Titel? Schätzt die Zahl',
+    'Nenne 3 deutsche Europameister-Jahre',
+    'Diskutiert: Messi oder Ronaldo – wer die schwächere Begründung hat, trinkt',
+    'Nenne 3 aktuelle Bundesliga-Trainer',
+    'Nenne 3 Stadien der Bundesliga',
+    'Wer von euch ist der größte Fußball-Experte? Abstimmung – Letzter trinkt',
+    'Nenne 3 Welttorhüter der letzten 20 Jahre',
+    'Nenne die Startelf deines Lieblingsvereins – pro Lücke ein Schluck',
+    'Singe eine Vereinshymne – alle anderen entscheiden ob es zählt',
+    'Nenne 3 Spieler, die für Bayern UND Dortmund gespielt haben',
+    'Wer von euch wäre der schlechteste Schiedsrichter? Abstimmung',
+    'Nenne 3 WM-Gastgeberländer der letzten 30 Jahre',
+    'Errate das Trikot: jemand beschreibt einen Verein nur mit Farben, Rest rät',
+  ],
 };
 let rouletteCategory = 'Trinken 🍺';
 let wheelSpinning = false;
@@ -2624,6 +2680,7 @@ function drawWheel() {
 }
 
 function spinWheel() {
+  if(!canContribute()) return spectatorBlock();
   if (wheelSpinning) return;
   wheelSpinning = true;
   document.getElementById('wheel-result').textContent = '🎰 Drehe...';
@@ -2839,6 +2896,7 @@ function loadTasks() {
 }
 
 function toggleTask(task) {
+  if(!canContribute()) return spectatorBlock();
   if (!state.currentUser) { showToast('⚠️ Profil auswählen!'); return; }
   const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
   if (done[task.id]) {
@@ -3741,6 +3799,7 @@ function getInstaAccounts() { return JSON.parse(localStorage.getItem(INSTA_STORA
 function saveInstaAccounts(a) { saveInstaAccountsToDB(a); }
 
 function addInstaAccount() {
+  if(!canContribute()) return spectatorBlock();
   const input = document.getElementById('insta-handle-input');
   if (!input) { console.error('insta input not found'); return; }
   let handle = input.value.trim().replace(/^@/,'').replace(/\s/g,'').toLowerCase();
@@ -3855,7 +3914,7 @@ function isRecapAvailable() {
 const DRINK_COLORS = { bier:'#ffb300', cocktail:'#ff2d78', shot:'#00e5ff', wasser:'#4fc3f7' };
 const DRINK_LABELS = { bier:'Bier 🍺', cocktail:'Cocktail 🍹', shot:'Shot 🥃', wasser:'Wasser 💧' };
 // Gewichtetes Punktesystem: Shot > Cocktail > Bier > Wasser. Ziel 100/Tag = vernünftiges Tagespensom pro Person (7er-Crew).
-const DRINK_POINTS = { wasser:2, bier:10, cocktail:15, shot:20 };
+const DRINK_POINTS = { wasser:0.5, bier:1, cocktail:1.5, shot:2 };
 const DRINK_DAILY_TARGET = 100;
 const TRIP_START_KEY = '2026-07-02'; // echte Wertung erst ab Reisebeginn
 let _drinkSaveTimer = null;
@@ -3910,6 +3969,7 @@ async function saveDrinksToDB(){
 }
 
 function addDrink(type){
+  if(!canContribute()) return spectatorBlock();
   const me = state.currentUser;
   if(!me){ showToast('Wähle zuerst dein Profil 👤'); return; }
   if(!DRINK_POINTS[type]) return;
@@ -3971,7 +4031,7 @@ function renderDrinks(){
   liq.setAttribute('height', (124-top).toFixed(1));
   liq.setAttribute('fill', over ? '#ff3b3b' : (DRINK_COLORS[state.selDrink] || '#ffb300'));
 
-  setDrinkText('drink-my-total', myScore);
+  setDrinkText('drink-my-total', Math.round(myScore));
   setDrinkText('drink-my-break', '🍺 '+mine.bier+' · 🍹 '+mine.cocktail+' · 🥃 '+mine.shot+' · 💧 '+mine.wasser);
   const note = document.getElementById('drink-over-note'); if(note) note.style.display = (over && !pre) ? 'block' : 'none';
 
@@ -3988,14 +4048,14 @@ function renderDrinks(){
       if(sc > 0) perUser.push({ name:u.name, emoji:u.emoji, score:sc, isMe: me && uid===me.id });
     }
   });
-  setDrinkText('drink-crew-total', crewScore);
+  setDrinkText('drink-crew-total', Math.round(crewScore));
   setDrinkText('drink-crew-water', crewWater);
 
   const cl = document.getElementById('drink-crew-list');
   if(cl){
     perUser.sort((a,b)=>b.score-a.score);
     cl.innerHTML = perUser.length
-      ? perUser.map(u=>'<div class="drink-chip'+(u.isMe?' me':'')+'">'+u.emoji+' '+escHtml(u.name)+' <b>'+u.score+'</b></div>').join('')
+      ? perUser.map(u=>'<div class="drink-chip'+(u.isMe?' me':'')+'">'+u.emoji+' '+escHtml(u.name)+' <b>'+Math.round(u.score)+'</b></div>').join('')
       : '<div class="drink-empty">'+(pre ? 'Echte Wertung startet am 02.07. 🌴' : 'Heute noch nichts eingetragen.')+'</div>';
   }
 
@@ -4007,7 +4067,7 @@ function renderDrinks(){
   const dh = document.getElementById('drink-day-history');
   if(dh){
     dh.innerHTML = keys.length
-      ? keys.map(k=>'<div class="drink-day-row'+(k===day?' today':'')+'"><span>'+drinkDayLabel(k)+'</span><b>'+days[k]+'</b></div>').join('')
+      ? keys.map(k=>'<div class="drink-day-row'+(k===day?' today':'')+'"><span>'+drinkDayLabel(k)+'</span><b>'+Math.round(days[k])+'</b></div>').join('')
       : '<div class="drink-empty">Tagessummen erscheinen ab 02.07. 🌴</div>';
   }
 }
@@ -4082,6 +4142,7 @@ function initHashtagSection() {
 }
 
 function addHashtag() {
+  if(!canContribute()) return spectatorBlock();
   const input = document.getElementById('hashtag-input');
   if (!input) return;
   let tag = input.value.trim().replace(/^#/,'').replace(/\s/g,'').toLowerCase();
