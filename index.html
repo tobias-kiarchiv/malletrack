@@ -690,6 +690,7 @@ body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;point
         <span class="room-check" id="room-check-icon"></span>
       </div>
       <button class="login-btn" id="login-step1-btn" type="button">Weiter →</button>
+      <div style="text-align:center;margin-top:14px"><span onclick="enterSpectatorFlow()" style="color:var(--text-sec);font-size:13px;cursor:pointer;text-decoration:underline">👀 Nicht auf Tour? Nur zuschauen</span></div>
     </div>
 
     <!-- STEP 2: Name & Emoji -->
@@ -705,6 +706,7 @@ body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;point
       <input class="login-input" id="login-name-input" placeholder="Dein Name (z.B. Tobi)"
              maxlength="20" type="text">
       <button class="login-btn" id="login-step2-btn" type="button">Weiter →</button>
+      <button id="login-spectator-btn" type="button" style="width:100%;margin-top:10px;padding:13px;border-radius:13px;border:1px solid var(--border);background:transparent;color:var(--text-sec);font-weight:600;font-size:14px;cursor:pointer">👀 Als Zuschauer beitreten</button>
     </div>
 
     <!-- STEP 3: Bestätigung -->
@@ -1364,6 +1366,31 @@ function checkRoomCode() {
 }
 
 // STEP 2 → 3
+function enterSpectatorFlow() {
+  // Zuschauer überspringt Code-Check – direkt zu Step 2
+  if (!document.getElementById('login-emoji-grid').children.length) initLoginEmojis();
+  document.getElementById('login-step-1').style.display = 'none';
+  document.getElementById('login-step-2').style.display = 'block';
+  document.getElementById('login-spectator-btn').style.display = 'block';
+  // Step-Dots als Hinweis
+  document.getElementById('sd1b').className = 'step-dot done';
+  document.getElementById('sd2b').className = 'step-dot active';
+}
+
+async function completeSpectatorRegistration() {
+  const nameInput = document.getElementById('login-name-input');
+  let name = nameInput.value.trim();
+  if (name.length < 1) name = 'Zuschauer';
+  const emoji = loginState && loginState.selectedEmoji ? loginState.selectedEmoji : '👀';
+  state.currentUser = { id:'spec_'+name.toLowerCase().replace(/\s/g,'_')+'_'+Date.now(), name, emoji, isSpectator:true };
+  localStorage.setItem('malletrack_profile', JSON.stringify(state.currentUser));
+  hideLockScreen();
+  updateHeaderChip();
+  applySpectatorUI();
+  showToast('👀 Zuschauer-Modus: ' + emoji + ' ' + name);
+  try { await init(); } catch(e) { console.warn('Spectator init:', e); }
+}
+
 function goToStep3() {
   const nameInput = document.getElementById('login-name-input');
   const name = nameInput.value.trim();
@@ -4475,6 +4502,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (step1Btn) step1Btn.addEventListener('click', checkRoomCode);
   if (step2Btn) step2Btn.addEventListener('click', goToStep3);
   if (step3Btn) step3Btn.addEventListener('click', completeRegistration);
+  const specBtn = document.getElementById('login-spectator-btn');
+  if (specBtn) specBtn.addEventListener('click', completeSpectatorRegistration);
 
   if (roomInput) {
     roomInput.addEventListener('input', () => {
