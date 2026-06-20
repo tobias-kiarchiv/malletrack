@@ -1918,7 +1918,8 @@ function updateMarker(loc) {
 }
 
 async function loadLocations() {
-  const {data}=await sb.from('locations').select('*').eq('room_id',ROOM_ID);
+  const {data,error}=await sb.from('locations').select('*').eq('room_id',ROOM_ID);
+  if(error){ console.error('loadLocations error:', error); return; }
   if(data) data.forEach(loc=>{state.crewLocations[loc.user_id]=loc;updateMarker(loc);});
 }
 
@@ -2078,13 +2079,21 @@ function startLocationSharing() {
 }
 async function sendLocation(lat,lng) {
   if(!state.currentUser)return;
-  await sb.from('locations').upsert({
-    room_id:ROOM_ID,user_id:state.currentUser.id,
-    user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,
-    lat,lng,updated_at:new Date().toISOString()
-  },{onConflict:'room_id,user_id'});
+  try {
+    const { error } = await sb.from('locations').upsert({
+      room_id:ROOM_ID,user_id:state.currentUser.id,
+      user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,
+      lat,lng,updated_at:new Date().toISOString()
+    },{onConflict:'room_id,user_id'});
+    if(error){
+      console.error('sendLocation upsert error:', error);
+      showToast('❌ Standort-Sync: '+(error.message||error.code||'Fehler'));
+    }
+  } catch(e){
+    console.error('sendLocation exception:', e);
+    showToast('❌ Standort konnte nicht gesendet werden');
+  }
   updateMarker({user_id:state.currentUser.id,user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,lat,lng});
-  // Dynamische POIs im Umkreis laden
   state.crewLocations[state.currentUser.id] = {user_id:state.currentUser.id,user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,lat,lng,updated_at:new Date().toISOString()};
   if(state.mapInstance) loadOverpassAroundPoint(lat, lng, state.mapInstance).catch(()=>{});
 }
