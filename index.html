@@ -659,6 +659,9 @@ body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;point
 .roulette-answer-btn{width:100%;margin-top:10px;padding:12px;border-radius:13px;border:1px solid rgba(255,214,0,0.3);background:rgba(255,214,0,0.06);color:var(--neon-gold);font-size:13px;font-weight:600;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;text-align:left}
 .roulette-answer-btn.open{background:rgba(255,214,0,0.14);border-color:var(--neon-gold)}
 .roulette-answer-btn:active{transform:scale(0.98)}
+.crew-subheader{margin:18px 4px 8px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--neon-cyan);opacity:0.85}
+.member-card.spectator-card{opacity:0.82;border-style:dashed}
+.member-card.spectator-card .member-avatar{filter:grayscale(0.2)}
 </style>
 </head>
 <body>
@@ -1396,6 +1399,7 @@ async function completeSpectatorRegistration() {
   applySpectatorUI();
   showToast('👀 Zuschauer-Modus: ' + emoji + ' ' + name);
   try { await init(); } catch(e) { console.warn('Spectator init:', e); }
+  registerSpectatorPresence();
 }
 
 function goToStep3() {
@@ -1492,6 +1496,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ── Zentrale Zuschauer-Sperre: blockiert ALLE schreibenden DB-Operationen ──
 (function(){
   const origFrom = sb.from.bind(sb);
+  sb._rawFrom = origFrom; // für Zuschauer-Präsenz (umgeht die Schreibsperre gezielt)
   let _specToastT = 0;
   function blockedQuery(){
     const now = Date.now();
@@ -1668,6 +1673,16 @@ function subscribeRealtime() {
   sb.channel('drk').on('postgres_changes',{event:'*',schema:'public',table:'statuses',filter:'room_id=eq.'+ROOM_ID},
     (p) => { const uid = p.new && p.new.user_id; if(uid && uid.indexOf('__drinks__')===0){ const id=uid.slice(10); let days={}; try{days=JSON.parse(p.new.status||'{}')||{};}catch(e){} state.drinks[id]={name:p.new.user_name||'?',emoji:p.new.user_emoji||'🍺',days}; renderDrinks(); } }).subscribe();
   loadDrinksFromDB();
+
+  if(!window._crewRefreshStarted){
+    window._crewRefreshStarted = true;
+    setInterval(async () => {
+      if(!state.currentUser) return;
+      try { await loadLocations(); await loadStatuses(); await loadDrinksFromDB(); } catch(e){}
+      if(state.currentUser.isSpectator) registerSpectatorPresence();
+      renderCrew(); renderDrinks();
+    }, 20000);
+  }
 }
 
 // ============================================================
@@ -2070,7 +2085,7 @@ async function sendLocation(lat,lng) {
   },{onConflict:'room_id,user_id'});
   updateMarker({user_id:state.currentUser.id,user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,lat,lng});
   // Dynamische POIs im Umkreis laden
-  state.crewLocations[state.currentUser.id] = {lat,lng};
+  state.crewLocations[state.currentUser.id] = {user_id:state.currentUser.id,user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,lat,lng,updated_at:new Date().toISOString()};
   if(state.mapInstance) loadOverpassAroundPoint(lat, lng, state.mapInstance).catch(()=>{});
 }
 function stopLocationSharing() {
@@ -2294,20 +2309,51 @@ function updateChatBadge(){
 // ============================================================
 async function loadStatuses(){const {data}=await sb.from('statuses').select('*').eq('room_id',ROOM_ID);if(data)data.forEach(s=>state.crewStatuses[s.user_id]=s);}
 
+async function registerSpectatorPresence(){
+  if(!state.currentUser || !state.currentUser.isSpectator) return;
+  try{
+    await sb._rawFrom('statuses').upsert({
+      room_id:ROOM_ID, user_id:'__spectator__'+state.currentUser.id,
+      user_name:state.currentUser.name, user_emoji:state.currentUser.emoji,
+      status:'spectating', updated_at:new Date().toISOString()
+    },{onConflict:'room_id,user_id'});
+  }catch(e){ console.warn('spectator presence:', e); }
+}
+
+function renderSpectatorList(list){
+  const specs = Object.values(state.crewStatuses).filter(s =>
+    String(s.user_id).indexOf('__spectator__')===0 &&
+    s.updated_at && (Date.now()-new Date(s.updated_at).getTime() < 10*60*1000)
+  );
+  if(!specs.length) return 0;
+  const hdr=document.createElement('div'); hdr.className='crew-subheader';
+  hdr.textContent='👀 Zuschauer ('+specs.length+')';
+  list.appendChild(hdr);
+  specs.sort((a,b)=>(a.user_name||'').localeCompare(b.user_name||''));
+  specs.forEach(sp=>{
+    const c=document.createElement('div'); c.className='member-card spectator-card';
+    c.innerHTML='<div class="member-avatar">'+(sp.user_emoji||'👀')+'</div><div class="member-info"><div class="member-name">'+escHtml(sp.user_name||'Zuschauer')+'</div><div class="member-status-text">👀 schaut nur zu</div></div>';
+    list.appendChild(c);
+  });
+  return specs.length;
+}
+
 function renderCrew() {
   const list=document.getElementById('member-list'); list.innerHTML='';
   const allUsers=new Map();
   Object.values(state.crewLocations).forEach(loc=>allUsers.set(loc.user_id,{id:loc.user_id,name:loc.user_name,emoji:loc.user_emoji,sharing:true}));
   Object.values(state.crewStatuses).forEach(s=>{if(String(s.user_id).indexOf('__')===0)return;if(!allUsers.has(s.user_id))allUsers.set(s.user_id,{id:s.user_id,name:s.user_name,emoji:s.user_emoji,sharing:false});});
-  if(state.currentUser&&!allUsers.has(state.currentUser.id))allUsers.set(state.currentUser.id,{...state.currentUser,sharing:state.locationSharing});
+  if(state.currentUser&&!state.currentUser.isSpectator&&!allUsers.has(state.currentUser.id))allUsers.set(state.currentUser.id,{...state.currentUser,sharing:state.locationSharing});
 
-  if(allUsers.size===0){list.innerHTML='<div class="empty-feed" style="opacity:0.5;padding:30px"><div class="empty-icon">👀</div><div class="empty-text">Noch niemand aktiv.<br>Teile den Link!</div></div>';return;}
+  if(allUsers.size===0){list.innerHTML='';const had=renderSpectatorList(list);if(!had){list.innerHTML='<div class="empty-feed" style="opacity:0.5;padding:30px"><div class="empty-icon">👀</div><div class="empty-text">Noch niemand aktiv.<br>Teile den Link!</div></div>';}return;}
 
   allUsers.forEach(member=>{
     const isMe=state.currentUser&&member.id===state.currentUser.id;
     const statusData=state.crewStatuses[member.id];
     const status=statusData?.status||'Gerade angekommen';
-    const sharing=!!(state.crewLocations[member.id]||(isMe&&state.locationSharing));
+    const _loc=state.crewLocations[member.id];
+    const _fresh=_loc&&_loc.updated_at&&(Date.now()-new Date(_loc.updated_at).getTime()<15*60*1000);
+    const sharing=!!((isMe&&state.locationSharing)||_fresh);
     const card=document.createElement('div');
     card.className='member-card'+(isMe?' me':'')+(sharing?' sharing-active':'');
     if(!isMe)card.onclick=()=>openMemberModal(member);
@@ -2316,7 +2362,7 @@ function renderCrew() {
       <div class="member-info">
         <div class="member-name">${member.name}${isMe?'<span class="me-badge">DU</span>':''}</div>
         ${isMe
-          ?`<select class="status-select" onchange="updateStatus(this.value)" onclick="event.stopPropagation()">${STATUS_OPTIONS.map(s=>`<option ${s===status?'selected':''}>${s}</option>`).join('')}</select>`
+          ?`<select class="status-select" onchange="onStatusSelect(this.value)" onclick="event.stopPropagation()">${(STATUS_OPTIONS.includes(status)?'':`<option selected>${status}</option>`)}${STATUS_OPTIONS.map(s=>`<option ${s===status?'selected':''}>${s}</option>`).join('')}<option value="__custom__">✏️ Eigener Status…</option></select>`
           :`<div class="member-status-text">💬 ${status}</div>`
         }
       </div>
@@ -2326,6 +2372,17 @@ function renderCrew() {
       </div>`;
     list.appendChild(card);
   });
+  renderSpectatorList(list);
+}
+
+function onStatusSelect(val){
+  if(val === '__custom__'){
+    const txt = (prompt('Eigenen Status eingeben:') || '').trim();
+    renderCrew(); // Select zurücksetzen
+    if(txt) updateStatus(txt.slice(0,40));
+    return;
+  }
+  updateStatus(val);
 }
 
 async function updateStatus(newStatus) {
@@ -2449,6 +2506,11 @@ function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
     // Tab-spezifische Aktionen
+    // Tab-spezifische Aktionen
+    if (tabId === 'tab-gruppe' || tabId === 'tab-karte') {
+      loadLocations().then(() => loadStatuses()).then(() => renderCrew()).catch(()=>{});
+      if (state.currentUser && state.currentUser.isSpectator) registerSpectatorPresence();
+    }
     if (tabId === 'tab-karte') {
       setTimeout(() => {
         if (state.mapInstance) state.mapInstance.invalidateSize();
@@ -2556,6 +2618,27 @@ const ROULETTE_CATEGORIES = {
     'Sag 60 Sekunden lang nur Ja',
     'Gehe rückwärts zum nächsten Platz',
     '10 Kniebeugen vor allen anderen',
+    'Sprich 1 Minute nur im Flüsterton',
+    'Mache ein Selfie mit dem ältesten Menschen in Sichtweite',
+    'Bestelle die nächste Runde komplett auf Mallorquinisch/Spanisch',
+    'Erzähle einen Witz auf Englisch',
+    'Mache 5 Hampelmänner',
+    'Tausche ein Kleidungsstück mit der Person rechts von dir',
+    'Laufe einmal im Entengang um den Tisch',
+    'Sag jedem in der Runde ein ehrliches Kompliment',
+    'Sprich 2 Minuten in Reimen',
+    'Mache eine 10-Sekunden-Plank',
+    'Imitiere einen berühmten Promi, bis jemand ihn errät',
+    'Rufe deinen besten Spruch der Reise laut in die Runde',
+    'Mache ein Gruppenfoto in einer lustigen Pose',
+    'Trinke dein nächstes Getränk ohne Hände',
+    'Erzähle deine peinlichste Geschichte der letzten 12 Monate',
+    'Tanze 20 Sekunden ohne Musik',
+    'Sprich die nächsten 3 Minuten in der dritten Person über dich',
+    'Mache Liegestütze, einer pro Buchstabe deines Vornamens',
+    'Begrüße den nächsten Fremden mit einer erfundenen Handshake-Choreo',
+    'Singe deinen Lieblingssong als Opern-Version',
+    'Halte 30 Sekunden lang ein ernstes Gesicht, während alle dich zum Lachen bringen',
   ],
   'Malle-Spezial 🌴': [
     'Gruppen-Selfie sofort!',
@@ -2715,9 +2798,84 @@ const ROULETTE_CATEGORIES = {
     'Nenne 3 Spieler, die bei einer WM die Torjägerkanone gewannen || Gerd Müller (1970), Ronaldo (2002), Thomas Müller (2010), Klose (2006), Mbappé (2022)',
     'Welcher Verein gewann 2023 die Champions League? || Manchester City',
     'Welcher Verein gewann 2024 die Champions League? || Real Madrid',
+    'Welches Land gewann die WM 2014? || Deutschland',
+    'Welches Land gewann die WM 2002? || Brasilien',
+    'Welches Land gewann die WM 1998? || Frankreich',
+    'Welches Land gewann die WM 1994? || Brasilien',
+    'Welches Land gewann die WM 1986? || Argentinien',
+    'Welches Land gewann die WM 1982? || Italien',
+    'Welches Land gewann die WM 1978? || Argentinien',
+    'Welches Land gewann die WM 1966? || England',
+    'In welchem Land fand die WM 2010 statt? || Südafrika',
+    'In welchem Land fand die WM 2014 statt? || Brasilien',
+    'In welchem Land fand die WM 2018 statt? || Russland',
+    'In welchem Land fand die WM 2022 statt? || Katar',
+    'Welches Land gewann die EM 2004 überraschend? || Griechenland',
+    'Welches Land gewann die EM 2000? || Frankreich',
+    'Welches Land gewann die EM 1996? || Deutschland',
+    'Welches Land gewann die EM 1992 überraschend? || Dänemark',
+    'In welchem Land/welchen Ländern findet die EM 2028 statt? || Großbritannien & Irland',
+    'Welcher Verein gewann die Champions League 2024? || Real Madrid',
+    'Welcher Verein gewann die Champions League 2023? || Manchester City',
+    'Welcher Verein gewann die Champions League 2021? || FC Chelsea',
+    'Welcher Verein gewann die Champions League 2020? || FC Bayern München',
+    'Welcher Verein gewann die Champions League 2019? || FC Liverpool',
+    'In welcher Liga spielt der FC Liverpool? || Premier League (England)',
+    'In welcher Liga spielt Ajax Amsterdam? || Eredivisie (Niederlande)',
+    'In welcher Liga spielt Benfica Lissabon? || Primeira Liga (Portugal)',
+    'In welcher Liga spielt Celtic Glasgow? || Scottish Premiership (Schottland)',
+    'In welcher Liga spielt Galatasaray Istanbul? || Süper Lig (Türkei)',
+    'Welcher Verein spielt im Stadion Anfield? || FC Liverpool',
+    'Welcher Verein spielt im Old Trafford? || Manchester United',
+    'Welcher Verein spielt im San Siro / Giuseppe Meazza? || AC Mailand und Inter Mailand',
+    'Welcher Verein spielt im Stadion De Kuip in Rotterdam? || Feyenoord Rotterdam',
+    'Welcher Verein wird die Königlichen genannt? || Real Madrid',
+    'Welcher Verein wird die Alte Dame genannt? || Juventus Turin',
+    'Welcher Verein wird die Reds genannt? || FC Liverpool',
+    'Welcher Verein wird die Gunners genannt? || FC Arsenal',
+    'Welcher englische Verein wird die Citizens genannt? || Manchester City',
+    'Welcher Spieler gewann 2024 den Ballon d\'Or? || Rodri (Manchester City)',
+    'Welcher Spieler gewann 2021 den Ballon d\'Or? || Lionel Messi',
+    'Welcher Spieler gewann 2019 den Ballon d\'Or? || Lionel Messi',
+    'Welcher Spieler gewann 2018 den Ballon d\'Or? || Luka Modrić',
+    'Wer wurde 2018 zum besten Spieler der WM gewählt (Goldener Ball)? || Luka Modrić',
+    'Nenne den deutschen Rekordnationalspieler aller Zeiten || Lothar Matthäus (150 Länderspiele)',
+    'Wer ist aktueller Bundestrainer der deutschen Nationalmannschaft? || Julian Nagelsmann (Stand 2024/25)',
+    'Welcher Verein gewann 1999 das Champions-League-Finale in der Nachspielzeit? || Manchester United (gegen Bayern)',
+    'Welche Mannschaft gewann das CL-Finale 1999 gegen Manchester United nicht trotz Führung? || FC Bayern München',
+    'Wie viele Spieler einer Mannschaft müssen mindestens auf dem Feld sein, sonst wird abgebrochen? || 7 Spieler',
+    'Wie nennt man es, wenn ein Spieler in einem Spiel 3 Tore schießt? || Hattrick',
+    'Wie groß ist ein Fußballtor in der Höhe (ungefähr)? || 2,44 Meter',
+    'Wie viele Meter ist der Elfmeterpunkt vom Tor entfernt? || 11 Meter',
+    'Welche Farbe hat die Karte für einen Platzverweis? || Rot',
+    'Was bekommt ein Team bei einem Handspiel im eigenen Strafraum? || Einen Elfmeter gegen sich',
+    'Welcher Spieler hält den Rekord für die meisten Tore in einem Kalenderjahr? || Lionel Messi (91 Tore, 2012)',
+    'Welcher Spieler wechselte 2017 für 222 Mio. Euro zu PSG? || Neymar',
+    'Welcher Verein verkaufte Neymar 2017 an PSG? || FC Barcelona',
+    'Welche Nationalmannschaft gewann 2021 die Copa América? || Argentinien',
+    'Welche Nationalmannschaft gewann 2024 die Copa América? || Argentinien',
+    'Welcher Verein gewann 2013 als Erster das Triple in Deutschland? || FC Bayern München',
+    'Nenne den Spitznamen des FC Schalke 04 || Die Königsblauen / Knappen',
+    'Welcher Verein trägt den Beinamen 1. FC und kommt aus Köln? || 1. FC Köln',
+    'Wie heißt das Nationalstadion Englands? || Wembley-Stadion',
+    'Welche Nationalmannschaft hat den Spitznamen Squadra Azzurra? || Italien',
+    'Welche Nationalmannschaft hat den Spitznamen Les Bleus? || Frankreich',
+    'Welche Nationalmannschaft hat den Spitznamen Seleção? || Brasilien',
+    'Wer ist Rekordtorschütze der spanischen La Liga? || Lionel Messi (474 Tore)',
+    'Welcher Trainer gewann die meisten Champions-League-Titel? || Carlo Ancelotti (5 Titel)',
   ],
 };
 let rouletteCategory = Object.keys(ROULETTE_CATEGORIES)[0];
+// No-Repeat-Topf für Fußball: jede Frage kommt einmal dran, bevor sich etwas wiederholt
+let _footballBag = [];
+function nextFootballQuestion(){
+  const arr = ROULETTE_CATEGORIES['Fußball ⚽'];
+  if(!_footballBag.length){
+    _footballBag = arr.map((_,i)=>i);
+    for(let i=_footballBag.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [_footballBag[i],_footballBag[j]]=[_footballBag[j],_footballBag[i]]; }
+  }
+  return arr[_footballBag.pop()];
+}
 let wheelSpinning = false;
 let wheelAngle = 0;
 
@@ -2809,8 +2967,8 @@ function spinWheel() {
     const arc = 360 / items.length;
     const normalizedAngle = ((360 - (wheelAngle % 360)) + 90) % 360;
     const winnerIdx = Math.floor(normalizedAngle / arc) % items.length;
-    const result = items[winnerIdx];
     const isFootball = rouletteCategory === 'Fußball ⚽';
+    const result = isFootball ? nextFootballQuestion() : items[winnerIdx];
     const sep = result.indexOf(' || ');
     const question = isFootball && sep !== -1 ? result.substring(0, sep) : result;
     const answer   = isFootball && sep !== -1 ? result.substring(sep + 4) : null;
@@ -3226,6 +3384,7 @@ function showAlertBanner(title,body){
 }
 
 async function sendGroupAlert(){
+  if(!canContribute()) return spectatorBlock();
   if(!state.currentUser){showToast("⚠️ Profil auswählen!");return;}
   const inp=document.getElementById("push-msg-input");
   const msg=(inp&&inp.value.trim())||"📣 Alle in die App!";
@@ -4040,7 +4199,8 @@ function dayScore(d){ d = d || {}; return (d.bier||0)*DRINK_POINTS.bier + (d.coc
 function setDrinkText(id, v){ const e = document.getElementById(id); if(e) e.textContent = v; }
 
 function drinkTodayKey(){
-  const d = new Date();
+  // Tageswechsel um 6:00 morgens (Nachtstunden zählen zum Vortag)
+  const d = new Date(Date.now() - 6*60*60*1000);
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 function drinkDayLabel(k){
@@ -4573,7 +4733,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (prof && prof.isSpectator) {
       state.currentUser = prof;
       hideLockScreen(); updateHeaderChip(); applySpectatorUI();
-      init().catch(e => { console.error('Init error:', e); hideLockScreen(); });
+      init().then(()=>registerSpectatorPresence()).catch(e => { console.error('Init error:', e); hideLockScreen(); });
       _specResumed = true;
     }
   } catch(e) {}
