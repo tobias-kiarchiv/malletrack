@@ -662,6 +662,7 @@ body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;point
 .crew-subheader{margin:18px 4px 8px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--neon-cyan);opacity:0.85}
 .member-card.spectator-card{opacity:0.82;border-style:dashed}
 .member-card.spectator-card .member-avatar{filter:grayscale(0.2)}
+body.spectator .room-card{display:none !important}
 </style>
 </head>
 <body>
@@ -1051,7 +1052,7 @@ body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;point
                 <span id="admin-my-name">–</span>
                 <span id="admin-role-badge" style="display:none;background:linear-gradient(135deg,rgba(255,214,0,0.25),rgba(255,150,0,0.15));border:1px solid rgba(255,214,0,0.5);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--neon-gold);letter-spacing:0.5px">👑 ADMIN</span>
               </div>
-              <div style="font-size:12px;color:var(--text-sec);margin-top:2px">Raum: MALLE26</div>
+              <div style="font-size:12px;color:var(--text-sec);margin-top:2px">Raum: Mallorca 2026 🌴</div>
             </div>
           </div>
           <button class="btn-primary" onclick="openProfileModal()" style="margin-bottom:8px">✏️ Profil bearbeiten</button>
@@ -1667,7 +1668,12 @@ function subscribeRealtime() {
   sb.channel('cht').on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'room_id=eq.'+ROOM_ID},
     async(p) => {
       await loadChatMessages();
+      const m = p.new;
+      const fromOther = m && (!state.currentUser || m.author_name !== state.currentUser.name);
       if(state.activeTab!=='tab-chat'){state.unreadChat++;updateChatBadge();}
+      if(fromOther && (state.activeTab!=='tab-chat' || document.hidden)){
+        showLocalNotification((m.author_emoji||'💬')+' '+(m.author_name||'Crew'), m.text || 'Neue Nachricht');
+      }
     }).subscribe();
 
   sb.channel('drk').on('postgres_changes',{event:'*',schema:'public',table:'statuses',filter:'room_id=eq.'+ROOM_ID},
@@ -2069,13 +2075,29 @@ function startLocationSharing() {
       state.currentLat=p.coords.latitude; state.currentLng=p.coords.longitude;
       await sendLocation(p.coords.latitude,p.coords.longitude);
     },null,{enableHighAccuracy:true,maximumAge:5000});
+    armShareLimits();
   },()=>{
     state.currentLat=39.5696+(Math.random()-0.5)*0.01;
     state.currentLng=2.6502+(Math.random()-0.5)*0.01;
     state.locationSharing=true; updateSharingButton(true);
     sendLocation(state.currentLat,state.currentLng);
+    armShareLimits();
     showToast('📍 Demo: Simulierter Standort (Palma)');
   });
+}
+
+function armShareLimits(){
+  if(state.shareTimeout) clearTimeout(state.shareTimeout);
+  if(state.shareHeartbeat) clearInterval(state.shareHeartbeat);
+  // Hält den Standort auch im Stehen frisch
+  state.shareHeartbeat = setInterval(()=>{
+    if(state.locationSharing && state.currentLat!=null) sendLocation(state.currentLat,state.currentLng);
+  }, 60000);
+  // Nach 20 Minuten automatisch beenden + Standort löschen
+  state.shareTimeout = setTimeout(()=>{
+    stopLocationSharing();
+    showToast('📍 Standortteilung nach 20 Min automatisch beendet');
+  }, 20*60*1000);
 }
 async function sendLocation(lat,lng) {
   if(!state.currentUser)return;
@@ -2099,8 +2121,15 @@ async function sendLocation(lat,lng) {
 }
 function stopLocationSharing() {
   if(state.watchId){navigator.geolocation.clearWatch(state.watchId);state.watchId=null;}
+  if(state.shareTimeout){clearTimeout(state.shareTimeout);state.shareTimeout=null;}
+  if(state.shareHeartbeat){clearInterval(state.shareHeartbeat);state.shareHeartbeat=null;}
   state.locationSharing=false; updateSharingButton(false);
+  if(state.currentUser){
+    sb.from('locations').delete().eq('room_id',ROOM_ID).eq('user_id',state.currentUser.id).then(()=>{}).catch(()=>{});
+    delete state.crewLocations[state.currentUser.id];
+  }
   if(state.markers[state.currentUser?.id]){state.mapInstance.removeLayer(state.markers[state.currentUser.id]);delete state.markers[state.currentUser.id];}
+  renderCrew();
   showToast('📴 Standort-Sharing gestoppt');
 }
 function updateSharingButton(active) {
@@ -2361,7 +2390,7 @@ function renderCrew() {
     const statusData=state.crewStatuses[member.id];
     const status=statusData?.status||'Gerade angekommen';
     const _loc=state.crewLocations[member.id];
-    const _fresh=_loc&&_loc.updated_at&&(Date.now()-new Date(_loc.updated_at).getTime()<15*60*1000);
+    const _fresh=_loc&&_loc.updated_at&&(Date.now()-new Date(_loc.updated_at).getTime()<5*60*1000);
     const sharing=!!((isMe&&state.locationSharing)||_fresh);
     const card=document.createElement('div');
     card.className='member-card'+(isMe?' me':'')+(sharing?' sharing-active':'');
@@ -3341,9 +3370,16 @@ async function registerServiceWorker(){
   try{const reg=await navigator.serviceWorker.register("/sw.js").catch(()=>null);if(reg)await navigator.serviceWorker.ready.catch(()=>{});}catch(e){console.warn("SW:",e.message);}
 }
 
-function showLocalNotification(title,body){
-  if(Notification.permission!=="granted")return;
-  try{new Notification(title,{body,tag:"malletrack-"+Date.now(),vibrate:[200,100,200]});}catch(e){console.warn("Notif:",e);}
+async function showLocalNotification(title,body){
+  if(!('Notification' in window) || Notification.permission!=="granted")return;
+  const opts={body,tag:"malletrack-"+Date.now(),vibrate:[200,100,200],renotify:true,badge:'/icon.png',icon:'/icon.png'};
+  try{
+    if(navigator.serviceWorker){
+      const reg=await navigator.serviceWorker.getRegistration();
+      if(reg&&reg.showNotification){ reg.showNotification(title,opts); return; }
+    }
+    new Notification(title,opts);
+  }catch(e){ try{ new Notification(title,{body}); }catch(_){ console.warn("Notif:",e); } }
 }
 
 let alertsSubscribed=false;
