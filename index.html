@@ -188,7 +188,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .modal-backdrop.open .modal-sheet{transform:translateY(0)}
 .modal-handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px}
 .modal-title{font-family:'Bebas Neue',cursive;font-size:24px;letter-spacing:1px;margin-bottom:18px;text-align:center}
-.emoji-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
+.emoji-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px;max-height:210px;overflow-y:auto;padding-right:2px}
 .emoji-option{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:22px;border-radius:10px;background:rgba(255,255,255,0.05);border:2px solid transparent;cursor:pointer;transition:all 0.15s}
 .emoji-option.selected{border-color:var(--neon-pink);background:rgba(255,45,120,0.2)}
 .name-input{width:100%;background:rgba(255,255,255,0.07);border:1px solid var(--border);border-radius:12px;padding:13px 14px;color:var(--text-pri);font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:500;outline:none;margin-bottom:10px;transition:border-color 0.2s}
@@ -1391,7 +1391,7 @@ async function completeSpectatorRegistration() {
   let name = nameInput.value.trim();
   if (name.length < 1) name = 'Zuschauer';
   const emoji = loginState && loginState.selectedEmoji ? loginState.selectedEmoji : '👀';
-  state.currentUser = { id:'spec_'+name.toLowerCase().replace(/\s/g,'_')+'_'+Date.now(), name, emoji, isSpectator:true };
+  state.currentUser = { id:(state.currentUser&&state.currentUser.id)||('spec_'+getStableUserId().slice(2)), name, emoji, isSpectator:true };
   localStorage.setItem('malletrack_profile', JSON.stringify(state.currentUser));
   hideLockScreen();
   updateHeaderChip();
@@ -1428,8 +1428,8 @@ async function completeRegistration() {
   btn.disabled = true;
   btn.textContent = '⏳ Wird gespeichert...';
 
-  // User-ID erstellen (stabil basierend auf Name + Emoji)
-  const userId = 'u_' + loginState.name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + loginState.selectedEmoji.codePointAt(0).toString(36);
+  // User-ID: dauerhaft & namens-unabhängig (bleibt bei Namensänderung gleich)
+  const userId = getStableUserId();
 
   const session = {
     userId,
@@ -1604,14 +1604,8 @@ async function init() {
     }
   }
 
-  // Emoji Grid
-  const grid = document.getElementById('emoji-grid');
-  PROFILE_EMOJIS.forEach(em => {
-    const btn = document.createElement('button');
-    btn.className = 'emoji-option' + (em === state.selectedEmoji ? ' selected' : '');
-    btn.textContent = em; btn.onclick = () => selectEmoji(em);
-    grid.appendChild(btn);
-  });
+  // Profil-Grid: Vereine (statt einfacher Emojis)
+  renderProfileGrid();
 
   // Emoji Bar im Chat
   const bar = document.getElementById('emoji-bar');
@@ -2486,12 +2480,39 @@ function removePlaylist(index) {
 // ============================================================
 // PROFIL
 // ============================================================
+function renderProfileGrid(){
+  const grid=document.getElementById('emoji-grid');
+  if(!grid) return;
+  grid.innerHTML='';
+  CLUB_AVATARS.forEach(club=>{
+    const btn=document.createElement('button');
+    btn.className='emoji-option'+(club.id===state.selectedEmoji?' selected':'');
+    btn.title=club.desc;
+    btn.innerHTML=clubAvatar(club.id,32);
+    btn.onclick=()=>{
+      state.selectedEmoji=club.id;
+      document.querySelectorAll('#emoji-grid .emoji-option').forEach(el=>el.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    grid.appendChild(btn);
+  });
+}
 function openProfileModal(){
-  if(state.currentUser){document.getElementById('profile-name-input').value=state.currentUser.name;selectEmoji(state.currentUser.emoji);}
+  if(state.currentUser){
+    document.getElementById('profile-name-input').value=state.currentUser.name;
+    state.selectedEmoji=state.currentUser.emoji;
+  }
+  renderProfileGrid();
   document.getElementById('profile-modal').classList.add('open');
 }
 function selectEmoji(em){state.selectedEmoji=em;document.querySelectorAll('.emoji-option').forEach(el=>el.classList.toggle('selected',el.textContent===em));}
 function getClubById(id){ return CLUB_AVATARS ? CLUB_AVATARS.find(c=>c.id===id) : null; }
+// Dauerhafte, namens-UNABHÄNGIGE User-ID (bleibt bei Namensänderung gleich → kein Doppel-User)
+function getStableUserId(){
+  let uid = localStorage.getItem('malletrack_uid');
+  if(!uid){ uid = 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); localStorage.setItem('malletrack_uid', uid); }
+  return uid;
+}
 // Zeigt das echte Vereinslogo (logos/<id>.png) falls vorhanden, sonst das farbige Kürzel-Badge,
 // sonst (bei reinen Emojis wie 🌴) das Emoji selbst.
 function clubAvatar(id, px){
@@ -2513,7 +2534,7 @@ function renderClubEmoji(id){
 async function saveProfile(){
   const name=document.getElementById('profile-name-input').value.trim();
   if(!name){showToast('⚠️ Bitte Namen eingeben!');return;}
-  state.currentUser={id:'u_'+name.toLowerCase().replace(/\s/g,'_'),name,emoji:state.selectedEmoji};
+  state.currentUser={id:(state.currentUser&&state.currentUser.id)||getStableUserId(),name,emoji:state.selectedEmoji,isAdmin:state.currentUser&&state.currentUser.isAdmin};
   localStorage.setItem('malletrack_profile',JSON.stringify(state.currentUser));
   updateHeaderChip(); closeModal('profile-modal');
   showToast(`👋 Willkommen, ${state.selectedEmoji} ${name}!`);
@@ -2528,10 +2549,11 @@ function applySpectatorUI(){
 async function saveSpectatorProfile(){
   let name = document.getElementById('profile-name-input').value.trim();
   if(!name) name = 'Zuschauer';
-  state.currentUser = { id:'spec_'+name.toLowerCase().replace(/\s/g,'_'), name, emoji: state.selectedEmoji, isSpectator:true };
+  state.currentUser = { id:(state.currentUser&&state.currentUser.id)||('spec_'+getStableUserId().slice(2)), name, emoji: state.selectedEmoji, isSpectator:true };
   localStorage.setItem('malletrack_profile', JSON.stringify(state.currentUser));
   updateHeaderChip(); closeModal('profile-modal'); applySpectatorUI();
   showToast(`👀 Zuschauer-Modus: ${state.selectedEmoji} ${name}`);
+  registerSpectatorPresence();
   renderCrew();
 }
 function updateHeaderChip(){if(!state.currentUser)return;document.getElementById('header-emoji').textContent=state.currentUser.emoji;document.getElementById('header-name').textContent=state.currentUser.name;}
