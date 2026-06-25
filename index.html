@@ -1896,7 +1896,7 @@ function createEmojiIcon(emoji,name,isMe=false,isSharing=false) {
   const shadow = isMe ? 'rgba(0,229,255,0.6)' : 'rgba(255,45,120,0.5)';
   return L.divIcon({
     className:'',
-    html:`<div class="emoji-marker"><div class="emoji-bubble" style="border-color:${color};box-shadow:0 0 14px ${shadow}">${emoji}</div><div class="emoji-name">${name}</div></div>`,
+    html:`<div class="emoji-marker"><div class="emoji-bubble" style="border-color:${color};box-shadow:0 0 14px ${shadow}">${clubAvatar(emoji,34)}</div><div class="emoji-name">${name}</div></div>`,
     iconSize:[60,65],iconAnchor:[30,62]
   });
 }
@@ -2534,11 +2534,21 @@ function renderClubEmoji(id){
 async function saveProfile(){
   const name=document.getElementById('profile-name-input').value.trim();
   if(!name){showToast('⚠️ Bitte Namen eingeben!');return;}
-  state.currentUser={id:(state.currentUser&&state.currentUser.id)||getStableUserId(),name,emoji:state.selectedEmoji,isAdmin:state.currentUser&&state.currentUser.isAdmin};
+  const prev = state.currentUser || {};
+  state.currentUser={id:prev.id||getStableUserId(),name,emoji:state.selectedEmoji,isAdmin:prev.isAdmin,isSpectator:prev.isSpectator};
   localStorage.setItem('malletrack_profile',JSON.stringify(state.currentUser));
   updateHeaderChip(); closeModal('profile-modal');
-  showToast(`👋 Willkommen, ${state.selectedEmoji} ${name}!`);
-  await updateStatus('Gerade angekommen'); renderCrew();
+  // Identität überall propagieren: Status (Text behalten), Marker, Crew, Chat
+  if(!state.currentUser.isSpectator){
+    const curStatus = (state.crewStatuses[state.currentUser.id] && state.crewStatuses[state.currentUser.id].status) || 'Gerade angekommen';
+    try{
+      await sb.from('statuses').upsert({room_id:ROOM_ID,user_id:state.currentUser.id,user_name:state.currentUser.name,user_emoji:state.currentUser.emoji,status:curStatus,updated_at:new Date().toISOString()},{onConflict:'room_id,user_id'});
+    }catch(e){ console.warn('Profil-Sync Status:', e); }
+    if(state.locationSharing && state.currentLat!=null){ sendLocation(state.currentLat, state.currentLng); }
+  }
+  showToast('✅ Profil aktualisiert: '+name);
+  renderCrew();
+  if(typeof renderChat==='function') renderChat();
 }
 function canContribute(){ return !(state.currentUser && state.currentUser.isSpectator); }
 function spectatorBlock(){ showToast('👀 Zuschauer-Modus – du beobachtest nur'); }
@@ -2556,7 +2566,7 @@ async function saveSpectatorProfile(){
   registerSpectatorPresence();
   renderCrew();
 }
-function updateHeaderChip(){if(!state.currentUser)return;document.getElementById('header-emoji').textContent=state.currentUser.emoji;document.getElementById('header-name').textContent=state.currentUser.name;}
+function updateHeaderChip(){if(!state.currentUser)return;const he=document.getElementById('header-emoji');if(he)he.innerHTML=clubAvatar(state.currentUser.emoji,24);document.getElementById('header-name').textContent=state.currentUser.name;}
 
 // ============================================================
 // UTILS
