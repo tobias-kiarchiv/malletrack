@@ -147,8 +147,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .msg-bubble{display:flex;gap:8px;align-items:flex-end}
 .msg-bubble.mine{flex-direction:row-reverse}
 .msg-av{font-size:22px;flex-shrink:0;margin-bottom:2px}
-.msg-content{max-width:72%}
-.msg-name{font-size:10px;font-weight:700;color:var(--text-sec);margin-bottom:3px}
+.msg-content{max-width:82%}
+.msg-name{font-size:15px;font-weight:800;color:var(--neon-cyan);margin-bottom:3px}
 .msg-bubble.mine .msg-name{text-align:right;color:var(--neon-pink)}
 .msg-text{background:var(--bg-card);border:1px solid var(--border);border-radius:16px 16px 16px 4px;padding:9px 13px;font-size:14px;line-height:1.4;word-break:break-word}
 .msg-bubble.mine .msg-text{background:rgba(255,45,120,0.2);border-color:rgba(255,45,120,0.3);border-radius:16px 16px 4px 16px}
@@ -663,6 +663,12 @@ body.spectator .drink-type-row, body.spectator .drink-undo-btn{opacity:0.4;point
 .member-card.spectator-card{opacity:0.82;border-style:dashed}
 .member-card.spectator-card .member-avatar{filter:grayscale(0.2)}
 body.spectator .room-card{display:none !important}
+.club-ava{position:relative;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;overflow:hidden;font-weight:900;line-height:1;flex-shrink:0;text-align:center}
+.club-ava-label{padding:0 1px}
+.club-ava-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#fff;display:block}
+.club-ava.has-logo{background:#fff !important;border-color:#fff !important}
+.club-ava.has-logo .club-ava-label{display:none}
+.ava-emoji{display:inline-flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
@@ -2302,7 +2308,7 @@ function renderChat() {
     const isMe=state.currentUser&&msg.author_name===state.currentUser.name;
     const bubble=document.createElement('div');
     bubble.className='msg-bubble'+(isMe?' mine':'');
-    bubble.innerHTML=`<div class="msg-av">${msg.author_emoji}</div><div class="msg-content"><div class="msg-name">${msg.author_name}</div><div class="msg-text">${escHtml(msg.text)}</div><div class="msg-time">${formatTime(msg.created_at)}</div></div>`;
+    bubble.innerHTML=`<div class="msg-av">${clubAvatar(msg.author_emoji,34)}</div><div class="msg-content"><div class="msg-name">${escHtml(msg.author_name)}</div><div class="msg-text">${escHtml(msg.text)}</div><div class="msg-time">${formatTime(msg.created_at)}</div></div>`;
     container.appendChild(bubble);
   });
   container.scrollTop=container.scrollHeight;
@@ -2361,7 +2367,7 @@ function renderSpectatorList(list){
   specs.sort((a,b)=>(a.user_name||'').localeCompare(b.user_name||''));
   specs.forEach(sp=>{
     const c=document.createElement('div'); c.className='member-card spectator-card';
-    c.innerHTML='<div class="member-avatar">'+(sp.user_emoji||'👀')+'</div><div class="member-info"><div class="member-name">'+escHtml(sp.user_name||'Zuschauer')+'</div><div class="member-status-text">👀 schaut nur zu</div></div>';
+    c.innerHTML='<div class="member-avatar">'+clubAvatar(sp.user_emoji||'👀',40)+'</div><div class="member-info"><div class="member-name">'+escHtml(sp.user_name||'Zuschauer')+'</div><div class="member-status-text">👀 schaut nur zu</div></div>';
     list.appendChild(c);
   });
   return specs.length;
@@ -2387,7 +2393,7 @@ function renderCrew() {
     card.className='member-card'+(isMe?' me':'')+(sharing?' sharing-active':'');
     if(!isMe)card.onclick=()=>openMemberModal(member);
     card.innerHTML=`
-      <div class="member-avatar">${member.emoji}${sharing?'<div class="online-dot"></div>':''}</div>
+      <div class="member-avatar">${clubAvatar(member.emoji,40)}${sharing?'<div class="online-dot"></div>':''}</div>
       <div class="member-info">
         <div class="member-name">${member.name}${isMe?'<span class="me-badge">DU</span>':''}</div>
         ${isMe
@@ -2485,6 +2491,19 @@ function openProfileModal(){
 }
 function selectEmoji(em){state.selectedEmoji=em;document.querySelectorAll('.emoji-option').forEach(el=>el.classList.toggle('selected',el.textContent===em));}
 function getClubById(id){ return CLUB_AVATARS ? CLUB_AVATARS.find(c=>c.id===id) : null; }
+// Zeigt das echte Vereinslogo (logos/<id>.png) falls vorhanden, sonst das farbige Kürzel-Badge,
+// sonst (bei reinen Emojis wie 🌴) das Emoji selbst.
+function clubAvatar(id, px){
+  px = px || 40;
+  const club = getClubById(id);
+  if(!club){
+    return '<span class="ava-emoji" style="font-size:'+Math.round(px*0.62)+'px">'+escHtml(id||'👤')+'</span>';
+  }
+  return '<span class="club-ava" style="width:'+px+'px;height:'+px+'px;background:'+club.bg+';color:'+club.fg+';border:2px solid '+club.border+';font-size:'+Math.round(px*0.3)+'px">'
+    + '<span class="club-ava-label">'+club.label+'</span>'
+    + '<img class="club-ava-img" src="logos/'+id+'.png" alt="'+ (club.desc||'') +'" loading="lazy" onload="this.parentElement.classList.add(\'has-logo\')" onerror="this.remove()">'
+    + '</span>';
+}
 function renderClubEmoji(id){
   const club = getClubById(id);
   if(!club) return id;
