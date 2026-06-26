@@ -2012,7 +2012,7 @@ function addAction(container, icon, label, fn) {
 function openMemberModal(member) {
   if(member.id===state.currentUser?.id) return;
   state.selectedMember=member;
-  document.getElementById('member-modal-title').textContent=`${member.emoji} ${member.name}`;
+  document.getElementById('member-modal-title').textContent=`${(getClubById(member.emoji)?.desc)||member.emoji} · ${member.name}`;
   const actions=document.getElementById('member-actions');
   actions.innerHTML='';
 
@@ -2209,14 +2209,14 @@ function createSnapCard(snap) {
   card.innerHTML=`
     <div class="snap-meta">
       <div class="snap-author">
-        <div class="snap-avatar">${snap.author_emoji}</div>
-        <div><div class="snap-name">${snap.author_name}</div><div class="snap-time">${formatTime(snap.created_at)}</div></div>
+        <div class="snap-avatar">${clubAvatar(snap.author_emoji,36)}</div>
+        <div><div class="snap-name">${escHtml(snap.author_name)}</div><div class="snap-time">${formatTime(snap.created_at)}</div></div>
       </div>
       <div style="text-align:right"><div class="countdown-label">💣 Löscht in</div><div class="countdown-value" data-expires="${expiresAt}">${hrs}h ${mins}m</div></div>
     </div>
     <img class="snap-image" src="${snap.image_data}" alt="Snap" loading="lazy">
     <div class="snap-footer">
-      <div class="snap-location">📍 ${snap.location||'Mallorca'}</div>
+      <div class="snap-location">📍 ${escHtml(snap.location||'Mallorca')}</div>
       <div class="snap-reactions-row">
         ${reactionEmojis.map(em=>`<button class="reaction-btn" onclick="addReaction('${snap.id}','${em}')">${em} ${r[em]||0}</button>`).join('')}
       </div>
@@ -2259,7 +2259,7 @@ async function loadComments(snapId) {
   (data||[]).forEach(msg=>{
     const el=document.createElement('div');
     el.className='comment-item';
-    el.innerHTML=`<div class="comment-avatar">${msg.author_emoji}</div><div class="comment-bubble"><div class="comment-author">${msg.author_name}</div><div class="comment-text">${escHtml(msg.text)}</div></div>`;
+    el.innerHTML=`<div class="comment-avatar">${clubAvatar(msg.author_emoji,28)}</div><div class="comment-bubble"><div class="comment-author">${escHtml(msg.author_name)}</div><div class="comment-text">${escHtml(msg.text)}</div></div>`;
     list.appendChild(el);
   });
 }
@@ -2390,10 +2390,10 @@ function renderCrew() {
     card.innerHTML=`
       <div class="member-avatar">${clubAvatar(member.emoji,40)}${sharing?'<div class="online-dot"></div>':''}</div>
       <div class="member-info">
-        <div class="member-name">${member.name}${isMe?'<span class="me-badge">DU</span>':''}</div>
+        <div class="member-name">${escHtml(member.name)}${isMe?'<span class="me-badge">DU</span>':''}</div>
         ${isMe
-          ?`<select class="status-select" onchange="onStatusSelect(this.value)" onclick="event.stopPropagation()">${(STATUS_OPTIONS.includes(status)?'':`<option selected>${status}</option>`)}${STATUS_OPTIONS.map(s=>`<option ${s===status?'selected':''}>${s}</option>`).join('')}<option value="__custom__">✏️ Eigener Status…</option></select>`
-          :`<div class="member-status-text">💬 ${status}</div>`
+          ?`<select class="status-select" onchange="onStatusSelect(this.value)" onclick="event.stopPropagation()">${(STATUS_OPTIONS.includes(status)?'':`<option selected>${escHtml(status)}</option>`)}${STATUS_OPTIONS.map(s=>`<option ${s===status?'selected':''}>${s}</option>`).join('')}<option value="__custom__">✏️ Eigener Status…</option></select>`
+          :`<div class="member-status-text">💬 ${escHtml(status)}</div>`
         }
       </div>
       <div class="member-right">
@@ -2521,7 +2521,13 @@ function clubAvatar(id, px){
   if(!club){
     return '<span class="ava-emoji" style="font-size:'+Math.round(px*0.62)+'px">'+escHtml(id||'👤')+'</span>';
   }
-  return '<span class="club-ava" style="width:'+px+'px;height:'+px+'px;background:'+club.bg+';color:'+club.fg+';border:2px solid '+club.border+';font-size:'+Math.round(px*0.3)+'px">'
+  // Emoji-Avatare (😎🔥⭐🌴) haben kein Logo → nur Emoji zeigen, keinen Bild-Request
+  const isEmojiAva = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2300}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/u.test(club.label);
+  const base = '<span class="club-ava" style="width:'+px+'px;height:'+px+'px;background:'+club.bg+';color:'+club.fg+';border:2px solid '+club.border+';font-size:'+Math.round(px*0.3)+'px">';
+  if(isEmojiAva){
+    return base + '<span class="club-ava-label" style="font-size:'+Math.round(px*0.55)+'px">'+club.label+'</span></span>';
+  }
+  return base
     + '<span class="club-ava-label">'+club.label+'</span>'
     + '<img class="club-ava-img" src="logos/'+id+'.png" alt="'+ (club.desc||'') +'" loading="lazy" onload="this.parentElement.classList.add(\'has-logo\')" onerror="this.remove()">'
     + '</span>';
