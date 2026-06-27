@@ -1218,7 +1218,7 @@ let loginState = {
 // Beim Start prüfen ob bereits eingeloggt
 function checkExistingSession() {
   try {
-    const session = JSON.parse(localStorage.getItem(LOGIN_STORAGE_KEY) || 'null');
+    const session = lsGet(LOGIN_STORAGE_KEY, null);
     if (session && session.userId && session.name && session.emoji) {
       const validRoom = session.roomCode === 'MALLE26' || VALID_ROOM_CODES.includes(session.roomCode) || ADMIN_CODES.includes(session.roomCode);
       if (validRoom) {
@@ -1446,7 +1446,7 @@ async function completeRegistration() {
   localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(session));
 
   // Profil-Liste aktualisieren (für mehrere Geräte/Browser)
-  const profiles = JSON.parse(localStorage.getItem(LOGIN_PROFILES_KEY) || '[]');
+  const profiles = lsGet(LOGIN_PROFILES_KEY, []);
   const existing = profiles.findIndex(p => p.userId === userId);
   if (existing >= 0) profiles[existing] = session;
   else profiles.unshift(session);
@@ -1476,7 +1476,7 @@ async function completeRegistration() {
 // Session-Update (lastSeen) beim Schließen/Verlassen
 function updateLastSeen() {
   try {
-    const session = JSON.parse(localStorage.getItem(LOGIN_STORAGE_KEY) || 'null');
+    const session = lsGet(LOGIN_STORAGE_KEY, null);
     if (session) {
       session.lastSeen = new Date().toISOString();
       localStorage.setItem(LOGIN_STORAGE_KEY, JSON.stringify(session));
@@ -1583,7 +1583,7 @@ function waitForLeaflet(callback, attempts) {
 // ============================================================
 async function init() {
   // Manuelle Leaderboard-Anpassungen laden
-  lbManualAdjustments = JSON.parse(localStorage.getItem('malletrack_lb_adjustments') || '{}');
+  lbManualAdjustments = lsGet('malletrack_lb_adjustments', {});
 
   // Alerts immer abhören
   setTimeout(() => {
@@ -1626,7 +1626,7 @@ async function init() {
   });
 
   // Spotify laden
-  state.spotifyPlaylists = JSON.parse(localStorage.getItem('malletrack_spotify') || '[]');
+  state.spotifyPlaylists = lsGet('malletrack_spotify', []);
   renderSpotifyList();
 
   await Promise.all([loadSnaps(), loadStatuses(), loadChatMessages()]);
@@ -1638,13 +1638,15 @@ async function init() {
   });
   renderCrew();
   subscribeRealtime();
-  setInterval(updateCountdowns, 1000);
+  if(!state._cdStarted){ state._cdStarted = true; setInterval(updateCountdowns, 1000); }
 }
 
 // ============================================================
 // SUPABASE REALTIME
 // ============================================================
 function subscribeRealtime() {
+  if(state._rtSubscribed) return; // verhindert doppelte Channel-Handler bei mehrfachem init()
+  state._rtSubscribed = true;
   sb.channel('loc').on('postgres_changes',{event:'*',schema:'public',table:'locations',filter:'room_id=eq.'+ROOM_ID},
     (p) => { if(p.new?.user_id!==state.currentUser?.id){state.crewLocations[p.new.user_id]=p.new;updateMarker(p.new);renderCrew();} }).subscribe();
 
@@ -2513,6 +2515,11 @@ function getStableUserId(){
   if(!uid){ uid = 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); localStorage.setItem('malletrack_uid', uid); }
   return uid;
 }
+// Sicheres Lesen aus localStorage: bei kaputten/fehlenden Daten Fallback statt Absturz
+function lsGet(key, fallback){
+  try{ const v = localStorage.getItem(key); if(v==null) return fallback; const p = JSON.parse(v); return (p==null) ? fallback : p; }
+  catch(e){ console.warn('localStorage parse fehlgeschlagen:', key, e); return fallback; }
+}
 // Zeigt das echte Vereinslogo (logos/<id>.png) falls vorhanden, sonst das farbige Kürzel-Badge,
 // sonst (bei reinen Emojis wie 🌴) das Emoji selbst.
 function clubAvatar(id, px){
@@ -2957,6 +2964,7 @@ let rouletteCategory = Object.keys(ROULETTE_CATEGORIES)[0];
 let _footballBag = [];
 function nextFootballQuestion(){
   const arr = ROULETTE_CATEGORIES['Fußball ⚽'];
+  if(!arr || !arr.length) return 'Keine Frage verfügbar';
   if(!_footballBag.length){
     _footballBag = arr.map((_,i)=>i);
     for(let i=_footballBag.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [_footballBag[i],_footballBag[j]]=[_footballBag[j],_footballBag[i]]; }
@@ -3094,7 +3102,7 @@ async function loadLeaderboard() {
     .select('author_name,author_emoji,reactions,created_at')
     .eq('room_id', ROOM_ID)
     .gte('created_at', LEADERBOARD_START);
-  const tasks = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+  const tasks = lsGet('malletrack_tasks_done', {});
 
   const scores = {};
   (snaps || []).forEach(snap => {
@@ -3117,7 +3125,7 @@ async function loadLeaderboard() {
   });
 
   // Manuelle Admin-Anpassungen laden
-  lbManualAdjustments = JSON.parse(localStorage.getItem('malletrack_lb_adjustments') || '{}');
+  lbManualAdjustments = lsGet('malletrack_lb_adjustments', {});
   Object.entries(lbManualAdjustments).forEach(([name, adj]) => {
     if (scores[name]) scores[name].pts += adj;
     else scores[name] = { name, emoji: '⭐', pts: adj, snaps: 0, reactions: 0 };
@@ -3232,8 +3240,8 @@ const DEFAULT_TASKS = [
 ];
 
 function loadTasks() {
-  const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
-  const custom = JSON.parse(localStorage.getItem('malletrack_tasks_custom') || '[]');
+  const done = lsGet('malletrack_tasks_done', {});
+  const custom = lsGet('malletrack_tasks_custom', []);
   const allTasks = [...DEFAULT_TASKS, ...custom];
   const el = document.getElementById('tasks-list');
   if (!el) return;
@@ -3257,7 +3265,7 @@ function loadTasks() {
 function toggleTask(task) {
   if(!canContribute()) return spectatorBlock();
   if (!state.currentUser) { showToast('⚠️ Profil auswählen!'); return; }
-  const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+  const done = lsGet('malletrack_tasks_done', {});
   if (done[task.id]) {
     delete done[task.id];
     showToast('↩️ Aufgabe zurückgesetzt');
@@ -3274,7 +3282,7 @@ function toggleTask(task) {
 function addCustomTask() {
   const input = document.getElementById('new-task-input');
   const title = input.value.trim(); if (!title) return;
-  const custom = JSON.parse(localStorage.getItem('malletrack_tasks_custom') || '[]');
+  const custom = lsGet('malletrack_tasks_custom', []);
   custom.push({ id: 'c_' + Date.now(), title, emoji:'⚡', pts: 20, diff:'⭐⭐' });
   localStorage.setItem('malletrack_tasks_custom', JSON.stringify(custom));
   input.value = '';
@@ -3335,7 +3343,7 @@ async function updateHeatmap() {
 }
 
 // Heatmap alle 30s updaten
-setInterval(() => { if (state.activeTab === 'tab-fun') updateHeatmap(); }, 30000);
+setInterval(() => { if (state.activeTab === 'tab-funquiz') updateHeatmap(); }, 30000);
 
 
 // Zum Hotel fliegen
@@ -3905,7 +3913,7 @@ async function loadLeaderboardEvents() {
   });
 
   // Aufgaben
-  const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+  const done = lsGet('malletrack_tasks_done', {});
   Object.entries(done).forEach(([taskId, info]) => {
     if (info && info.user) {
       events.push({
@@ -3993,7 +4001,7 @@ async function deleteLeaderboardEvent(ev, rowEl) {
     lbManualAdjustments[ev.name] = (lbManualAdjustments[ev.name] || 0) - ev.pts;
   } else if (ev.type === 'task') {
     // Aufgabe als nicht erledigt markieren
-    const done = JSON.parse(localStorage.getItem('malletrack_tasks_done') || '{}');
+    const done = lsGet('malletrack_tasks_done', {});
     delete done[ev.taskId];
     localStorage.setItem('malletrack_tasks_done', JSON.stringify(done));
   } else if (ev.type === 'manual') {
@@ -4139,7 +4147,7 @@ async function loadInstaAccountsFromDB() {
       return accounts;
     }
   } catch(e) { console.warn('loadInsta:', e); }
-  return JSON.parse(localStorage.getItem(INSTA_STORAGE_KEY) || '[]');
+  return lsGet(INSTA_STORAGE_KEY, []);
 }
 
 async function saveInstaAccountsToDB(accounts) {
@@ -4164,7 +4172,7 @@ function initInstaTab() {
   renderInstaAccounts();
 }
 
-function getInstaAccounts() { return JSON.parse(localStorage.getItem(INSTA_STORAGE_KEY) || '[]'); }
+function getInstaAccounts() { return lsGet(INSTA_STORAGE_KEY, []); }
 function saveInstaAccounts(a) { saveInstaAccountsToDB(a); }
 
 function addInstaAccount() {
@@ -4460,7 +4468,7 @@ async function loadHashtagsFromDB() {
       return tags;
     }
   } catch(e) { console.warn('loadHashtags:', e); }
-  return JSON.parse(localStorage.getItem(HASHTAG_STORAGE_KEY) || '[]');
+  return lsGet(HASHTAG_STORAGE_KEY, []);
 }
 
 async function saveHashtagsToDB(tags) {
@@ -4491,7 +4499,7 @@ const HASHTAG_PREVIEW_THEMES = [
 ];
 
 function getHashtags() {
-  return JSON.parse(localStorage.getItem(HASHTAG_STORAGE_KEY) || '[]');
+  return lsGet(HASHTAG_STORAGE_KEY, []);
 }
 function saveHashtags(tags) {
   saveHashtagsToDB(tags);
@@ -4823,7 +4831,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Zuschauer-Session wiederherstellen (kein Code-Login, nur Profil)
   let _specResumed = false;
   try {
-    const prof = JSON.parse(localStorage.getItem('malletrack_profile') || 'null');
+    const prof = lsGet('malletrack_profile', null);
     if (prof && prof.isSpectator) {
       state.currentUser = prof;
       hideLockScreen(); updateHeaderChip(); applySpectatorUI();
