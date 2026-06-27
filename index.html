@@ -2344,11 +2344,12 @@ async function loadStatuses(){const {data}=await sb.from('statuses').select('*')
 async function registerSpectatorPresence(){
   if(!state.currentUser || !state.currentUser.isSpectator) return;
   try{
-    await sb._rawFrom('statuses').upsert({
+    const { error } = await sb._rawFrom('statuses').upsert({
       room_id:ROOM_ID, user_id:'__spectator__'+state.currentUser.id,
       user_name:state.currentUser.name, user_emoji:state.currentUser.emoji,
       status:'spectating', updated_at:new Date().toISOString()
     },{onConflict:'room_id,user_id'});
+    if(error){ console.error('Zuschauer-Präsenz:', error); showToast('❌ Zuschauer-Sync: '+(error.message||error.code||'Fehler')); }
   }catch(e){ console.warn('spectator presence:', e); }
 }
 
