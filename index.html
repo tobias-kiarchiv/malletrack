@@ -1666,7 +1666,7 @@ function subscribeRealtime() {
       const fromOther = m && (!state.currentUser || m.author_name !== state.currentUser.name);
       if(state.activeTab!=='tab-chat'){state.unreadChat++;updateChatBadge();}
       if(fromOther && (state.activeTab!=='tab-chat' || document.hidden)){
-        showLocalNotification((m.author_emoji||'💬')+' '+(m.author_name||'Crew'), m.text || 'Neue Nachricht');
+        showLocalNotification((m.author_emoji||'💬')+' '+(m.author_name||'Crew'), m.text || 'Neue Nachricht', "malletrack-chat");
       }
     }).subscribe();
 
@@ -3428,9 +3428,9 @@ async function registerServiceWorker(){
   try{const reg=await navigator.serviceWorker.register("/sw.js").catch(()=>null);if(reg)await navigator.serviceWorker.ready.catch(()=>{});}catch(e){console.warn("SW:",e.message);}
 }
 
-async function showLocalNotification(title,body){
+async function showLocalNotification(title,body,tag){
   if(!('Notification' in window) || Notification.permission!=="granted")return;
-  const opts={body,tag:"malletrack-"+Date.now(),vibrate:[200,100,200],renotify:true,badge:'/icon.png',icon:'/icon.png'};
+  const opts={body,tag:tag||"malletrack",renotify:true,vibrate:[200,100,200],badge:'/icon.png',icon:'/icon.png'};
   try{
     if(navigator.serviceWorker){
       const reg=await navigator.serviceWorker.getRegistration();
@@ -3473,7 +3473,7 @@ function listenForAlerts(){
   sb.channel("push_ch").on("postgres_changes",{event:"INSERT",schema:"public",table:"push_alerts",filter:"room_id=eq."+ROOM_ID},(payload)=>{
     const a=payload.new;if(state.currentUser&&a.sender_name===state.currentUser.name)return;
     const title="📣 "+a.sender_emoji+" "+a.sender_name;const body=a.message||"Schau in die App!";
-    if(document.hidden||!document.hasFocus())showLocalNotification(title,body);
+    if(document.hidden||!document.hasFocus())showLocalNotification(title,body,"malletrack-alert");
     showToast("📣 "+a.sender_name+": "+body);showAlertBanner(title,body);
   }).subscribe();
 }
