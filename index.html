@@ -1084,17 +1084,7 @@ body.spectator .room-card{display:none !important}
             🔔 Push-Benachrichtigungen aktivieren
           </button>
 
-          <div id="push-send-area" style="display:none">
-            <div style="font-size:12px;color:var(--text-sec);margin-bottom:10px">
-              📲 Alle bekommen einen Banner + Chat-Nachricht.<br>
-              Wer Push aktiviert hat: auch eine Handy-Benachrichtigung.
-            </div>
-            <div class="push-presets" id="push-presets"></div>
-            <input class="push-msg-input" id="push-msg-input" placeholder="Eigene Nachricht..." maxlength="80">
-            <button class="btn-push-alert" id="push-send-btn" onclick="sendGroupAlert()">
-              📣 ALLE RUFEN!
-            </button>
-          </div>
+          <div id="push-send-area" style="display:none"></div>
 
           <div id="push-denied-hint" style="display:none;font-size:12px;color:var(--neon-pink);padding:8px;background:rgba(255,45,120,0.08);border-radius:8px">
             ❌ Push wurde blockiert. Bitte in den Browser-Einstellungen erlauben:<br>
@@ -2203,7 +2193,7 @@ function renderSnaps() {
 function createSnapCard(snap) {
   const card=document.createElement('div');
   card.className='snap-card'; card.dataset.snapId=snap.id;
-  const expiresAt=new Date(snap.expires_at).getTime();
+  const expiresAt=new Date(parseTs(snap.expires_at)).getTime();
   const remaining=expiresAt-Date.now();
   const hrs=Math.floor(remaining/3600000),mins=Math.floor((remaining%3600000)/60000);
   const r=snap.reactions||{'🔥':0,'😂':0,'❤️':0,'🥂':0,'😱':0};
@@ -2295,7 +2285,7 @@ function renderChat() {
   }
   let lastDate='';
   state.chatMessages.forEach(msg=>{
-    const d=new Date(msg.created_at).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
+    const d=new Date(parseTs(msg.created_at)).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});
     if(d!==lastDate){
       lastDate=d;
       const div=document.createElement('div');
@@ -2356,7 +2346,7 @@ async function registerSpectatorPresence(){
 function renderSpectatorList(list){
   const specs = Object.values(state.crewStatuses).filter(s =>
     String(s.user_id).indexOf('__spectator__')===0 &&
-    s.updated_at && (Date.now()-new Date(s.updated_at).getTime() < 10*60*1000)
+    s.updated_at && (Date.now()-new Date(parseTs(s.updated_at)).getTime() < 10*60*1000)
   );
   if(!specs.length) return 0;
   const hdr=document.createElement('div'); hdr.className='crew-subheader';
@@ -2385,7 +2375,7 @@ function renderCrew() {
     const statusData=state.crewStatuses[member.id];
     const status=statusData?.status||'Gerade angekommen';
     const _loc=state.crewLocations[member.id];
-    const _fresh=_loc&&_loc.updated_at&&(Date.now()-new Date(_loc.updated_at).getTime()<5*60*1000);
+    const _fresh=_loc&&_loc.updated_at&&(Date.now()-new Date(parseTs(_loc.updated_at)).getTime()<5*60*1000);
     const sharing=!!((isMe&&state.locationSharing)||_fresh);
     const card=document.createElement('div');
     card.className='member-card'+(isMe?' me':'')+(sharing?' sharing-active':'');
@@ -2520,6 +2510,17 @@ function getStableUserId(){
 function lsGet(key, fallback){
   try{ const v = localStorage.getItem(key); if(v==null) return fallback; const p = JSON.parse(v); return (p==null) ? fallback : p; }
   catch(e){ console.warn('localStorage parse fehlgeschlagen:', key, e); return fallback; }
+}
+// Robustes Datum-Parsing (iOS Safari ist streng: Mikrosekunden + "+00" → Invalid Date)
+function parseTs(s){
+  if(s==null) return 0;
+  if(typeof s==='number') return s;
+  let str=String(s).trim().replace(' ','T');
+  str=str.replace(/(\.\d{3})\d+/,'$1');   // Mikrosekunden auf 3 Stellen kürzen
+  if(/[+-]\d{2}$/.test(str)) str+=':00';   // "+00" → "+00:00"
+  let t=Date.parse(str);
+  if(isNaN(t)) t=Date.parse(str+'Z');      // ohne Zeitzone: als UTC annehmen
+  return isNaN(t)?0:t;
 }
 // Zeigt das echte Vereinslogo (logos/<id>.png) falls vorhanden, sonst das farbige Kürzel-Badge,
 // sonst (bei reinen Emojis wie 🌴) das Emoji selbst.
@@ -3470,36 +3471,6 @@ function listenForAlerts(){
     })
     .subscribe();
 
-  sb.channel("push_ch").on("postgres_changes",{event:"INSERT",schema:"public",table:"push_alerts",filter:"room_id=eq."+ROOM_ID},(payload)=>{
-    const a=payload.new;if(state.currentUser&&a.sender_name===state.currentUser.name)return;
-    const title="📣 "+a.sender_emoji+" "+a.sender_name;const body=a.message||"Schau in die App!";
-    if(document.hidden||!document.hasFocus())showLocalNotification(title,body,"malletrack-alert");
-    showToast("📣 "+a.sender_name+": "+body);showAlertBanner(title,body);
-  }).subscribe();
-}
-
-function showAlertBanner(title,body){
-  const old=document.getElementById("alert-banner");if(old)old.remove();
-  const b=document.createElement("div");b.id="alert-banner";
-  b.style.cssText="position:fixed;top:70px;left:12px;right:12px;background:linear-gradient(135deg,rgba(255,45,120,0.97),rgba(180,0,0,0.97));border-radius:16px;padding:14px 16px;z-index:2000;box-shadow:0 0 30px rgba(255,45,120,0.5);display:flex;align-items:center;gap:12px";
-  b.innerHTML="<div style='font-size:26px'>📣</div><div style='flex:1'><div style='font-weight:700;font-size:14px;color:white'>"+escHtml(title)+"</div><div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px'>"+escHtml(body)+"</div></div><button onclick='this.parentElement.remove()' style='background:rgba(255,255,255,0.2);border:none;border-radius:8px;color:white;padding:4px 10px;cursor:pointer'>✕</button>";
-  document.body.appendChild(b);setTimeout(()=>{if(b.parentElement)b.remove();},6000);
-}
-
-async function sendGroupAlert(){
-  if(!canContribute()) return spectatorBlock();
-  if(!state.currentUser){showToast("⚠️ Profil auswählen!");return;}
-  const inp=document.getElementById("push-msg-input");
-  const msg=(inp&&inp.value.trim())||"📣 Alle in die App!";
-  const btn=document.getElementById("push-send-btn");
-  if(btn){btn.disabled=true;btn.textContent="⏳ Sendet...";}
-  try{
-    await sb.from("push_alerts").insert({room_id:ROOM_ID,sender_name:state.currentUser.name,sender_emoji:state.currentUser.emoji,message:msg});
-    await sendSpecialMessage("📣 ALERT: "+msg);
-    showLocalNotification("✅ Gesendet!","Alle wurden benachrichtigt");
-    showToast("📣 Alert gesendet!");if(inp)inp.value="";
-  }catch(e){showToast("❌ Fehler: "+e.message);}
-  if(btn){btn.disabled=false;btn.textContent="📣 ALLE RUFEN!";}
 }
 
 // ============================================================
@@ -4043,7 +4014,7 @@ async function loadRecap() {
 
     grid.innerHTML = '';
     data.forEach(snap => {
-      const expired = new Date(snap.expires_at) < new Date();
+      const expired = new Date(parseTs(snap.expires_at)) < new Date();
       const thumb = document.createElement('div');
       thumb.className = 'recap-thumb';
       if (expired) thumb.style.opacity = '0.7';
@@ -4081,7 +4052,7 @@ function showFullSnap(snap) {
   const info = document.createElement('div');
   info.style.cssText = 'margin-top:14px;text-align:center;color:white';
   info.innerHTML = '<div style="font-size:16px;font-weight:700">' + snap.author_emoji + ' ' + escHtml(snap.author_name) + '</div>'
-    + '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">' + new Date(snap.created_at).toLocaleString('de-DE') + '</div>';
+    + '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:4px">' + new Date(parseTs(snap.created_at)).toLocaleString('de-DE') + '</div>';
 
   const downloadBtn = document.createElement('button');
   downloadBtn.style.cssText = 'margin-top:14px;background:var(--neon-cyan);border:none;border-radius:12px;padding:10px 24px;font-weight:700;cursor:pointer;font-size:14px';
@@ -4090,7 +4061,7 @@ function showFullSnap(snap) {
     e.stopPropagation();
     const a = document.createElement('a');
     a.href = snap.image_data;
-    a.download = 'malle-snap-' + snap.author_name + '-' + new Date(snap.created_at).toLocaleDateString('de-DE') + '.jpg';
+    a.download = 'malle-snap-' + snap.author_name + '-' + new Date(parseTs(snap.created_at)).toLocaleDateString('de-DE') + '.jpg';
     a.click();
   };
 
