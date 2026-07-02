@@ -867,7 +867,7 @@ body.spectator .room-card{display:none !important}
               <line x1="20" y1="129" x2="80" y2="129" stroke="rgba(255,255,255,0.55)" stroke-width="3" stroke-linecap="round"/>
             </svg>
             <div class="drink-my-total" id="drink-my-total">0</div>
-            <div class="drink-my-sub">/ 100 Punkte</div>
+            <div class="drink-my-sub">/ 100 · Crew gesamt 🍻</div>
           </div>
           <div class="drink-my-break" id="drink-my-break">🍺 0 · 🍹 0 · 🥃 0 · 💧 0</div>
           <div class="drink-over-note" id="drink-over-note">Tagespensom erreicht – Wasser & Pause helfen 💧</div>
@@ -4516,31 +4516,38 @@ function renderDrinks(){
   let mine = pre ? state.testDay : ((me && state.drinks[me.id] && state.drinks[me.id].days[day]) || {});
   mine = Object.assign({ bier:0, cocktail:0, shot:0, wasser:0 }, mine);
   const myScore = dayScore(mine);
-  const over = myScore > DRINK_DAILY_TARGET;
 
-  const pct = Math.min(myScore/DRINK_DAILY_TARGET, 1);
-  const top = 124 - 104*pct;
-  liq.setAttribute('y', top.toFixed(1));
-  liq.setAttribute('height', (124-top).toFixed(1));
-  liq.setAttribute('fill', over ? '#ff3b3b' : (DRINK_COLORS[state.selDrink] || '#ffb300'));
-
-  setDrinkText('drink-my-total', Math.round(myScore));
-  setDrinkText('drink-my-break', '🍺 '+mine.bier+' · 🍹 '+mine.cocktail+' · 🥃 '+mine.shot+' · 💧 '+mine.wasser);
-  const note = document.getElementById('drink-over-note'); if(note) note.style.display = (over && !pre) ? 'block' : 'none';
-
-  document.querySelectorAll('.drink-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === state.selDrink));
-
-  // Crew & Historie nur aus echten Trip-Tagen (>= 02.07.)
+  // Crew-Tageswerte (Summe aller, nur echte Trip-Tage >= 02.07.)
   let crewScore = 0, crewWater = 0;
+  const crewBreak = { bier:0, cocktail:0, shot:0, wasser:0 };
   const perUser = [];
   Object.entries(state.drinks||{}).forEach(([uid, u]) => {
     const dd = (u.days && u.days[day]) || {};
     if(day >= TRIP_START_KEY){
       const sc = dayScore(dd);
       crewScore += sc; crewWater += (dd.wasser||0);
+      crewBreak.bier += dd.bier||0; crewBreak.cocktail += dd.cocktail||0; crewBreak.shot += dd.shot||0; crewBreak.wasser += dd.wasser||0;
       if(sc > 0) perUser.push({ name:u.name, emoji:u.emoji, score:sc, isMe: me && uid===me.id });
     }
   });
+
+  // Großes Glas = Crew gesamt (festes Ziel 100). Vor dem Trip: eigener Test-Stand.
+  const glassScore = pre ? myScore : crewScore;
+  const glassBreak = pre ? mine : crewBreak;
+  const over = glassScore > DRINK_DAILY_TARGET;
+
+  const pct = Math.min(glassScore/DRINK_DAILY_TARGET, 1);
+  const top = 124 - 104*pct;
+  liq.setAttribute('y', top.toFixed(1));
+  liq.setAttribute('height', (124-top).toFixed(1));
+  liq.setAttribute('fill', over ? '#ff3b3b' : (DRINK_COLORS[state.selDrink] || '#ffb300'));
+
+  setDrinkText('drink-my-total', Math.round(glassScore));
+  setDrinkText('drink-my-break', '🍺 '+glassBreak.bier+' · 🍹 '+glassBreak.cocktail+' · 🥃 '+glassBreak.shot+' · 💧 '+glassBreak.wasser);
+  const note = document.getElementById('drink-over-note'); if(note) note.style.display = (over && !pre) ? 'block' : 'none';
+
+  document.querySelectorAll('.drink-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === state.selDrink));
+
   setDrinkText('drink-crew-total', Math.round(crewScore));
   setDrinkText('drink-crew-water', crewWater);
 
