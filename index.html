@@ -1668,7 +1668,9 @@ function subscribeRealtime() {
     window._crewRefreshStarted = true;
     setInterval(async () => {
       if(!state.currentUser) return;
-      try { await loadLocations(); await loadStatuses(); await loadDrinksFromDB(); } catch(e){}
+      try { await loadLocations(); } catch(e){}
+      try { await loadStatuses(); } catch(e){}
+      try { await loadDrinksFromDB(); } catch(e){}
       if(state.currentUser.isSpectator) registerSpectatorPresence();
       renderCrew(); renderDrinks();
     }, 20000);
@@ -2618,7 +2620,7 @@ function switchTab(tabId, btn) {
       setTimeout(() => { const c = document.getElementById('chat-messages'); if(c) c.scrollTop = c.scrollHeight; }, 100);
     }
     if (tabId === 'tab-funquiz') {
-      try { loadLeaderboard(); loadTasks(); initRoulette(); renderDrinks(); } catch(e){ console.error('funquiz:',e); }
+      try { loadLeaderboard(); loadTasks(); initRoulette(); loadDrinksFromDB(); renderDrinks(); } catch(e){ console.error('funquiz:',e); }
       setTimeout(() => { try { initHeatmap(); } catch(e){} }, 300);
     }
     if (tabId === 'tab-insta') {
@@ -4425,7 +4427,8 @@ function drinkDayLabel(k){
 
 async function loadDrinksFromDB(){
   try {
-    const { data } = await sb.from('statuses').select('user_id,user_name,user_emoji,status').eq('room_id', ROOM_ID);
+    const { data, error } = await sb.from('statuses').select('user_id,user_name,user_emoji,status').eq('room_id', ROOM_ID);
+    if(error){ console.error('Drink load:', error); showToast('❌ Getränke laden: '+(error.message||error.code||'Fehler')); return; }
     const map = {};
     (data||[]).forEach(r => {
       if(!r.user_id || r.user_id.indexOf('__drinks__') !== 0) return;
@@ -4446,7 +4449,7 @@ async function saveDrinksToDB(){
   const me = state.currentUser;
   if(!me || !state.drinks[me.id]) return;
   try {
-    await sb.from('statuses').upsert({
+    const { error } = await sb.from('statuses').upsert({
       room_id: ROOM_ID,
       user_id: '__drinks__'+me.id,
       user_name: me.name,
@@ -4454,7 +4457,8 @@ async function saveDrinksToDB(){
       status: JSON.stringify(state.drinks[me.id].days),
       updated_at: new Date().toISOString(),
     }, { onConflict: 'room_id,user_id' });
-  } catch(e){ console.warn('Drink save:', e); }
+    if(error){ console.error('Drink save:', error); showToast('❌ Getränke-Sync: '+(error.message||error.code||'Fehler')); }
+  } catch(e){ console.error('Drink save:', e); showToast('❌ Getränke konnten nicht gespeichert werden'); }
 }
 
 function addDrink(type){
