@@ -3663,15 +3663,15 @@ async function loadAdminMembers(){
   const {data:locs}=await sb.from("locations").select("*").eq("room_id",ROOM_ID);
   const {data:stats}=await sb.from("statuses").select("*").eq("room_id",ROOM_ID);
   const users=new Map();
-  (locs||[]).forEach(l=>users.set(l.user_id,{id:l.user_id,name:l.user_name,emoji:l.user_emoji}));
-  (stats||[]).forEach(s=>{if(!users.has(s.user_id))users.set(s.user_id,{id:s.user_id,name:s.user_name,emoji:s.user_emoji});});
+  (locs||[]).forEach(l=>{if(String(l.user_id).indexOf('__')===0)return;users.set(l.user_id,{id:l.user_id,name:l.user_name,emoji:l.user_emoji});});
+  (stats||[]).forEach(s=>{if(String(s.user_id).indexOf('__')===0)return;if(!users.has(s.user_id))users.set(s.user_id,{id:s.user_id,name:s.user_name,emoji:s.user_emoji});});
   listEl.innerHTML="";
   if(users.size===0){listEl.innerHTML="<div style='font-size:13px;color:var(--text-sec);text-align:center;padding:12px'>Keine anderen Nutzer aktiv</div>";return;}
   users.forEach(user=>{
     if(state.currentUser&&user.id===state.currentUser.id)return;
     const row=document.createElement("div");
     row.style.cssText="display:flex;align-items:center;gap:10px;background:rgba(255,0,0,0.04);border:1px solid rgba(255,0,0,0.15);border-radius:10px;padding:10px 12px;margin-bottom:6px";
-    row.innerHTML='<span style="font-size:20px">'+user.emoji+'</span><span style="flex:1;font-weight:600;font-size:14px">'+escHtml(user.name)+'</span><button data-uid="'+user.id+'" data-uname="'+escHtml(user.name)+'" style="background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.4);border-radius:8px;color:#ff4444;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700">Rauswerfen</button>';
+    row.innerHTML='<span style="display:inline-flex">'+clubAvatar(user.emoji,28)+'</span><span style="flex:1;font-weight:600;font-size:14px">'+escHtml(user.name)+'</span><button data-uid="'+user.id+'" data-uname="'+escHtml(user.name)+'" style="background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.4);border-radius:8px;color:#ff4444;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:700">Rauswerfen</button>';
     row.querySelector('button').onclick=function(){kickUser(this.dataset.uid,this.dataset.uname,this.parentElement);};
     listEl.appendChild(row);
   });
