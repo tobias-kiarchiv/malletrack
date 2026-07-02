@@ -2158,12 +2158,12 @@ async function handlePhotoUpload(event) {
     canvas.width=w;canvas.height=h;
     canvas.getContext('2d').drawImage(img,0,0,w,h);
     const compressed=canvas.toDataURL('image/jpeg',0.75);
-    // Snap läuft bis zum nächsten 11:00 Uhr ab
-    // Foto um 03:00 -> 8h bis 11:00 heute | Foto um 14:00 -> 21h bis 11:00 morgen
+    // Snap läuft immer am NÄCHSTEN Tag um 11:00 Uhr ab (Folgetag), egal wann gepostet.
+    // Foto Do 09:00 -> Fr 11:00 | Foto Do 22:00 -> Fr 11:00 | Foto Fr 00:30 -> Sa 11:00
     const _now = new Date();
     const _expiry = new Date(_now);
+    _expiry.setDate(_expiry.getDate() + 1);
     _expiry.setHours(11, 0, 0, 0);
-    if (_expiry <= _now) _expiry.setDate(_expiry.getDate() + 1);
     const expiresAt = _expiry.toISOString();
     await sb.from('snaps').insert({
       room_id:ROOM_ID,author_name:state.currentUser.name,author_emoji:state.currentUser.emoji,
