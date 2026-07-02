@@ -2229,7 +2229,10 @@ function createSnapCard(snap) {
 async function addReaction(snapId,emoji) {
   const snap=state.snaps.find(s=>s.id===snapId); if(!snap)return;
   const newR={...snap.reactions,[emoji]:(snap.reactions[emoji]||0)+1};
-  await sb.from('snaps').update({reactions:newR}).eq('id',snapId);
+  // Reaktionen sind für ALLE erlaubt – auch für Zuschauer (gezielt an der Schreibsperre vorbei).
+  const from = sb._rawFrom || sb.from;
+  const { error } = await from('snaps').update({reactions:newR}).eq('id',snapId);
+  if(error){ showToast('❌ Reaktion fehlgeschlagen'); return; }
   await loadSnaps(); showToast(emoji);
 }
 
