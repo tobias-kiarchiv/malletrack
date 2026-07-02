@@ -2179,7 +2179,8 @@ async function handlePhotoUpload(event) {
 }
 
 async function loadSnaps() {
-  const {data}=await sb.from('snaps').select('*').eq('room_id',ROOM_ID).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});
+  const {data,error}=await sb.from('snaps').select('*').eq('room_id',ROOM_ID).gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});
+  if(error){ console.error('Snaps laden:', error); showToast('❌ Snaps laden: '+(error.message||error.code||'Fehler')); }
   state.snaps=data||[];renderSnaps();
 }
 
