@@ -648,7 +648,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .drink-empty{font-size:12px;color:var(--text-sec);opacity:0.7;padding:8px 2px}
 .drink-day-title{font-size:12px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 .drink-day-history{display:flex;flex-direction:column;gap:6px}
-.drink-day-row{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--border);font-size:14px;color:var(--text-pri)}
+.drink-day-row{display:flex;flex-direction:column;gap:7px;padding:9px 13px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--border);font-size:14px;color:var(--text-pri)}
+.drink-day-head{display:flex;justify-content:space-between;align-items:center}
+.drink-day-users{display:flex;flex-wrap:wrap;gap:5px}
+.drink-day-user{font-size:12px;color:var(--text-sec);background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:2px 8px}
+.drink-day-user b{font-family:'Bebas Neue',cursive;font-size:14px;color:var(--neon-gold);margin-left:3px}
 .drink-day-row.today{border-color:var(--neon-gold);background:rgba(255,214,0,0.08)}
 .drink-day-row b{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--neon-gold)}
 .drink-my-sub{position:absolute;top:64%;left:0;right:0;text-align:center;font-size:11px;color:var(--text-sec);letter-spacing:1px;pointer-events:none}
@@ -4414,7 +4418,7 @@ const TRIP_START_KEY = '2026-07-02'; // echte Wertung erst ab Reisebeginn
 let _drinkSaveTimer = null;
 
 function isPreTrip(){ return drinkTodayKey() < TRIP_START_KEY; }
-function dayScore(d){ d = d || {}; return (d.bier||0)*DRINK_POINTS.bier + (d.cocktail||0)*DRINK_POINTS.cocktail + (d.shot||0)*DRINK_POINTS.shot + (d.wasser||0)*DRINK_POINTS.wasser; }
+function dayScore(d){ d = d || {}; return (d.bier||0)*DRINK_POINTS.bier + (d.cocktail||0)*DRINK_POINTS.cocktail + (d.shot||0)*DRINK_POINTS.shot; }
 function setDrinkText(id, v){ const e = document.getElementById(id); if(e) e.textContent = v; }
 
 function drinkTodayKey(){
@@ -4563,15 +4567,28 @@ function renderDrinks(){
       : '<div class="drink-empty">'+(pre ? 'Echte Wertung startet am 02.07. 🌴' : 'Heute noch nichts eingetragen.')+'</div>';
   }
 
-  const days = {};
+  const dayData = {};
   Object.values(state.drinks||{}).forEach(u => {
-    Object.entries(u.days||{}).forEach(([k,v]) => { if(k >= TRIP_START_KEY) days[k] = (days[k]||0) + dayScore(v); });
+    Object.entries(u.days||{}).forEach(([k,v]) => {
+      if(k < TRIP_START_KEY) return;
+      const sc = dayScore(v);
+      if(!dayData[k]) dayData[k] = { total:0, users:[] };
+      dayData[k].total += sc;
+      if(sc > 0) dayData[k].users.push({ name:u.name, emoji:u.emoji, score:sc });
+    });
   });
-  const keys = Object.keys(days).sort();
+  const keys = Object.keys(dayData).sort();
   const dh = document.getElementById('drink-day-history');
   if(dh){
     dh.innerHTML = keys.length
-      ? keys.map(k=>'<div class="drink-day-row'+(k===day?' today':'')+'"><span>'+drinkDayLabel(k)+'</span><b>'+Math.round(days[k])+'</b></div>').join('')
+      ? keys.map(k=>{
+          const d = dayData[k];
+          d.users.sort((a,b)=>b.score-a.score);
+          const perStr = d.users.length
+            ? '<div class="drink-day-users">'+d.users.map(u=>'<span class="drink-day-user">'+u.emoji+' '+escHtml(u.name)+'<b>'+Math.round(u.score)+'</b></span>').join('')+'</div>'
+            : '';
+          return '<div class="drink-day-row'+(k===day?' today':'')+'"><div class="drink-day-head"><span>'+drinkDayLabel(k)+'</span><b>'+Math.round(d.total)+'</b></div>'+perStr+'</div>';
+        }).join('')
       : '<div class="drink-empty">Tagessummen erscheinen ab 02.07. 🌴</div>';
   }
 }
