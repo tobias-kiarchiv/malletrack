@@ -592,6 +592,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .recap-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
 .recap-stat-val{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--neon-cyan)}
 .recap-stat-label{font-size:10px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.recap-section{margin:18px 0}
+.recap-section-title{font-size:12px;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px;margin-bottom:9px;font-weight:700}
+.recap-award{display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;margin-bottom:7px}
+.recap-award-emoji{font-size:22px}
+.recap-award-txt{flex:1;font-size:12px;color:var(--text-sec)}
+.recap-award-txt b{color:var(--neon-gold);font-size:14px}
+.recap-award-val{font-family:'Bebas Neue',cursive;font-size:22px;color:var(--neon-cyan)}
+.recap-rank{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--border);margin-bottom:6px}
+.recap-rank.win{border-color:var(--neon-gold);background:rgba(255,214,0,0.08)}
+.recap-rank-pos{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--neon-gold);width:28px;text-align:center}
+.recap-rank-name{flex:1;font-size:14px;color:var(--text-pri)}
+.recap-rank-sub{font-size:11px;color:var(--text-sec);margin-top:1px}
+.recap-rank-pts{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--neon-cyan)}
 .recap-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
 .recap-thumb{border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--bg-card);border:1px solid var(--border);cursor:pointer;position:relative}
 .recap-thumb img{width:100%;height:100%;object-fit:cover;display:block}
@@ -958,6 +971,8 @@ body.spectator .room-card{display:none !important}
         <div style="font-size:11px;color:var(--text-sec);text-align:center;margin:10px 0 16px">
           Alle Snaps werden dauerhaft gespeichert – auch nach 11 Uhr
         </div>
+
+        <div id="recap-bigstats"></div>
 
         <div class="members-title">Alle Trip-Snaps</div>
         <div class="recap-grid" id="recap-grid">
@@ -1665,7 +1680,7 @@ function subscribeRealtime() {
     }).subscribe();
 
   sb.channel('drk').on('postgres_changes',{event:'*',schema:'public',table:'statuses',filter:'room_id=eq.'+ROOM_ID},
-    (p) => { const uid = p.new && p.new.user_id; if(uid && uid.indexOf('__drinks__')===0){ const id=uid.slice(10); let days={}; try{days=JSON.parse(p.new.status||'{}')||{};}catch(e){} state.drinks[id]={name:p.new.user_name||'?',emoji:p.new.user_emoji||'🍺',days}; renderDrinks(); } }).subscribe();
+    (p) => { const uid = p.new && p.new.user_id; if(uid && uid.indexOf('__drinks__')===0){ const id=uid.slice(10); const _me = state.currentUser && state.currentUser.id; if(_me && id===_me) return; let days={}; try{days=JSON.parse(p.new.status||'{}')||{};}catch(e){} state.drinks[id]={name:p.new.user_name||'?',emoji:p.new.user_emoji||'🍺',days}; renderDrinks(); } }).subscribe();
   loadDrinksFromDB();
 
   if(!window._crewRefreshStarted){
@@ -4161,6 +4176,77 @@ async function loadRecap() {
     if (totalEl) totalEl.textContent = data.length;
     if (membersEl) membersEl.textContent = members.size;
 
+    // ===== GROSSE AUSWERTUNG (Fotos + Trinkspiel + Auszeichnungen) =====
+    try {
+      // Foto-Auswertung
+      const byAuthor = {}; let totalReactions = 0; let topSnap = null; let topSnapR = -1;
+      data.forEach(s => {
+        const r = s.reactions || {}; const rc = Object.values(r).reduce((a,b)=>a+(parseInt(b)||0),0);
+        totalReactions += rc;
+        if(!byAuthor[s.author_name]) byAuthor[s.author_name] = { name:s.author_name, emoji:s.author_emoji, snaps:0, reactions:0 };
+        byAuthor[s.author_name].snaps++; byAuthor[s.author_name].reactions += rc;
+        if(rc > topSnapR){ topSnapR = rc; topSnap = s; }
+      });
+      const authors = Object.values(byAuthor);
+      const topPoster = authors.slice().sort((a,b)=>b.snaps-a.snaps)[0];
+      const topReacted = authors.slice().sort((a,b)=>b.reactions-a.reactions)[0];
+
+      // Trinkspiel-Auswertung (aus statuses __drinks__)
+      const { data: st } = await sb.from('statuses').select('user_id,user_name,user_emoji,status').eq('room_id', ROOM_ID);
+      const dusers = []; const dtot = { bier:0, cocktail:0, shot:0, wasser:0 }; const dayTotals = {};
+      (st||[]).forEach(r => {
+        if(!r.user_id || r.user_id.indexOf('__drinks__')!==0) return;
+        let days={}; try{days=JSON.parse(r.status||'{}')||{};}catch(e){}
+        let score=0,b=0,c=0,sh=0,w=0;
+        Object.entries(days).forEach(([k,v])=>{ if(k < TRIP_START_KEY) return; score+=dayScore(v); b+=v.bier||0; c+=v.cocktail||0; sh+=v.shot||0; w+=v.wasser||0; dayTotals[k]=(dayTotals[k]||0)+dayScore(v); });
+        dtot.bier+=b; dtot.cocktail+=c; dtot.shot+=sh; dtot.wasser+=w;
+        if(score>0||b||c||sh||w) dusers.push({ name:r.user_name, emoji:r.user_emoji, score, bier:b, cocktail:c, shot:sh, wasser:w });
+      });
+      const crewScore = dusers.reduce((a,u)=>a+u.score,0);
+      const rank = dusers.slice().sort((a,b)=>b.score-a.score);
+      const maxBy = (arr,key)=> arr.length ? arr.slice().sort((a,b)=>b[key]-a[key])[0] : null;
+      const bierKing=maxBy(dusers,'bier'), cocktailKing=maxBy(dusers,'cocktail'), shotKing=maxBy(dusers,'shot'), waterKing=maxBy(dusers,'wasser');
+      const bestDayKey = Object.keys(dayTotals).sort((a,b)=>dayTotals[b]-dayTotals[a])[0];
+
+      const av = (u,px)=> (typeof clubAvatar==='function' ? clubAvatar(u.emoji, px||22) : (u.emoji||''));
+      const award = (emoji,label,u,val)=> u ? '<div class="recap-award"><span class="recap-award-emoji">'+emoji+'</span><span class="recap-award-txt">'+label+'<br><b>'+escHtml(u.name)+'</b></span><span class="recap-award-val">'+val+'</span></div>' : '';
+
+      let html = '';
+      // Trinkspiel
+      html += '<div class="recap-section"><div class="recap-section-title">🍻 Trinkspiel – Gesamtwertung</div>';
+      html += '<div class="recap-stats"><div class="recap-stat"><div class="recap-stat-val">'+Math.round(crewScore)+'</div><div class="recap-stat-label">Crew-Punkte</div></div>'
+           + '<div class="recap-stat"><div class="recap-stat-val">'+dtot.bier+'</div><div class="recap-stat-label">🍺 Biere</div></div>'
+           + '<div class="recap-stat"><div class="recap-stat-val">'+dtot.wasser+'</div><div class="recap-stat-label">💧 Wasser</div></div></div>';
+      if(rank.length){
+        html += rank.map((u,i)=>'<div class="recap-rank'+(i===0?' win':'')+'"><span class="recap-rank-pos">'+(i===0?'🏆':(i+1))+'</span><span class="recap-rank-name">'+escHtml(u.name)+'<div class="recap-rank-sub">🍺'+u.bier+' · 🍹'+u.cocktail+' · 🥃'+u.shot+' · 💧'+u.wasser+'</div></span><span class="recap-rank-pts">'+Math.round(u.score)+'</span></div>').join('');
+      } else { html += '<div style="font-size:12px;color:var(--text-sec)">Keine Trinkspiel-Daten gespeichert.</div>'; }
+      html += '</div>';
+
+      // Auszeichnungen
+      html += '<div class="recap-section"><div class="recap-section-title">🏅 Auszeichnungen</div>';
+      html += award('🏆','Trinkspiel-Sieger (meiste Punkte)', rank[0], rank[0]?Math.round(rank[0].score):'');
+      html += award('🍺','Bier-König', bierKing && bierKing.bier>0?bierKing:null, bierKing?bierKing.bier:'');
+      html += award('🍹','Cocktail-König', cocktailKing && cocktailKing.cocktail>0?cocktailKing:null, cocktailKing?cocktailKing.cocktail:'');
+      html += award('🥃','Shot-König', shotKing && shotKing.shot>0?shotKing:null, shotKing?shotKing.shot:'');
+      html += award('💧','Wasser-Held (brav hydriert)', waterKing && waterKing.wasser>0?waterKing:null, waterKing?waterKing.wasser:'');
+      html += award('📸','Foto-König (meiste Snaps)', topPoster, topPoster?topPoster.snaps:'');
+      html += award('❤️','Reaktions-Magnet (meiste Reaktionen)', topReacted && topReacted.reactions>0?topReacted:null, topReacted?topReacted.reactions:'');
+      html += '</div>';
+
+      // Foto-Statistik
+      html += '<div class="recap-section"><div class="recap-section-title">📸 Foto-Statistik</div>';
+      html += '<div class="recap-stats"><div class="recap-stat"><div class="recap-stat-val">'+data.length+'</div><div class="recap-stat-label">Snaps</div></div>'
+           + '<div class="recap-stat"><div class="recap-stat-val">'+totalReactions+'</div><div class="recap-stat-label">Reaktionen</div></div>'
+           + '<div class="recap-stat"><div class="recap-stat-val">'+members.size+'</div><div class="recap-stat-label">Fotografen</div></div></div>';
+      if(topSnap && topSnapR>0){
+        html += '<div class="recap-award"><span class="recap-award-emoji">🌟</span><span class="recap-award-txt">Meist-gefeierter Snap von <b>'+escHtml(topSnap.author_name)+'</b></span><span class="recap-award-val">'+topSnapR+'</span></div>';
+      }
+      html += '</div>';
+
+      const bs = document.getElementById('recap-bigstats');
+      if(bs) bs.innerHTML = html;
+    } catch(e){ console.error('Recap-Stats:', e); }
+
     grid.innerHTML = '';
     data.forEach(snap => {
       const expired = new Date(parseTs(snap.expires_at)) < new Date();
@@ -4444,6 +4530,10 @@ async function loadDrinksFromDB(){
       let days = {}; try { days = JSON.parse(r.status||'{}') || {}; } catch(e){}
       map[uid] = { name: r.user_name||'?', emoji: r.user_emoji||'🍺', days };
     });
+    // Eigene (evtl. noch nicht gespeicherte) Einträge NICHT durch den DB-Stand überschreiben.
+    // Das eigene Gerät ist maßgeblich für die eigenen Getränke – sonst gehen frische Tipps verloren.
+    const _meId = state.currentUser && state.currentUser.id;
+    if(_meId && state.drinks[_meId]) map[_meId] = state.drinks[_meId];
     state.drinks = map;
     renderDrinks();
   } catch(e){ console.warn('Drink load:', e); }
@@ -4452,6 +4542,13 @@ async function loadDrinksFromDB(){
 function saveDrinksDebounced(){
   clearTimeout(_drinkSaveTimer);
   _drinkSaveTimer = setTimeout(saveDrinksToDB, 500);
+}
+// Sicherheitsnetz: ausstehende Getränke-Speicherung sofort schreiben, bevor die App schließt/in den Hintergrund geht
+if(!window._drinkFlushBound){
+  window._drinkFlushBound = true;
+  const _flushDrinks = () => { if(_drinkSaveTimer){ clearTimeout(_drinkSaveTimer); _drinkSaveTimer=null; saveDrinksToDB(); } };
+  document.addEventListener('visibilitychange', () => { if(document.hidden) _flushDrinks(); });
+  window.addEventListener('pagehide', _flushDrinks);
 }
 async function saveDrinksToDB(){
   const me = state.currentUser;
