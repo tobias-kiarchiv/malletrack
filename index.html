@@ -799,6 +799,7 @@ body.spectator .room-card{display:none !important}
           <div class="section-title">SNAPS</div>
           <div class="snap-count" id="snap-count">0 Fotos</div>
         </div>
+        <button onclick="switchTab('tab-recap')" style="width:100%;padding:14px;margin-bottom:12px;border:none;border-radius:14px;background:linear-gradient(135deg,#ff6ec4,#7873f5);color:#fff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 4px 14px rgba(120,115,245,0.4)">🏆 Trip-Rückblick &amp; Statistiken ansehen</button>
         <div class="camera-btn" onclick="triggerCamera()">
           <div style="font-size:30px">📸</div>
           <div style="font-size:13px;font-weight:700;color:var(--neon-pink);letter-spacing:0.5px">SNAP AUFNEHMEN</div>
@@ -951,6 +952,7 @@ body.spectator .room-card{display:none !important}
     <div id="tab-recap" class="tab-panel">
       <div id="tab-recap-inner">
         <div class="recap-header">
+          <button onclick="switchTab('tab-snaps')" style="background:none;border:none;color:var(--neon-cyan);font-size:14px;cursor:pointer;padding:0 0 8px">← Zurück zu Snaps</button>
           <div class="section-title">📸 TRIP RECAP</div>
           <div style="font-size:12px;color:var(--text-sec);margin-top:4px">Alle Snaps des Trips – auch abgelaufene</div>
         </div>
